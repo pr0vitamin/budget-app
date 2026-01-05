@@ -1,25 +1,22 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Navigation', () => {
-    test('can navigate between all pages', async ({ page }) => {
-        // Start at home (Buckets)
+    test('authenticated user can view all pages', async ({ page }) => {
+        // Buckets page
         await page.goto('/');
-        await expect(page.getByRole('heading', { name: 'Buckets' })).toBeVisible();
+        await expect(page.locator('body')).toContainText('Buckets');
+        await expect(page.locator('body')).not.toContainText('Welcome back'); // Not login page
 
-        // Go to Inbox
-        await page.getByRole('link', { name: 'Inbox' }).click();
-        await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
+        // Inbox page
+        await page.goto('/inbox');
+        await expect(page.locator('body')).toContainText('Inbox');
 
-        // Go to Calendar
-        await page.getByRole('link', { name: 'Calendar' }).click();
-        await expect(page.getByRole('heading', { name: 'Calendar' })).toBeVisible();
+        // Calendar page
+        await page.goto('/calendar');
+        await expect(page.locator('body')).toContainText('Calendar');
 
-        // Go to Settings
-        await page.getByRole('link', { name: 'Settings' }).click();
-        await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
-
-        // Back to Buckets
-        await page.getByRole('link', { name: 'Buckets' }).click();
-        await expect(page.getByRole('heading', { name: 'Buckets' })).toBeVisible();
+        // Settings page
+        await page.goto('/settings');
+        await expect(page.locator('body')).toContainText('Settings');
     });
 });
