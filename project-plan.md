@@ -49,12 +49,12 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 1.3 Authentication
 
-- [ ] Configure Supabase Auth for magic link
-- [ ] Create login page with email input
-- [ ] Implement magic link request flow
-- [ ] Set up session handling (7-day inactivity timeout)
-- [ ] Create auth middleware for protected routes
-- [ ] Add auth context provider
+- [x] Configure Supabase Auth for magic link
+- [x] Create login page with email input
+- [x] Implement magic link request flow
+- [x] Set up session handling (7-day inactivity timeout)
+- [x] Create auth middleware for protected routes
+- [x] Add auth context provider
 
 #### 1.4 Base Layout & Navigation
 
