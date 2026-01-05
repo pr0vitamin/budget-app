@@ -129,9 +129,9 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 2.6 Unit Tests - Core Logic
 
-- [ ] Test bucket balance calculation
-- [ ] Test period boundary calculations
-- [ ] Test rollover logic
+- [x] Test bucket balance calculation
+- [x] Test period boundary calculations
+- [x] Test rollover logic
 
 ### Milestone 2 Deliverable
 
