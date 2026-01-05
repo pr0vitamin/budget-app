@@ -90,7 +90,7 @@ The project is organized into **7 milestones**, each building on the previous. E
 - [x] `DELETE /api/bucket-groups/:id` - delete group
 - [x] `POST /api/bucket-groups/reorder` - reorder groups
 - [x] Create bucket group management UI
-- [ ] Implement drag-and-drop reordering
+- [x] Implement drag-and-drop reordering
 
 #### 2.2 Buckets API & UI
 
@@ -100,7 +100,7 @@ The project is organized into **7 milestones**, each building on the previous. E
 - [x] `DELETE /api/buckets/:id` - delete bucket
 - [x] `POST /api/buckets/reorder` - reorder within groups
 - [x] Create bucket list view (grouped, collapsible)
-- [ ] Create bucket form (name, type, color, icon, rollover settings)
+- [x] Create bucket form (name, type, color, icon, rollover settings)
 - [x] Display balance calculations
 
 #### 2.3 Cat Piggy Bank Component

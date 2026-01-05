@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BucketList } from '@/components/buckets';
+import { BucketList, BucketForm, ReorderGroupsModal } from '@/components/buckets';
 import { signOut } from './login/actions';
 
 interface Bucket {
@@ -26,10 +26,18 @@ interface BucketsPageClientProps {
     userEmail: string;
 }
 
+interface BucketFormState {
+    isOpen: boolean;
+    groupId: string;
+    bucket?: Bucket;
+}
+
 export function BucketsPageClient({ groups, totalAvailable, userEmail }: BucketsPageClientProps) {
     const router = useRouter();
     const [isCreatingGroup, setIsCreatingGroup] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
+    const [bucketForm, setBucketForm] = useState<BucketFormState>({ isOpen: false, groupId: '' });
+    const [isReorderingGroups, setIsReorderingGroups] = useState(false);
 
     const handleCreateGroup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,22 +56,63 @@ export function BucketsPageClient({ groups, totalAvailable, userEmail }: Buckets
         }
     };
 
-    const handleBucketClick = (bucket: Bucket) => {
-        // TODO: Open bucket detail/edit modal
-        console.log('Clicked bucket:', bucket);
+    const handleBucketClick = (bucket: Bucket, groupId: string) => {
+        setBucketForm({ isOpen: true, groupId, bucket });
     };
 
-    const handleAddBucket = async (groupId: string) => {
-        const name = prompt('Bucket name:');
-        if (!name) return;
+    const handleAddBucket = (groupId: string) => {
+        setBucketForm({ isOpen: true, groupId });
+    };
 
-        const res = await fetch('/api/buckets', {
-            method: 'POST',
+    const handleBucketSubmit = async (data: {
+        name: string;
+        type: 'spending' | 'savings';
+        color: string;
+        autoAllocationAmount: number;
+        rollover: boolean;
+    }) => {
+        const isEditing = !!bucketForm.bucket;
+        const url = isEditing
+            ? `/api/buckets/${bucketForm.bucket!.id}`
+            : '/api/buckets';
+
+        const res = await fetch(url, {
+            method: isEditing ? 'PATCH' : 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ groupId, name }),
+            body: JSON.stringify({
+                ...data,
+                groupId: bucketForm.groupId,
+            }),
         });
 
         if (res.ok) {
+            setBucketForm({ isOpen: false, groupId: '' });
+            router.refresh();
+        }
+    };
+
+    const handleBucketDelete = async () => {
+        if (!bucketForm.bucket) return;
+
+        const res = await fetch(`/api/buckets/${bucketForm.bucket.id}`, {
+            method: 'DELETE',
+        });
+
+        if (res.ok) {
+            setBucketForm({ isOpen: false, groupId: '' });
+            router.refresh();
+        }
+    };
+
+    const handleReorderSave = async (orderedIds: string[]) => {
+        const res = await fetch('/api/bucket-groups/reorder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderedIds }),
+        });
+
+        if (res.ok) {
+            setIsReorderingGroups(false);
             router.refresh();
         }
     };
@@ -84,10 +133,26 @@ export function BucketsPageClient({ groups, totalAvailable, userEmail }: Buckets
                 </div>
             </div>
 
+            {/* Reorder button */}
+            {groups.length > 1 && (
+                <button
+                    onClick={() => setIsReorderingGroups(true)}
+                    className="mb-4 text-sm text-indigo-600 flex items-center gap-1"
+                >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                    </svg>
+                    Reorder Groups
+                </button>
+            )}
+
             {/* Bucket list */}
             <BucketList
                 groups={groups}
-                onBucketClick={handleBucketClick}
+                onBucketClick={(bucket) => {
+                    const group = groups.find(g => g.buckets.some(b => b.id === bucket.id));
+                    if (group) handleBucketClick(bucket, group.id);
+                }}
                 onAddBucket={handleAddBucket}
             />
 
@@ -136,6 +201,33 @@ export function BucketsPageClient({ groups, totalAvailable, userEmail }: Buckets
                     Sign Out
                 </button>
             </form>
+
+            {/* Bucket Form Modal */}
+            {bucketForm.isOpen && (
+                <BucketForm
+                    groupId={bucketForm.groupId}
+                    initialData={bucketForm.bucket ? {
+                        name: bucketForm.bucket.name,
+                        type: bucketForm.bucket.type as 'spending' | 'savings',
+                        color: bucketForm.bucket.color,
+                        autoAllocationAmount: bucketForm.bucket.autoAllocationAmount,
+                        rollover: true,
+                    } : undefined}
+                    bucketId={bucketForm.bucket?.id}
+                    onSubmit={handleBucketSubmit}
+                    onCancel={() => setBucketForm({ isOpen: false, groupId: '' })}
+                    onDelete={bucketForm.bucket ? handleBucketDelete : undefined}
+                />
+            )}
+
+            {/* Reorder Groups Modal */}
+            {isReorderingGroups && (
+                <ReorderGroupsModal
+                    groups={groups.map(g => ({ id: g.id, name: g.name }))}
+                    onSave={handleReorderSave}
+                    onCancel={() => setIsReorderingGroups(false)}
+                />
+            )}
         </div>
     );
 }
