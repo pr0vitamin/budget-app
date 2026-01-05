@@ -24,3 +24,33 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Input placeholder styling - make it more visible */
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280; /* gray-500 - much more readable */
+  opacity: 1;
+}
+
+/* Input text should be dark */
+input,
+textarea,
+select {
+  color: #1f2937; /* gray-800 */
+}
+
+/* Slide up animation for modals */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
