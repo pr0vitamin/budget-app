@@ -114,18 +114,18 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 2.4 Manual Transactions
 
-- [ ] `POST /api/transactions` - create manual transaction
-- [ ] `PATCH /api/transactions/:id` - update transaction
-- [ ] `DELETE /api/transactions/:id` - delete manual transaction
-- [ ] Create add transaction form (amount, merchant, date, account)
-- [ ] Create transaction list view
+- [x] `POST /api/transactions` - create manual transaction
+- [x] `PATCH /api/transactions/:id` - update transaction
+- [x] `DELETE /api/transactions/:id` - delete manual transaction
+- [x] Create add transaction form (amount, merchant, date, account)
+- [x] Create transaction list view
 
 #### 2.5 User Settings
 
-- [ ] `GET /api/settings` - get user settings
-- [ ] `PATCH /api/settings` - update settings
-- [ ] Create settings page
-- [ ] Budget cycle configuration (type, start day)
+- [x] `GET /api/settings` - get user settings
+- [x] `PATCH /api/settings` - update settings
+- [x] Create settings page
+- [x] Budget cycle configuration (type, start day)
 
 #### 2.6 Unit Tests - Core Logic
 

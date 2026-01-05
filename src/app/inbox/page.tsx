@@ -1,24 +1,72 @@
 import { AppShell } from '@/components/layout';
+import { createClient } from '@/lib/supabase/server';
+import { prisma } from '@/lib/db';
+import { InboxPageClient } from './InboxPageClient';
 
-export default function InboxPage() {
+export default async function InboxPage() {
+    const supabase = await createClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+        return null; // Middleware will redirect
+    }
+
+    // Get user's accounts
+    const userAccounts = await prisma.account.findMany({
+        where: { userId: user.id },
+        select: { id: true },
+    });
+    const accountIds = userAccounts.map((a) => a.id);
+
+    // Fetch transactions
+    const transactions = await prisma.transaction.findMany({
+        where: {
+            OR: [
+                { accountId: { in: accountIds } },
+                { accountId: null, isManual: true },
+            ],
+        },
+        include: {
+            account: { select: { id: true, name: true, institution: true } },
+            allocations: {
+                include: {
+                    bucket: { select: { id: true, name: true, color: true } },
+                },
+            },
+        },
+        orderBy: { date: 'desc' },
+        take: 50,
+    });
+
+    // Count unallocated
+    const unallocatedCount = transactions.filter((t) => t.allocations.length === 0).length;
+
+    // Format for client
+    const formattedTransactions = transactions.map((t) => ({
+        id: t.id,
+        amount: Number(t.amount),
+        merchant: t.merchant || 'Unknown',
+        date: t.date.toISOString(),
+        description: t.description || undefined,
+        isManual: t.isManual,
+        allocations: t.allocations.map((a) => ({
+            bucket: {
+                id: a.bucket.id,
+                name: a.bucket.name,
+                color: a.bucket.color,
+            },
+            amount: Number(a.amount),
+        })),
+    }));
+
     return (
         <AppShell>
-            <div className="p-4">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Inbox</h1>
-                    <span className="text-sm text-gray-500">0 transactions</span>
-                </div>
-
-                {/* Empty state */}
-                <div className="bg-white rounded-3xl shadow-sm p-8 text-center">
-                    <div className="text-6xl mb-4">📬</div>
-                    <h2 className="text-lg font-semibold text-gray-800 mb-2">All caught up!</h2>
-                    <p className="text-gray-500">
-                        Connect your bank to automatically import transactions, or add them manually.
-                    </p>
-                </div>
-            </div>
+            <InboxPageClient
+                transactions={formattedTransactions}
+                unallocatedCount={unallocatedCount}
+            />
         </AppShell>
     );
 }
