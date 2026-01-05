@@ -37,15 +37,15 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 1.2 Database Setup
 
-- [/] Create Supabase project
+- [x] Create Supabase project
 - [x] Initialize Prisma with PostgreSQL
 - [x] Define schema for all entities:
   - User, Account, BucketGroup, Bucket
   - Transaction, Allocation
   - ScheduledTransaction, CategorizationRule
   - UserSettings
-- [ ] Run initial migration
-- [ ] Enable Row-Level Security (RLS) policies
+- [x] Run initial migration
+- [x] Enable Row-Level Security (RLS) policies
 
 #### 1.3 Authentication
 
