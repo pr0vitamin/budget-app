@@ -65,10 +65,10 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 1.5 Testing Infrastructure
 
-- [ ] Configure Vitest for unit tests
-- [ ] Configure Playwright for E2E tests
-- [ ] Create test database/environment
-- [ ] Set up test authentication helpers
+- [x] Configure Vitest for unit tests
+- [x] Configure Playwright for E2E tests
+- [x] Create test database/environment
+- [x] Set up test authentication helpers
 
 ### Milestone 1 Deliverable
 
