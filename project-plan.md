@@ -58,10 +58,10 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 1.4 Base Layout & Navigation
 
-- [ ] Create mobile-first responsive layout
-- [ ] Add bottom navigation bar (Buckets, Inbox, Calendar, Settings)
-- [ ] Implement skeleton loading states
-- [ ] Set up error boundary
+- [x] Create mobile-first responsive layout
+- [x] Add bottom navigation bar (Buckets, Inbox, Calendar, Settings)
+- [x] Implement skeleton loading states
+- [x] Set up error boundary
 
 #### 1.5 Testing Infrastructure
 
