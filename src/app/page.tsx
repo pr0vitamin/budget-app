@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/db';
+import { ensureUserExists } from '@/lib/ensure-user';
 import { AppShell } from '@/components/layout';
 import { BucketsPageClient } from './BucketsPageClient';
 
@@ -12,6 +13,9 @@ export default async function HomePage() {
   if (!user) {
     return null; // Middleware will redirect
   }
+
+  // Ensure user exists in Prisma database
+  await ensureUserExists(user);
 
   // Fetch bucket groups with buckets
   const groups = await prisma.bucketGroup.findMany({
@@ -49,7 +53,8 @@ export default async function HomePage() {
 
   // Calculate total available
   const totalAvailable = groupsWithBalances.reduce(
-    (sum, group) => sum + group.buckets.reduce((s, b) => s + b.balance, 0),
+    (sum, group) =>
+      sum + group.buckets.reduce((bs, b) => bs + b.balance, 0),
     0
   );
 
@@ -57,8 +62,8 @@ export default async function HomePage() {
     <AppShell>
       <BucketsPageClient
         groups={groupsWithBalances}
-        totalAvailable={totalAvailable}
         userEmail={user.email || ''}
+        totalAvailable={totalAvailable}
       />
     </AppShell>
   );

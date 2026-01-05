@@ -1,6 +1,7 @@
 import { AppShell } from '@/components/layout';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/db';
+import { ensureUserExists } from '@/lib/ensure-user';
 import { InboxPageClient } from './InboxPageClient';
 
 export default async function InboxPage() {
@@ -12,6 +13,9 @@ export default async function InboxPage() {
     if (!user) {
         return null; // Middleware will redirect
     }
+
+    // Ensure user exists in Prisma database
+    await ensureUserExists(user);
 
     // Get user's accounts
     const userAccounts = await prisma.account.findMany({
