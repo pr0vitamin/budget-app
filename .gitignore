@@ -48,7 +48,10 @@ supabase/.temp/
 
 # IDE
 .idea/
-.vscode/settings.json
+.vscode/
+
+# E2E test auth state (contains tokens, never commit)
+e2e/.auth/
 *.code-workspace
 
 /src/generated/prisma

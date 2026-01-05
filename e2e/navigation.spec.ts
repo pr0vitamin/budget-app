@@ -1,21 +1,25 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Navigation', () => {
-    test.beforeEach(async ({ page }) => {
-        // Skip auth for now - this will redirect to login
-        // In M6/M7, we'll add proper auth bypass
-    });
-
-    test('unauthenticated user is redirected to login', async ({ page }) => {
+    test('can navigate between all pages', async ({ page }) => {
+        // Start at home (Buckets)
         await page.goto('/');
-        await expect(page).toHaveURL('/login');
-    });
+        await expect(page.getByRole('heading', { name: 'Buckets' })).toBeVisible();
 
-    test('login page shows magic link form', async ({ page }) => {
-        await page.goto('/login');
+        // Go to Inbox
+        await page.getByRole('link', { name: 'Inbox' }).click();
+        await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible();
 
-        await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
-        await expect(page.getByLabel('Email address')).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Send Magic Link' })).toBeVisible();
+        // Go to Calendar
+        await page.getByRole('link', { name: 'Calendar' }).click();
+        await expect(page.getByRole('heading', { name: 'Calendar' })).toBeVisible();
+
+        // Go to Settings
+        await page.getByRole('link', { name: 'Settings' }).click();
+        await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+
+        // Back to Buckets
+        await page.getByRole('link', { name: 'Buckets' }).click();
+        await expect(page.getByRole('heading', { name: 'Buckets' })).toBeVisible();
     });
 });
