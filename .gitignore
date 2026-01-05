@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -49,3 +50,5 @@ supabase/.temp/
 .idea/
 .vscode/settings.json
 *.code-workspace
+
+/src/generated/prisma

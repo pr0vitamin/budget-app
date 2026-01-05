@@ -38,8 +38,8 @@ The project is organized into **7 milestones**, each building on the previous. E
 #### 1.2 Database Setup
 
 - [/] Create Supabase project
-- [ ] Initialize Prisma with PostgreSQL
-- [ ] Define schema for all entities:
+- [x] Initialize Prisma with PostgreSQL
+- [x] Define schema for all entities:
   - User, Account, BucketGroup, Bucket
   - Transaction, Allocation
   - ScheduledTransaction, CategorizationRule

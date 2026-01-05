@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================================
+// USER & SETTINGS
+// ============================================================================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+
+  // Relations
+  accounts              Account[]
+  bucketGroups          BucketGroup[]
+  categorizationRules   CategorizationRule[]
+  scheduledTransactions ScheduledTransaction[]
+  settings              UserSettings?
+}
+
+model UserSettings {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  budgetCycleType     String    @default("fortnightly") // weekly, fortnightly, monthly, custom
+  budgetCycleStartDay Int       @default(1) // Day of month or week (1-7 for weekly, 1-31 for monthly)
+  akahuAccessToken    String? // Encrypted
+  akahuRefreshToken   String? // Encrypted
+  tokenExpiresAt      DateTime?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================================
+// BANK ACCOUNTS
+// ============================================================================
+
+model Account {
+  id              String    @id @default(cuid())
+  userId          String
+  akahuAccountId  String    @unique
+  name            String
+  institution     String
+  type            String // checking, savings, credit, etc.
+  balance         Decimal   @default(0) @db.Decimal(12, 2)
+  lastSyncAt      DateTime?
+  connectionError String? // Last error message if sync failed
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId])
+}
+
+// ============================================================================
+// BUCKETS & GROUPS
+// ============================================================================
+
+model BucketGroup {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  buckets Bucket[]
+
+  @@index([userId])
+}
+
+model Bucket {
+  id                   String  @id @default(cuid())
+  groupId              String
+  name                 String
+  type                 String  @default("spending") // spending, savings
+  icon                 String? // Cat variant or emoji
+  color                String  @default("#6366f1") // Hex color
+  autoAllocationAmount Decimal @default(0) @db.Decimal(12, 2)
+  rollover             Boolean @default(true)
+  rolloverTargetId     String? // If rollover=false, where does leftover go?
+  sortOrder            Int     @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  group                 BucketGroup            @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  rolloverTarget        Bucket?                @relation("RolloverTarget", fields: [rolloverTargetId], references: [id], onDelete: SetNull)
+  rolloverSources       Bucket[]               @relation("RolloverTarget")
+  allocations           Allocation[]
+  scheduledTransactions ScheduledTransaction[]
+  categorizationRules   CategorizationRule[]
+
+  @@index([groupId])
+}
+
+// ============================================================================
+// TRANSACTIONS & ALLOCATIONS
+// ============================================================================
+
+model Transaction {
+  id                String   @id @default(cuid())
+  accountId         String?
+  externalId        String?  @unique // Akahu transaction ID
+  amount            Decimal  @db.Decimal(12, 2) // Negative = outflow, positive = inflow
+  merchant          String?
+  description       String?
+  date              DateTime @db.Date
+  status            String   @default("pending") // pending, cleared, amended
+  matchedScheduleId String?
+  isManual          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  account           Account?              @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  matchedSchedule   ScheduledTransaction? @relation(fields: [matchedScheduleId], references: [id], onDelete: SetNull)
+  allocations       Allocation[]
+
+  @@index([accountId])
+  @@index([date])
+  @@index([status])
+}
+
+model Allocation {
+  id            String  @id @default(cuid())
+  transactionId String
+  bucketId      String
+  amount        Decimal @db.Decimal(12, 2) // Portion allocated to this bucket
+
+  // Relations
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  bucket      Bucket      @relation(fields: [bucketId], references: [id], onDelete: Cascade)
+
+  @@unique([transactionId, bucketId])
+  @@index([bucketId])
+}
+
+// ============================================================================
+// SCHEDULED TRANSACTIONS
+// ============================================================================
+
+model ScheduledTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  bucketId  String
+  name      String
+  amount    Decimal  @db.Decimal(12, 2)
+  frequency String // weekly, fortnightly, monthly, yearly, custom
+  interval  Int      @default(1) // Every X periods (for custom)
+  startDate DateTime @db.Date
+  nextDue   DateTime @db.Date
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bucket              Bucket        @relation(fields: [bucketId], references: [id], onDelete: Cascade)
+  matchedTransactions Transaction[]
+
+  @@index([userId])
+  @@index([bucketId])
+  @@index([nextDue])
+}
+
+// ============================================================================
+// CATEGORIZATION RULES
+// ============================================================================
+
+model CategorizationRule {
+  id              String   @id @default(cuid())
+  userId          String
+  bucketId        String
+  merchantPattern String // Pattern to match merchant name
+  createdAt       DateTime @default(now())
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bucket Bucket @relation(fields: [bucketId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, merchantPattern])
+  @@index([userId])
+}
