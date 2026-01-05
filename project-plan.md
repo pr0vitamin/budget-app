@@ -84,33 +84,33 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 2.1 Bucket Groups API & UI
 
-- [ ] `GET /api/bucket-groups` - list groups
-- [ ] `POST /api/bucket-groups` - create group
-- [ ] `PATCH /api/bucket-groups/:id` - update group
-- [ ] `DELETE /api/bucket-groups/:id` - delete group
-- [ ] `POST /api/bucket-groups/reorder` - reorder groups
-- [ ] Create bucket group management UI
+- [x] `GET /api/bucket-groups` - list groups
+- [x] `POST /api/bucket-groups` - create group
+- [x] `PATCH /api/bucket-groups/:id` - update group
+- [x] `DELETE /api/bucket-groups/:id` - delete group
+- [x] `POST /api/bucket-groups/reorder` - reorder groups
+- [x] Create bucket group management UI
 - [ ] Implement drag-and-drop reordering
 
 #### 2.2 Buckets API & UI
 
-- [ ] `GET /api/buckets` - list buckets with calculated balances
-- [ ] `POST /api/buckets` - create bucket
-- [ ] `PATCH /api/buckets/:id` - update bucket
-- [ ] `DELETE /api/buckets/:id` - delete bucket
-- [ ] `POST /api/buckets/reorder` - reorder within groups
-- [ ] Create bucket list view (grouped, collapsible)
+- [x] `GET /api/buckets` - list buckets with calculated balances
+- [x] `POST /api/buckets` - create bucket
+- [x] `PATCH /api/buckets/:id` - update bucket
+- [x] `DELETE /api/buckets/:id` - delete bucket
+- [x] `POST /api/buckets/reorder` - reorder within groups
+- [x] Create bucket list view (grouped, collapsible)
 - [ ] Create bucket form (name, type, color, icon, rollover settings)
-- [ ] Display balance calculations
+- [x] Display balance calculations
 
 #### 2.3 Cat Piggy Bank Component
 
-- [ ] Design cat-face piggy bank SVG/component
-- [ ] Implement fill-level visualization
-- [ ] Add basic tap interaction (subtle bounce)
-- [ ] Create color variants
-- [ ] Basic fill animation (simple transition, not fancy yet)
-- [ ] Overspending state (visual warning)
+- [x] Design cat-face piggy bank SVG/component
+- [x] Implement fill-level visualization
+- [x] Add basic tap interaction (subtle bounce)
+- [x] Create color variants
+- [x] Basic fill animation (simple transition, not fancy yet)
+- [x] Overspending state (visual warning)
 
 #### 2.4 Manual Transactions
 
