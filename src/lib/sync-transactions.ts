@@ -28,13 +28,25 @@ export async function syncAccountTransactions(
         throw new Error('Unauthorized');
     }
 
-    // Determine date range - last 90 days or since last sync
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    // Get user settings for initial sync days
+    const settings = await prisma.userSettings.findUnique({
+        where: { userId },
+    });
 
-    const startDate = account.lastSyncAt && account.lastSyncAt > ninetyDaysAgo
-        ? account.lastSyncAt
-        : ninetyDaysAgo;
+    // Max 30 days for initial sync, configurable via settings
+    const MAX_INITIAL_DAYS = 30;
+    const initialDays = Math.min(settings?.initialSyncDays ?? MAX_INITIAL_DAYS, MAX_INITIAL_DAYS);
+
+    // Determine date range
+    let startDate: Date;
+    if (account.lastSyncAt) {
+        // Subsequent sync: from last sync date
+        startDate = account.lastSyncAt;
+    } else {
+        // First sync: configurable days back (max 30)
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - initialDays);
+    }
 
     // Fetch transactions from Akahu
     const akahuTransactions = await getTransactions(

@@ -12,7 +12,10 @@
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "db:push": "prisma db push && prisma generate && rm -rf .next",
+    "db:migrate": "prisma migrate dev && rm -rf .next",
+    "db:reset": "prisma migrate reset && rm -rf .next"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

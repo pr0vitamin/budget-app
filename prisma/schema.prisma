@@ -32,6 +32,7 @@ model UserSettings {
   userId              String    @unique
   budgetCycleType     String    @default("fortnightly") // weekly, fortnightly, monthly, custom
   budgetCycleStartDay Int       @default(1) // Day of month or week (1-7 for weekly, 1-31 for monthly)
+  initialSyncDays     Int       @default(30) // How many days back to sync on first fetch (max 30)
   akahuAccessToken    String? // Encrypted
   akahuRefreshToken   String? // Encrypted
   tokenExpiresAt      DateTime?
