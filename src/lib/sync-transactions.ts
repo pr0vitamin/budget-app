@@ -13,7 +13,8 @@ interface SyncResult {
  */
 export async function syncAccountTransactions(
     accountId: string,
-    userId: string
+    userId: string,
+    initialDays: number = 30
 ): Promise<SyncResult> {
     // Get the account to find Akahu ID
     const account = await prisma.account.findUnique({
@@ -28,11 +29,6 @@ export async function syncAccountTransactions(
         throw new Error('Unauthorized');
     }
 
-    // Get user settings for initial sync days
-    const settings = await prisma.userSettings.findUnique({
-        where: { userId },
-    });
-
     // Check if this account has any transactions (first sync detection)
     const existingTxCount = await prisma.transaction.count({
         where: { accountId },
@@ -43,8 +39,8 @@ export async function syncAccountTransactions(
     const MAX_DAYS = 30;
     let daysBack: number;
     if (isFirstSync) {
-        // First sync: use configurable days (max 30)
-        daysBack = Math.min(settings?.initialSyncDays ?? MAX_DAYS, MAX_DAYS);
+        // First sync: use provided initialDays (max 30)
+        daysBack = Math.min(Math.max(1, initialDays), MAX_DAYS);
     } else {
         // Subsequent syncs: always fetch 30 days (deduplication handles the rest)
         daysBack = MAX_DAYS;
@@ -116,8 +112,12 @@ interface SyncAllResult {
 
 /**
  * Sync transactions from all connected Akahu accounts for a user
+ * @param initialDays - How many days to fetch for first-time account syncs (default 30, max 30)
  */
-export async function syncAllAccountTransactions(userId: string): Promise<SyncAllResult> {
+export async function syncAllAccountTransactions(
+    userId: string,
+    initialDays: number = 30
+): Promise<SyncAllResult> {
     const accounts = await prisma.account.findMany({
         where: { userId },
     });
@@ -128,7 +128,7 @@ export async function syncAllAccountTransactions(userId: string): Promise<SyncAl
 
     for (const account of accounts) {
         try {
-            const result = await syncAccountTransactions(account.id, userId);
+            const result = await syncAccountTransactions(account.id, userId, initialDays);
             totalNew += result.newCount;
             totalUpdated += result.updatedCount;
             totalAmended += result.amendedCount;

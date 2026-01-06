@@ -8,7 +8,6 @@ import { AccountsList } from '@/components/accounts';
 interface Settings {
     budgetCycleType: string;
     budgetCycleStartDay: number;
-    initialSyncDays: number;
 }
 
 interface Account {
@@ -41,7 +40,6 @@ export function SettingsPageClient({
     const [isEditingCycle, setIsEditingCycle] = useState(false);
     const [cycleType, setCycleType] = useState(settings.budgetCycleType);
     const [startDay, setStartDay] = useState(settings.budgetCycleStartDay);
-    const [initialSyncDays, setInitialSyncDays] = useState(settings.initialSyncDays);
     const [isSaving, setIsSaving] = useState(false);
 
     const handleSaveCycle = async () => {
@@ -52,7 +50,6 @@ export function SettingsPageClient({
             body: JSON.stringify({
                 budgetCycleType: cycleType,
                 budgetCycleStartDay: startDay,
-                initialSyncDays: initialSyncDays,
             }),
         });
 
@@ -185,44 +182,6 @@ export function SettingsPageClient({
                     Bank Accounts
                 </h2>
                 <AccountsList accounts={accounts} />
-            </div>
-
-            {/* Sync Settings */}
-            <div className="bg-white rounded-2xl shadow-sm p-4 mb-4">
-                <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
-                    Sync Settings
-                </h2>
-                <div className="space-y-3">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Initial transaction sync: {initialSyncDays} days
-                        </label>
-                        <input
-                            type="range"
-                            min="1"
-                            max="30"
-                            value={initialSyncDays}
-                            onChange={(e) => setInitialSyncDays(Number(e.target.value))}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                        />
-                        <div className="flex justify-between text-xs text-gray-400 mt-1">
-                            <span>1 day</span>
-                            <span>30 days</span>
-                        </div>
-                    </div>
-                    {initialSyncDays !== settings.initialSyncDays && (
-                        <button
-                            onClick={handleSaveCycle}
-                            disabled={isSaving}
-                            className="w-full py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
-                        >
-                            {isSaving ? 'Saving...' : 'Save'}
-                        </button>
-                    )}
-                    <p className="text-xs text-gray-400">
-                        How many days of transactions to fetch when syncing a new account for the first time.
-                    </p>
-                </div>
             </div>
 
             {/* Data */}
