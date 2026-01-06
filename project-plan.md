@@ -147,43 +147,43 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 3.1 Allocation API
 
-- [ ] `POST /api/transactions/:id/allocate` - allocate to bucket(s)
-- [ ] `DELETE /api/transactions/:id/allocate` - remove allocation
-- [ ] Handle split transactions (multiple allocations)
-- [ ] Validate sum of splits equals transaction amount
+- [x] `POST /api/transactions/:id/allocate` - allocate to bucket(s)
+- [x] `DELETE /api/transactions/:id/allocate` - remove allocation
+- [x] Handle split transactions (multiple allocations)
+- [x] Validate sum of splits equals transaction amount
 
 #### 3.2 Inbox View
 
-- [ ] `GET /api/transactions/inbox` - unallocated transactions
-- [ ] Create inbox page with transaction cards
-- [ ] Show unallocated count in navigation badge
+- [x] `GET /api/transactions/inbox` - unallocated transactions
+- [x] Create inbox page with transaction cards
+- [x] Show unallocated count in navigation badge
 - [ ] Implement swipe-to-allocate gesture
 
 #### 3.3 Transaction Allocation UI
 
-- [ ] Create allocation modal/sheet
-- [ ] Bucket selector with search
-- [ ] Split transaction interface
-- [ ] "Always allocate [merchant] to [bucket]" toggle
+- [x] Create allocation modal/sheet
+- [x] Bucket selector with search
+- [x] Split transaction interface
+- [x] "Always allocate [merchant] to [bucket]" toggle
 
 #### 3.4 Categorization Rules
 
-- [ ] `GET /api/rules` - list rules
-- [ ] `POST /api/rules` - create rule
-- [ ] `DELETE /api/rules/:id` - delete rule
-- [ ] Auto-apply rules on new transactions
+- [x] `GET /api/rules` - list rules
+- [x] `POST /api/rules` - create rule
+- [x] `DELETE /api/rules/:id` - delete rule
+- [x] Auto-apply rules on new transactions
 - [ ] Rules management UI
 
 #### 3.5 Available to Budget
 
-- [ ] Calculate unallocated income
+- [x] Calculate unallocated income
 - [ ] Display prominently on buckets page
 - [ ] Prevent over-allocation (validation)
 
 #### 3.6 Unit Tests - Allocation Logic
 
-- [ ] Test split transaction validation
-- [ ] Test auto-categorization rule matching
+- [x] Test split transaction validation
+- [x] Test auto-categorization rule matching
 - [ ] Test available-to-budget calculation
 
 ### Milestone 3 Deliverable

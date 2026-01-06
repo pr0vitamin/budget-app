@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/db';
+import { applyCategorizationRules } from '@/lib/auto-categorize';
 
 export async function GET(request: Request) {
     const supabase = await createClient();
@@ -94,6 +95,9 @@ export async function POST(request: Request) {
             account: true,
         },
     });
+
+    // Try to auto-categorize based on rules
+    await applyCategorizationRules(transaction.id, user.id);
 
     return NextResponse.json(transaction, { status: 201 });
 }

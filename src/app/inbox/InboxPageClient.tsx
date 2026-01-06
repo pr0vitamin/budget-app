@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { TransactionList, TransactionForm } from '@/components/transactions';
+import { TransactionList, TransactionForm, AllocationModal } from '@/components/transactions';
 
 interface Transaction {
     id: string;
@@ -26,6 +26,7 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
     const router = useRouter();
     const [showAddForm, setShowAddForm] = useState(false);
     const [filter, setFilter] = useState<'all' | 'unallocated'>('all');
+    const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
     const filteredTransactions =
         filter === 'unallocated'
@@ -51,8 +52,40 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
     };
 
     const handleTransactionClick = (transaction: Transaction) => {
-        // TODO: Open allocation modal
-        console.log('Clicked transaction:', transaction);
+        setSelectedTransaction(transaction);
+    };
+
+    const handleAllocate = async (
+        transactionId: string,
+        allocations: Array<{ bucketId: string; amount: number }>,
+        createRule: boolean
+    ) => {
+        // Allocate transaction
+        const allocRes = await fetch(`/api/transactions/${transactionId}/allocate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ allocations }),
+        });
+
+        if (!allocRes.ok) {
+            const error = await allocRes.json();
+            throw new Error(error.error || 'Failed to allocate');
+        }
+
+        // Create rule if requested
+        if (createRule && selectedTransaction?.merchant && allocations.length === 1) {
+            await fetch('/api/rules', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    merchantPattern: selectedTransaction.merchant,
+                    bucketId: allocations[0].bucketId,
+                }),
+            });
+        }
+
+        setSelectedTransaction(null);
+        router.refresh();
     };
 
     return (
@@ -65,12 +98,7 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
                     className="w-10 h-10 bg-indigo-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-indigo-600 transition-colors"
                 >
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4v16m8-8H4"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                 </button>
             </div>
@@ -105,9 +133,16 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
 
             {/* Add transaction form modal */}
             {showAddForm && (
-                <TransactionForm
-                    onSubmit={handleAddTransaction}
-                    onCancel={() => setShowAddForm(false)}
+                <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setShowAddForm(false)} />
+            )}
+
+            {/* Allocation modal */}
+            {selectedTransaction && (
+                <AllocationModal
+                    isOpen={!!selectedTransaction}
+                    onClose={() => setSelectedTransaction(null)}
+                    transaction={selectedTransaction}
+                    onAllocate={handleAllocate}
                 />
             )}
         </div>
