@@ -3,16 +3,30 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from '../login/actions';
+import { AccountsList } from '@/components/accounts';
 
 interface Settings {
     budgetCycleType: string;
     budgetCycleStartDay: number;
 }
 
+interface Account {
+    id: string;
+    name: string;
+    institution: string;
+    accountType: string;
+    formattedAccount: string | null;
+    balanceCurrent: number | null;
+    status: string;
+    connectionLogo: string | null;
+    lastSyncAt: string | null;
+    connectionError: string | null;
+}
+
 interface SettingsPageClientProps {
     userEmail: string;
     settings: Settings;
-    accountsCount: number;
+    accounts: Account[];
 }
 
 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -20,7 +34,7 @@ const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 export function SettingsPageClient({
     userEmail,
     settings,
-    accountsCount,
+    accounts,
 }: SettingsPageClientProps) {
     const router = useRouter();
     const [isEditingCycle, setIsEditingCycle] = useState(false);
@@ -167,13 +181,7 @@ export function SettingsPageClient({
                 <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
                     Bank Accounts
                 </h2>
-                {accountsCount > 0 ? (
-                    <p className="text-gray-600">{accountsCount} account(s) connected</p>
-                ) : (
-                    <button className="w-full py-3 text-center text-indigo-600 font-medium hover:bg-indigo-50 rounded-xl transition-colors">
-                        + Connect Bank Account
-                    </button>
-                )}
+                <AccountsList accounts={accounts} />
             </div>
 
             {/* Data */}

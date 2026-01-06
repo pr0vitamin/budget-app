@@ -45,22 +45,28 @@ model UserSettings {
 // ============================================================================
 
 model Account {
-  id              String    @id @default(cuid())
-  userId          String
-  akahuAccountId  String    @unique
-  name            String
-  institution     String
-  type            String // checking, savings, credit, etc.
-  balance         Decimal   @default(0) @db.Decimal(12, 2)
-  lastSyncAt      DateTime?
-  connectionError String? // Last error message if sync failed
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  userId           String
+  akahuId          String    // Akahu account ID (was akahuAccountId)
+  name             String
+  institution      String
+  accountType      String    // checking, savings, creditcard, etc.
+  formattedAccount String?   // e.g., "12-1234-1234567-00"
+  balanceCurrent   Decimal?  @db.Decimal(12, 2)
+  balanceAvailable Decimal?  @db.Decimal(12, 2)
+  currency         String    @default("NZD")
+  status           String    @default("ACTIVE") // ACTIVE, INACTIVE
+  connectionLogo   String?   // URL to institution logo
+  lastSyncAt       DateTime?
+  connectionError  String?   // Last error message if sync failed
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   // Relations
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
 
+  @@unique([userId, akahuId])
   @@index([userId])
 }
 
@@ -123,6 +129,10 @@ model Transaction {
   status            String   @default("pending") // pending, cleared, amended
   matchedScheduleId String?
   isManual          Boolean  @default(false)
+  isAmended         Boolean  @default(false) // Transaction was amended by bank
+  transactionType   String?  // credit, debit, payment, transfer, etc.
+  category          String?  // Akahu-provided category
+  balance           Decimal? @db.Decimal(12, 2) // Account balance after transaction
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

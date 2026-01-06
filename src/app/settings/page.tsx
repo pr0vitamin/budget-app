@@ -32,10 +32,24 @@ export default async function SettingsPage() {
         });
     }
 
-    // Get accounts count
-    const accountsCount = await prisma.account.count({
+    // Get connected accounts
+    const accounts = await prisma.account.findMany({
         where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
     });
+
+    const formattedAccounts = accounts.map((a) => ({
+        id: a.id,
+        name: a.name,
+        institution: a.institution,
+        accountType: a.accountType,
+        formattedAccount: a.formattedAccount,
+        balanceCurrent: a.balanceCurrent ? Number(a.balanceCurrent) : null,
+        status: a.status,
+        connectionLogo: a.connectionLogo,
+        lastSyncAt: a.lastSyncAt?.toISOString() || null,
+        connectionError: a.connectionError,
+    }));
 
     return (
         <AppShell>
@@ -45,7 +59,7 @@ export default async function SettingsPage() {
                     budgetCycleType: settings.budgetCycleType,
                     budgetCycleStartDay: settings.budgetCycleStartDay,
                 }}
-                accountsCount={accountsCount}
+                accounts={formattedAccounts}
             />
         </AppShell>
     );

@@ -198,43 +198,42 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 ### Tasks
 
-#### 4.1 Akahu OAuth Flow
+#### 4.1 Akahu Personal App Integration
 
-- [ ] `POST /api/accounts/connect` - initiate OAuth
-- [ ] `GET /api/accounts/callback` - handle callback
-- [ ] Store encrypted tokens in UserSettings
-- [ ] Read-only scope verification
+- [x] Create `akahu.ts` API client (personal app tokens, no OAuth)
+- [x] Typed interfaces for accounts/transactions
+- [x] Update `.env.example` with required tokens
 
 #### 4.2 Account Management
 
-- [ ] `GET /api/accounts` - list connected accounts
-- [ ] `DELETE /api/accounts/:id` - disconnect account
-- [ ] Account list UI with institution logos
-- [ ] Connection status indicators
+- [x] `GET /api/accounts` - list connected accounts
+- [x] `POST /api/accounts` - sync accounts from Akahu
+- [x] Account list UI with institution logos
+- [x] Connection status indicators
 
 #### 4.3 Transaction Sync
 
-- [ ] `POST /api/accounts/:id/sync` - trigger manual sync
-- [ ] Fetch transactions from Akahu
-- [ ] Deduplicate by externalId
-- [ ] Map Akahu transaction fields to our schema
-- [ ] Apply categorization rules to new transactions
+- [x] `POST /api/accounts/:id/sync` - trigger manual sync
+- [x] Fetch transactions from Akahu
+- [x] Deduplicate by externalId
+- [x] Map Akahu transaction fields to our schema
+- [x] Apply categorization rules to new transactions
 - [ ] Pull-to-refresh on transaction lists
-- [ ] 1-hour rate limit enforcement
+- [x] 1-hour rate limit enforcement
 
 #### 4.4 Transaction Amendment Handling
 
-- [ ] Detect amended transactions on sync
-- [ ] Single-bucket allocation: keep allocation, flag as amended
-- [ ] Multi-bucket split: unallocate, notify user
+- [x] Detect amended transactions on sync
+- [x] Single-bucket allocation: keep allocation, flag as amended
+- [x] Multi-bucket split: unallocate, add to inbox
 - [ ] Amended transaction UI indicator
 - [ ] Amendment notification
 
 #### 4.5 Sync Status UI
 
-- [ ] Last sync timestamp per account
-- [ ] Sync in progress indicator
-- [ ] Error banner for sync failures
+- [x] Last sync timestamp per account
+- [x] Sync in progress indicator
+- [x] Error banner for sync failures
 - [ ] Rate limit countdown
 
 #### 4.6 Integration Tests - Akahu
