@@ -36,14 +36,15 @@ export async function syncAccountTransactions(
     const isFirstSync = existingTxCount === 0;
 
     // Determine how far back to fetch
-    const MAX_DAYS = 30;
+    const MAX_INITIAL_DAYS = 30;
+    const DEFAULT_SYNC_DAYS = 7;
     let daysBack: number;
     if (isFirstSync) {
         // First sync: use provided initialDays (max 30)
-        daysBack = Math.min(Math.max(1, initialDays), MAX_DAYS);
+        daysBack = Math.min(Math.max(1, initialDays), MAX_INITIAL_DAYS);
     } else {
-        // Subsequent syncs: always fetch 30 days (deduplication handles the rest)
-        daysBack = MAX_DAYS;
+        // Subsequent syncs: fetch last 7 days (deduplication handles the rest)
+        daysBack = DEFAULT_SYNC_DAYS;
     }
 
     const startDate = new Date();
