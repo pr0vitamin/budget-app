@@ -33,20 +33,25 @@ export async function syncAccountTransactions(
         where: { userId },
     });
 
-    // Max 30 days for initial sync, configurable via settings
-    const MAX_INITIAL_DAYS = 30;
-    const initialDays = Math.min(settings?.initialSyncDays ?? MAX_INITIAL_DAYS, MAX_INITIAL_DAYS);
+    // Check if this account has any transactions (first sync detection)
+    const existingTxCount = await prisma.transaction.count({
+        where: { accountId },
+    });
+    const isFirstSync = existingTxCount === 0;
 
-    // Determine date range
-    let startDate: Date;
-    if (account.lastSyncAt) {
-        // Subsequent sync: from last sync date
-        startDate = account.lastSyncAt;
+    // Determine how far back to fetch
+    const MAX_DAYS = 30;
+    let daysBack: number;
+    if (isFirstSync) {
+        // First sync: use configurable days (max 30)
+        daysBack = Math.min(settings?.initialSyncDays ?? MAX_DAYS, MAX_DAYS);
     } else {
-        // First sync: configurable days back (max 30)
-        startDate = new Date();
-        startDate.setDate(startDate.getDate() - initialDays);
+        // Subsequent syncs: always fetch 30 days (deduplication handles the rest)
+        daysBack = MAX_DAYS;
     }
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysBack);
 
     // Fetch transactions from Akahu
     const akahuTransactions = await getTransactions(
@@ -73,16 +78,8 @@ export async function syncAccountTransactions(
                 await handleAmendedTransaction(existingTx, akahuTx);
                 amendedCount++;
                 updatedCount++;
-            } else {
-                // Update non-critical fields
-                await prisma.transaction.update({
-                    where: { id: existingTx.id },
-                    data: {
-                        balance: akahuTx.balance ?? null,
-                    },
-                });
-                updatedCount++;
             }
+            // Skip non-amended existing transactions (no need to update balance constantly)
         } else {
             // Create new transaction
             const newTx = await prisma.transaction.create({
@@ -107,16 +104,46 @@ export async function syncAccountTransactions(
         }
     }
 
-    // Update last sync timestamp
-    await prisma.account.update({
-        where: { id: accountId },
-        data: {
-            lastSyncAt: new Date(),
-            connectionError: null, // Clear any previous errors
-        },
+    return { newCount, updatedCount, amendedCount };
+}
+
+interface SyncAllResult {
+    totalNew: number;
+    totalUpdated: number;
+    totalAmended: number;
+    accountsSynced: number;
+}
+
+/**
+ * Sync transactions from all connected Akahu accounts for a user
+ */
+export async function syncAllAccountTransactions(userId: string): Promise<SyncAllResult> {
+    const accounts = await prisma.account.findMany({
+        where: { userId },
     });
 
-    return { newCount, updatedCount, amendedCount };
+    let totalNew = 0;
+    let totalUpdated = 0;
+    let totalAmended = 0;
+
+    for (const account of accounts) {
+        try {
+            const result = await syncAccountTransactions(account.id, userId);
+            totalNew += result.newCount;
+            totalUpdated += result.updatedCount;
+            totalAmended += result.amendedCount;
+        } catch (error) {
+            console.error(`Failed to sync account ${account.id}:`, error);
+            // Continue with other accounts
+        }
+    }
+
+    return {
+        totalNew,
+        totalUpdated,
+        totalAmended,
+        accountsSynced: accounts.length,
+    };
 }
 
 /**

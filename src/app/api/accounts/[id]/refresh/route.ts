@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/db';
-import { syncAccountTransactions } from '@/lib/sync-transactions';
+import { refreshAccount } from '@/lib/akahu';
 
-// Rate limit: 1 sync per hour per account
-const SYNC_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+// Rate limit: 1 refresh per hour per account (Akahu's limit)
+const REFRESH_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
 
 /**
- * POST /api/accounts/:id/sync
- * Trigger transaction sync for a specific account
+ * POST /api/accounts/:id/refresh
+ * Trigger a data refresh from the bank via Akahu
+ * This is rate-limited to once per hour by Akahu
  */
 export async function POST(
     request: Request,
@@ -38,11 +39,11 @@ export async function POST(
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Check rate limit
+    // Check rate limit for refresh
     if (account.lastSyncAt) {
-        const timeSinceLastSync = Date.now() - account.lastSyncAt.getTime();
-        if (timeSinceLastSync < SYNC_COOLDOWN_MS) {
-            const remainingMs = SYNC_COOLDOWN_MS - timeSinceLastSync;
+        const timeSinceLastRefresh = Date.now() - account.lastSyncAt.getTime();
+        if (timeSinceLastRefresh < REFRESH_COOLDOWN_MS) {
+            const remainingMs = REFRESH_COOLDOWN_MS - timeSinceLastRefresh;
             const remainingMinutes = Math.ceil(remainingMs / 60000);
             return NextResponse.json(
                 { error: `Rate limited. Try again in ${remainingMinutes} minutes.`, remainingMs },
@@ -52,24 +53,33 @@ export async function POST(
     }
 
     try {
-        const result = await syncAccountTransactions(accountId, user.id);
+        // Call Akahu to refresh data from the bank
+        await refreshAccount(account.akahuId);
+
+        // Update last refresh timestamp
+        await prisma.account.update({
+            where: { id: accountId },
+            data: {
+                lastSyncAt: new Date(),
+                connectionError: null,
+            },
+        });
 
         return NextResponse.json({
             success: true,
-            ...result,
-            lastSyncAt: new Date().toISOString(),
+            message: 'Bank data refresh triggered. New transactions may take a few minutes to appear.',
+            lastRefreshAt: new Date().toISOString(),
         });
     } catch (error) {
-        console.error('Error syncing transactions:', error);
+        console.error('Error refreshing account:', error);
 
-        // Store error on account
         await prisma.account.update({
             where: { id: accountId },
-            data: { connectionError: error instanceof Error ? error.message : 'Sync failed' },
+            data: { connectionError: error instanceof Error ? error.message : 'Refresh failed' },
         });
 
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Failed to sync transactions' },
+            { error: error instanceof Error ? error.message : 'Failed to refresh account' },
             { status: 500 }
         );
     }
