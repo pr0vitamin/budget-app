@@ -54,7 +54,7 @@ export async function POST(
 
     try {
         // Call Akahu to refresh data from the bank
-        await refreshAccount(account.akahuId);
+        await refreshAccount(account.akahuAccountId);
 
         // Update last refresh timestamp
         await prisma.account.update({
