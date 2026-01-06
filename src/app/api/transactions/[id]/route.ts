@@ -36,6 +36,32 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const { amount, merchant, date, description } = body;
 
+    // If amount is being updated and allocations exist, scale them proportionally
+    if (amount !== undefined && existing.account === null) {
+        const oldAmount = Math.abs(Number(existing.amount));
+        const newAmount = Math.abs(amount);
+
+        if (oldAmount > 0 && newAmount !== oldAmount) {
+            const allocations = await prisma.allocation.findMany({
+                where: { transactionId: id },
+            });
+
+            if (allocations.length > 0) {
+                const scale = newAmount / oldAmount;
+
+                // Update each allocation proportionally
+                await prisma.$transaction(
+                    allocations.map((alloc) =>
+                        prisma.allocation.update({
+                            where: { id: alloc.id },
+                            data: { amount: Number(alloc.amount) * scale },
+                        })
+                    )
+                );
+            }
+        }
+    }
+
     const updated = await prisma.transaction.update({
         where: { id },
         data: {
