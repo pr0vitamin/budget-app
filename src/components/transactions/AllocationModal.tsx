@@ -28,6 +28,7 @@ interface AllocationModalProps {
         allocations: AllocationRow[],
         createRule: boolean
     ) => Promise<void>;
+    availableToBudget?: number;
 }
 
 export function AllocationModal({
@@ -35,6 +36,7 @@ export function AllocationModal({
     onClose,
     transaction,
     onAllocate,
+    availableToBudget = 0,
 }: AllocationModalProps) {
     const [buckets, setBuckets] = useState<Bucket[]>([]);
     const [allocations, setAllocations] = useState<AllocationRow[]>([]);
@@ -150,6 +152,11 @@ export function AllocationModal({
         ? buckets.find((b) => b.id === allocations[0].bucketId)
         : null;
 
+    // Check if this is an expense that would exceed available budget
+    const isExpense = transaction.amount < 0;
+    const expenseAmount = Math.abs(transaction.amount);
+    const wouldExceedBudget = isExpense && expenseAmount > availableToBudget && availableToBudget >= 0;
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
             <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 animate-slide-up max-h-[85vh] overflow-y-auto">
@@ -182,6 +189,23 @@ export function AllocationModal({
                     </div>
                 )}
 
+                {/* Over-allocation warning */}
+                {wouldExceedBudget && (
+                    <div className="bg-amber-50 border border-amber-200 px-4 py-3 rounded-lg mb-4">
+                        <div className="flex items-start gap-2">
+                            <span className="text-amber-500 text-lg">⚠️</span>
+                            <div>
+                                <p className="text-sm font-medium text-amber-800">
+                                    This exceeds your available budget
+                                </p>
+                                <p className="text-xs text-amber-600 mt-1">
+                                    Available: ${availableToBudget.toFixed(2)} • This expense: ${expenseAmount.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Simple mode: Bucket selector */}
                 {!isSplitMode && (
                     <>
@@ -199,8 +223,8 @@ export function AllocationModal({
                                     key={bucket.id}
                                     onClick={() => handleBucketSelect(bucket.id)}
                                     className={`p-3 rounded-xl text-left transition-colors ${selectedBucket?.id === bucket.id
-                                            ? 'bg-indigo-500 text-white'
-                                            : 'bg-gray-100 hover:bg-gray-200'
+                                        ? 'bg-indigo-500 text-white'
+                                        : 'bg-gray-100 hover:bg-gray-200'
                                         }`}
                                 >
                                     <div

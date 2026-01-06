@@ -183,9 +183,9 @@ export function SettingsPageClient({
                     <button className="w-full py-3 text-left text-gray-700 hover:bg-gray-50 rounded-xl px-2 transition-colors">
                         Export Data
                     </button>
-                    <button className="w-full py-3 text-left text-gray-700 hover:bg-gray-50 rounded-xl px-2 transition-colors">
-                        Categorization Rules
-                    </button>
+                    <a href="/rules" className="block w-full py-3 text-left text-gray-700 hover:bg-gray-50 rounded-xl px-2 transition-colors">
+                        Categorization Rules →
+                    </a>
                 </div>
             </div>
 

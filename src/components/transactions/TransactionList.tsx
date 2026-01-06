@@ -1,5 +1,7 @@
 'use client';
 
+import { SwipeableTransactionItem } from './SwipeableTransactionItem';
+
 interface Transaction {
     id: string;
     amount: number;
@@ -52,45 +54,13 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
                 <div key={dateLabel}>
                     <h3 className="text-sm font-medium text-gray-500 mb-2">{dateLabel}</h3>
                     <div className="space-y-2">
-                        {dayTransactions.map((t) => {
-                            const isExpense = t.amount < 0;
-                            const isAllocated = t.allocations.length > 0;
-
-                            return (
-                                <button
-                                    key={t.id}
-                                    onClick={() => onTransactionClick?.(t)}
-                                    className="w-full bg-white rounded-xl p-4 shadow-sm flex items-center gap-3 text-left hover:shadow-md transition-shadow"
-                                >
-                                    {/* Icon */}
-                                    <div
-                                        className={`w-10 h-10 rounded-full flex items-center justify-center ${isAllocated
-                                                ? 'bg-green-100 text-green-600'
-                                                : 'bg-orange-100 text-orange-600'
-                                            }`}
-                                    >
-                                        {isAllocated ? '✓' : '?'}
-                                    </div>
-
-                                    {/* Details */}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-gray-800 truncate">{t.merchant}</p>
-                                        <p className="text-sm text-gray-500 truncate">
-                                            {isAllocated
-                                                ? t.allocations.map((a) => a.bucket.name).join(', ')
-                                                : 'Needs allocation'}
-                                        </p>
-                                    </div>
-
-                                    {/* Amount */}
-                                    <span
-                                        className={`font-bold ${isExpense ? 'text-gray-800' : 'text-green-600'}`}
-                                    >
-                                        {isExpense ? '-' : '+'}${Math.abs(t.amount).toFixed(2)}
-                                    </span>
-                                </button>
-                            );
-                        })}
+                        {dayTransactions.map((t) => (
+                            <SwipeableTransactionItem
+                                key={t.id}
+                                transaction={t}
+                                onAllocate={(transaction) => onTransactionClick?.(transaction)}
+                            />
+                        ))}
                     </div>
                 </div>
             ))}

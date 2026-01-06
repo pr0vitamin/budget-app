@@ -157,7 +157,7 @@ The project is organized into **7 milestones**, each building on the previous. E
 - [x] `GET /api/transactions/inbox` - unallocated transactions
 - [x] Create inbox page with transaction cards
 - [x] Show unallocated count in navigation badge
-- [ ] Implement swipe-to-allocate gesture
+- [x] Implement swipe-to-allocate gesture
 
 #### 3.3 Transaction Allocation UI
 
@@ -172,13 +172,13 @@ The project is organized into **7 milestones**, each building on the previous. E
 - [x] `POST /api/rules` - create rule
 - [x] `DELETE /api/rules/:id` - delete rule
 - [x] Auto-apply rules on new transactions
-- [ ] Rules management UI
+- [x] Rules management UI
 
 #### 3.5 Available to Budget
 
 - [x] Calculate unallocated income
 - [x] Display prominently on buckets page
-- [ ] Prevent over-allocation (validation)
+- [x] Prevent over-allocation (validation)
 
 #### 3.6 Unit Tests - Allocation Logic
 
