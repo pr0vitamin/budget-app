@@ -9,6 +9,7 @@ interface Transaction {
     date: string;
     description?: string;
     isManual: boolean;
+    isAmended?: boolean;
     allocations: Array<{
         bucket: { id: string; name: string; color: string };
         amount: number;
@@ -75,7 +76,14 @@ export function SwipeableTransactionItem({
 
                 {/* Details */}
                 <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-800 truncate">{transaction.merchant}</p>
+                    <div className="flex items-center gap-1">
+                        <p className="font-medium text-gray-800 truncate">{transaction.merchant}</p>
+                        {transaction.isAmended && (
+                            <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">
+                                Amended
+                            </span>
+                        )}
+                    </div>
                     <p className="text-sm text-gray-500 truncate">
                         {isAllocated
                             ? transaction.allocations.map((a) => a.bucket.name).join(', ')

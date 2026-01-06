@@ -218,7 +218,7 @@ The project is organized into **7 milestones**, each building on the previous. E
 - [x] Deduplicate by externalId
 - [x] Map Akahu transaction fields to our schema
 - [x] Apply categorization rules to new transactions
-- [ ] Pull-to-refresh on transaction lists
+- [x] Pull-to-refresh on transaction lists
 - [x] 1-hour rate limit enforcement
 
 #### 4.4 Transaction Amendment Handling
@@ -226,15 +226,15 @@ The project is organized into **7 milestones**, each building on the previous. E
 - [x] Detect amended transactions on sync
 - [x] Single-bucket allocation: keep allocation, flag as amended
 - [x] Multi-bucket split: unallocate, add to inbox
-- [ ] Amended transaction UI indicator
-- [ ] Amendment notification
+- [x] Amended transaction UI indicator
+- [ ] Amendment notification (future: push notifications)
 
 #### 4.5 Sync Status UI
 
 - [x] Last sync timestamp per account
 - [x] Sync in progress indicator
 - [x] Error banner for sync failures
-- [ ] Rate limit countdown
+- [x] Rate limit countdown
 
 #### 4.6 Integration Tests - Akahu
 

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { TransactionList, TransactionForm, AllocationModal } from '@/components/transactions';
+import { usePullToRefresh } from '@/hooks';
 
 interface Transaction {
     id: string;
@@ -11,6 +12,7 @@ interface Transaction {
     date: string;
     description?: string;
     isManual: boolean;
+    isAmended?: boolean;
     allocations: Array<{
         bucket: { id: string; name: string; color: string };
         amount: number;
@@ -27,6 +29,26 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
     const [showAddForm, setShowAddForm] = useState(false);
     const [filter, setFilter] = useState<'all' | 'unallocated'>('all');
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+
+    const handleRefresh = useCallback(async () => {
+        // Sync all accounts
+        const accountsRes = await fetch('/api/accounts');
+        if (accountsRes.ok) {
+            const accounts = await accountsRes.json();
+            // Sync each account (in parallel)
+            await Promise.allSettled(
+                accounts.map((acc: { id: string }) =>
+                    fetch(`/api/accounts/${acc.id}/sync`, { method: 'POST' })
+                )
+            );
+        }
+        router.refresh();
+    }, [router]);
+
+    const { isRefreshing, pullDistance, handlers } = usePullToRefresh({
+        onRefresh: handleRefresh,
+        threshold: 80,
+    });
 
     const filteredTransactions =
         filter === 'unallocated'
@@ -89,7 +111,29 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
     };
 
     return (
-        <div className="p-4">
+        <div className="p-4 h-full overflow-auto" {...handlers}>
+            {/* Pull to refresh indicator */}
+            <div
+                className="flex justify-center overflow-hidden transition-all"
+                style={{ height: pullDistance > 0 ? pullDistance : 0 }}
+            >
+                <div className="flex items-center gap-2 text-gray-500">
+                    {isRefreshing ? (
+                        <>
+                            <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Syncing...
+                        </>
+                    ) : pullDistance > 60 ? (
+                        'Release to refresh'
+                    ) : (
+                        'Pull to refresh'
+                    )}
+                </div>
+            </div>
+
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <h1 className="text-2xl font-bold text-gray-900">Inbox</h1>
@@ -108,8 +152,8 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
                 <button
                     onClick={() => setFilter('all')}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === 'all'
-                            ? 'bg-indigo-500 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                 >
                     All ({transactions.length})
@@ -117,8 +161,8 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
                 <button
                     onClick={() => setFilter('unallocated')}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === 'unallocated'
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                 >
                     Needs Review ({unallocatedCount})
