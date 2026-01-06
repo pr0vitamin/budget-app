@@ -121,11 +121,11 @@ export async function syncAccountTransactions(
 
 /**
  * Extract merchant name from description if not provided
+ * Uses the full description, just cleaned up
  */
 function extractMerchant(description: string): string {
-    // Simple extraction - take first part before common separators
-    const parts = description.split(/[-–—\s{2,}]/);
-    return parts[0]?.trim() || description.slice(0, 50);
+    // Clean up the description - remove excessive whitespace and trim
+    return description.replace(/\s+/g, ' ').trim().slice(0, 100);
 }
 
 /**

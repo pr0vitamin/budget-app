@@ -76,10 +76,10 @@ export function SwipeableTransactionItem({
 
                 {/* Details */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1">
-                        <p className="font-medium text-gray-800 truncate">{transaction.merchant}</p>
+                    <div className="flex items-start gap-1">
+                        <p className="font-medium text-gray-800 line-clamp-2">{transaction.merchant}</p>
                         {transaction.isAmended && (
-                            <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">
+                            <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium flex-shrink-0">
                                 Amended
                             </span>
                         )}
