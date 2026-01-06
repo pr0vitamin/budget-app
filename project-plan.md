@@ -256,11 +256,11 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 5.1 Scheduled Transactions API
 
-- [ ] `GET /api/scheduled` - list scheduled transactions
-- [ ] `POST /api/scheduled` - create scheduled transaction
-- [ ] `PATCH /api/scheduled/:id` - update scheduled
-- [ ] `DELETE /api/scheduled/:id` - delete scheduled
-- [ ] Calculate next due date based on frequency
+- [x] `GET /api/scheduled` - list scheduled transactions
+- [x] `POST /api/scheduled` - create scheduled transaction
+- [x] `PATCH /api/scheduled/:id` - update scheduled
+- [x] `DELETE /api/scheduled/:id` - delete scheduled
+- [x] Calculate next due date based on frequency
 
 #### 5.2 Scheduled Transaction UI
 
