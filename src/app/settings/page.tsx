@@ -28,6 +28,7 @@ export default async function SettingsPage() {
                 userId: user.id,
                 budgetCycleType: 'fortnightly',
                 budgetCycleStartDay: 4,
+                initialSyncDays: 30,
             },
         });
     }
@@ -58,6 +59,7 @@ export default async function SettingsPage() {
                 settings={{
                     budgetCycleType: settings.budgetCycleType,
                     budgetCycleStartDay: settings.budgetCycleStartDay,
+                    initialSyncDays: settings.initialSyncDays,
                 }}
                 accounts={formattedAccounts}
             />
