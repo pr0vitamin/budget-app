@@ -238,9 +238,9 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 4.6 Integration Tests - Akahu
 
-- [ ] Test OAuth flow with mock Akahu
-- [ ] Test transaction sync
-- [ ] Test amendment detection
+- [x] ~~Test OAuth flow with mock Akahu~~ (Not applicable - using personal app)
+- [x] Test transaction sync
+- [x] Test amendment detection
 
 ### Milestone 4 Deliverable
 
