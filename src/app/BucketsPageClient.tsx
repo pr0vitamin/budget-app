@@ -23,6 +23,7 @@ interface BucketGroup {
 interface BucketsPageClientProps {
     groups: BucketGroup[];
     totalAvailable: number;
+    availableToBudget: number;
     userEmail: string;
 }
 
@@ -32,7 +33,7 @@ interface BucketFormState {
     bucket?: Bucket;
 }
 
-export function BucketsPageClient({ groups, totalAvailable, userEmail }: BucketsPageClientProps) {
+export function BucketsPageClient({ groups, totalAvailable, availableToBudget, userEmail }: BucketsPageClientProps) {
     const router = useRouter();
     const [isCreatingGroup, setIsCreatingGroup] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
@@ -127,9 +128,14 @@ export function BucketsPageClient({ groups, totalAvailable, userEmail }: Buckets
                 </div>
                 <div className="text-right">
                     <p className="text-xs text-gray-400">Available to Budget</p>
-                    <p className={`text-xl font-bold ${totalAvailable < 0 ? 'text-red-500' : 'text-indigo-600'}`}>
-                        ${totalAvailable.toFixed(2)}
+                    <p className={`text-xl font-bold ${availableToBudget > 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                        ${availableToBudget.toFixed(2)}
                     </p>
+                    {totalAvailable !== 0 && (
+                        <p className="text-xs text-gray-500">
+                            Total in buckets: ${totalAvailable.toFixed(2)}
+                        </p>
+                    )}
                 </div>
             </div>
 

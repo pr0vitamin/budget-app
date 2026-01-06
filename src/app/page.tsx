@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/db';
 import { ensureUserExists } from '@/lib/ensure-user';
+import { calculateAvailableToBudget, getUnallocatedCount } from '@/lib/calculate-available';
 import { AppShell } from '@/components/layout';
 import { BucketsPageClient } from './BucketsPageClient';
 
@@ -51,19 +52,24 @@ export default async function HomePage() {
     }),
   }));
 
-  // Calculate total available
-  const totalAvailable = groupsWithBalances.reduce(
+  // Calculate total in buckets
+  const totalInBuckets = groupsWithBalances.reduce(
     (sum, group) =>
       sum + group.buckets.reduce((bs, b) => bs + b.balance, 0),
     0
   );
 
+  // Calculate available to budget (unallocated income)
+  const availableToBudget = await calculateAvailableToBudget(user.id);
+  const unallocatedCount = await getUnallocatedCount(user.id);
+
   return (
-    <AppShell>
+    <AppShell inboxBadgeCount={unallocatedCount}>
       <BucketsPageClient
         groups={groupsWithBalances}
         userEmail={user.email || ''}
-        totalAvailable={totalAvailable}
+        totalAvailable={totalInBuckets}
+        availableToBudget={availableToBudget}
       />
     </AppShell>
   );

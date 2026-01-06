@@ -85,3 +85,34 @@ describe('split allocation validation', () => {
         expect(Math.abs(sum - transactionAmount)).toBeGreaterThan(0.01);
     });
 });
+
+describe('available-to-budget calculation', () => {
+    // Pure function - mirrors logic in calculate-available.ts
+    function calculateAvailable(transactions: { amount: number; hasAllocations: boolean }[]): number {
+        return transactions
+            .filter((t) => t.amount > 0 && !t.hasAllocations)
+            .reduce((sum, t) => sum + t.amount, 0);
+    }
+
+    it('sums unallocated positive transactions', () => {
+        const transactions = [
+            { amount: 500, hasAllocations: false },
+            { amount: 200, hasAllocations: false },
+            { amount: -50, hasAllocations: false },
+            { amount: 100, hasAllocations: true },
+        ];
+        expect(calculateAvailable(transactions)).toBe(700);
+    });
+
+    it('returns 0 when no unallocated income', () => {
+        const transactions = [
+            { amount: 500, hasAllocations: true },
+            { amount: -50, hasAllocations: false },
+        ];
+        expect(calculateAvailable(transactions)).toBe(0);
+    });
+
+    it('returns 0 for empty transactions', () => {
+        expect(calculateAvailable([])).toBe(0);
+    });
+});

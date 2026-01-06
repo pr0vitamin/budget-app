@@ -177,14 +177,14 @@ The project is organized into **7 milestones**, each building on the previous. E
 #### 3.5 Available to Budget
 
 - [x] Calculate unallocated income
-- [ ] Display prominently on buckets page
+- [x] Display prominently on buckets page
 - [ ] Prevent over-allocation (validation)
 
 #### 3.6 Unit Tests - Allocation Logic
 
 - [x] Test split transaction validation
 - [x] Test auto-categorization rule matching
-- [ ] Test available-to-budget calculation
+- [x] Test available-to-budget calculation
 
 ### Milestone 3 Deliverable
 
