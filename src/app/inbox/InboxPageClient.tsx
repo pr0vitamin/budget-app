@@ -128,6 +128,34 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
         router.refresh();
     };
 
+    const handleEditTransaction = async (transactionId: string, data: { amount: number }) => {
+        const res = await fetch(`/api/transactions/${transactionId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to update');
+        }
+
+        router.refresh();
+    };
+
+    const handleDeleteTransaction = async (transactionId: string) => {
+        const res = await fetch(`/api/transactions/${transactionId}`, {
+            method: 'DELETE',
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to delete');
+        }
+
+        router.refresh();
+    };
+
     return (
         <div className="p-4 h-full overflow-auto" {...handlers}>
             {/* Pull to refresh indicator */}
@@ -226,6 +254,8 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
                     onClose={() => setSelectedTransaction(null)}
                     transaction={selectedTransaction}
                     onAllocate={handleAllocate}
+                    onEdit={handleEditTransaction}
+                    onDelete={handleDeleteTransaction}
                 />
             )}
 

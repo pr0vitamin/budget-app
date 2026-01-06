@@ -22,6 +22,7 @@ interface AllocationModalProps {
         merchant: string;
         amount: number;
         date: string;
+        isManual?: boolean;
         allocations?: Array<{
             bucket: { id: string; name: string; color: string };
             amount: number;
@@ -32,6 +33,8 @@ interface AllocationModalProps {
         allocations: AllocationRow[],
         createRule: boolean
     ) => Promise<void>;
+    onEdit?: (transactionId: string, data: { amount: number }) => Promise<void>;
+    onDelete?: (transactionId: string) => Promise<void>;
     availableToBudget?: number;
 }
 
@@ -40,6 +43,8 @@ export function AllocationModal({
     onClose,
     transaction,
     onAllocate,
+    onEdit,
+    onDelete,
     availableToBudget = 0,
 }: AllocationModalProps) {
     const [buckets, setBuckets] = useState<Bucket[]>([]);
@@ -48,6 +53,8 @@ export function AllocationModal({
     const [createRule, setCreateRule] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedAmount, setEditedAmount] = useState('');
 
     // Fetch buckets on mount
     useEffect(() => {
@@ -79,8 +86,45 @@ export function AllocationModal({
             setSearchTerm('');
             setCreateRule(false);
             setError(null);
+            setIsEditing(false);
+            setEditedAmount(Math.abs(transaction.amount).toFixed(2));
         }
     }, [isOpen, transaction]);
+
+    const handleSaveEdit = async () => {
+        if (!onEdit) return;
+        const newAmount = parseFloat(editedAmount);
+        if (isNaN(newAmount) || newAmount <= 0) {
+            setError('Please enter a valid amount');
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            // Invert if original was negative (expense)
+            const finalAmount = transaction.amount < 0 ? -newAmount : newAmount;
+            await onEdit(transaction.id, { amount: finalAmount });
+            setIsEditing(false);
+            onClose();
+        } catch {
+            setError('Failed to update transaction');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!onDelete) return;
+        if (!confirm('Delete this transaction? This cannot be undone.')) return;
+        setIsSubmitting(true);
+        try {
+            await onDelete(transaction.id);
+            onClose();
+        } catch {
+            setError('Failed to delete transaction');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const filteredBuckets = buckets.filter(
         (b) =>
@@ -175,16 +219,74 @@ export function AllocationModal({
                 {/* Transaction summary */}
                 <div className="bg-gray-50 rounded-xl p-4 mb-4">
                     <p className="font-medium text-gray-800">{transaction.merchant}</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                        ${Math.abs(transaction.amount).toFixed(2)}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                        {new Date(transaction.date).toLocaleDateString('en-NZ', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                        })}
-                    </p>
+
+                    {isEditing ? (
+                        <div className="mt-2">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl font-bold text-gray-900">$</span>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    value={editedAmount}
+                                    onChange={(e) => setEditedAmount(e.target.value)}
+                                    className="text-xl font-bold text-gray-900 bg-white border border-gray-300 rounded-lg px-3 py-2 w-32 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="flex gap-2 mt-3">
+                                <button
+                                    onClick={() => setIsEditing(false)}
+                                    className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-200 rounded-lg"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveEdit}
+                                    disabled={isSubmitting}
+                                    className="px-3 py-1 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50"
+                                >
+                                    {isSubmitting ? 'Saving...' : 'Save'}
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <p className="text-2xl font-bold text-gray-900">
+                                ${Math.abs(transaction.amount).toFixed(2)}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                                {new Date(transaction.date).toLocaleDateString('en-NZ', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short',
+                                })}
+                            </p>
+
+                            {/* Edit/Delete buttons for manual transactions */}
+                            {transaction.isManual && (onEdit || onDelete) && (
+                                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
+                                    {onEdit && (
+                                        <button
+                                            onClick={() => setIsEditing(true)}
+                                            className="px-3 py-1 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg flex items-center gap-1"
+                                        >
+                                            ✏️ Edit Amount
+                                        </button>
+                                    )}
+                                    {onDelete && (
+                                        <button
+                                            onClick={handleDelete}
+                                            disabled={isSubmitting}
+                                            className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-1"
+                                        >
+                                            🗑️ Delete
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
 
                 {/* Current allocation display */}
