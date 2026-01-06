@@ -74,14 +74,32 @@ export function AccountsList({ accounts }: AccountsListProps) {
 
     const handleSyncAll = async () => {
         setError(null);
-        try {
-            const res = await fetch('/api/accounts', { method: 'POST' });
-            if (res.ok) {
-                router.refresh();
+        let refreshedCount = 0;
+        let skippedCount = 0;
+
+        for (const account of accounts) {
+            const rateLimit = getRateLimitInfo(account.lastSyncAt);
+            if (!rateLimit.isLimited) {
+                try {
+                    const res = await fetch(`/api/accounts/${account.id}/refresh`, { method: 'POST' });
+                    if (res.ok) {
+                        refreshedCount++;
+                    } else if (res.status === 429) {
+                        skippedCount++;
+                    }
+                } catch {
+                    // Continue with other accounts
+                }
+            } else {
+                skippedCount++;
             }
-        } catch {
-            setError('Failed to sync accounts');
         }
+
+        if (refreshedCount === 0 && skippedCount > 0) {
+            setError(`All accounts are on cooldown. Try again later.`);
+        }
+
+        router.refresh();
     };
 
     const formatLastSync = (lastSyncAt: string | null) => {
