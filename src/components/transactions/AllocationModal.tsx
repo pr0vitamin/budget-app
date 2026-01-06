@@ -224,7 +224,7 @@ export function AllocationModal({
                                     onClick={() => handleBucketSelect(bucket.id)}
                                     className={`p-3 rounded-xl text-left transition-colors ${selectedBucket?.id === bucket.id
                                         ? 'bg-indigo-500 text-white'
-                                        : 'bg-gray-100 hover:bg-gray-200'
+                                        : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
                                         }`}
                                 >
                                     <div
