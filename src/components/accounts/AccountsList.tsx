@@ -48,7 +48,7 @@ export function AccountsList({ accounts }: AccountsListProps) {
     };
 
     const handleDelete = async (accountId: string, accountName: string) => {
-        if (!confirm(`Remove "${accountName}"? This will also delete all transactions from this account.`)) {
+        if (!confirm(`Remove "${accountName}"? Transactions from this account will be kept.`)) {
             return;
         }
 
