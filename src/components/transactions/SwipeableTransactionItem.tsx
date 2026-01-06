@@ -78,6 +78,11 @@ export function SwipeableTransactionItem({
                 <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-1">
                         <p className="font-medium text-gray-800 line-clamp-2">{transaction.merchant}</p>
+                        {transaction.isManual && (
+                            <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded font-medium flex-shrink-0" title="Manual transaction">
+                                ✏️
+                            </span>
+                        )}
                         {transaction.isAmended && (
                             <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium flex-shrink-0">
                                 Amended
