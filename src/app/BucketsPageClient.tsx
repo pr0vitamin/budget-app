@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { BucketList, BucketForm, ReorderGroupsModal, FeedModal } from '@/components/buckets';
+import { BucketList, BucketForm, ReorderGroupsModal, FeedModal, BucketDetailModal } from '@/components/buckets';
 import { signOut } from './login/actions';
 
 interface Bucket {
@@ -41,6 +41,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
     const [isReorderingGroups, setIsReorderingGroups] = useState(false);
     const [reservedByBucket, setReservedByBucket] = useState<Record<string, number>>({});
     const [feedingBucket, setFeedingBucket] = useState<Bucket | null>(null);
+    const [detailBucket, setDetailBucket] = useState<Bucket | null>(null);
 
     // Fetch reserved amounts on mount and when groups change
     useEffect(() => {
@@ -76,7 +77,8 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
     };
 
     const handleBucketClick = (bucket: Bucket, groupId: string) => {
-        setBucketForm({ isOpen: true, groupId, bucket });
+        // Show detail modal instead of edit form
+        setDetailBucket(bucket);
     };
 
     const handleAddBucket = (groupId: string) => {
@@ -151,6 +153,16 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
         }
 
         router.refresh();
+    };
+
+    const handleEditFromDetail = () => {
+        // Open edit form from detail modal
+        if (!detailBucket) return;
+        const group = groups.find(g => g.buckets.some(b => b.id === detailBucket.id));
+        if (group) {
+            setBucketForm({ isOpen: true, groupId: group.id, bucket: detailBucket });
+            setDetailBucket(null);
+        }
     };
 
     return (
@@ -281,6 +293,18 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                 bucketColor={feedingBucket?.color || '#6366f1'}
                 availableToBudget={availableToBudget}
             />
+
+            {/* Bucket Detail Modal */}
+            {detailBucket && (
+                <BucketDetailModal
+                    bucketId={detailBucket.id}
+                    bucketName={detailBucket.name}
+                    bucketColor={detailBucket.color}
+                    isOpen={true}
+                    onClose={() => setDetailBucket(null)}
+                    onEditBucket={handleEditFromDetail}
+                />
+            )}
         </div>
     );
 }
