@@ -270,11 +270,11 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 5.3 Auto-Matching
 
-- [ ] Match incoming transactions to scheduled transactions
-- [ ] ±10% amount tolerance
-- [ ] ±3 day date tolerance
-- [ ] Auto-link and mark as fulfilled
-- [ ] Handle matching conflicts
+- [x] Match incoming transactions to scheduled transactions
+- [x] ±20% amount tolerance (updated from ±10%)
+- [x] ±5 day date tolerance (updated from ±3 days)  
+- [x] Auto-link and mark as fulfilled
+- [x] Handle matching conflicts (prefer closer dates)
 
 #### 5.4 Bucket Reserved Amounts
 

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db';
 import { getTransactions, AkahuTransaction } from '@/lib/akahu';
 import { applyCategorizationRules } from '@/lib/auto-categorize';
+import { autoMatchToScheduled } from '@/lib/auto-match';
 
 interface SyncResult {
     newCount: number;
@@ -94,8 +95,16 @@ export async function syncAccountTransactions(
                 },
             });
 
-            // Apply auto-categorization rules
-            await applyCategorizationRules(newTx.id, userId);
+            // Try to auto-match to scheduled transactions (allocates + advances nextDue)
+            const matched = await autoMatchToScheduled(
+                { id: newTx.id, amount: akahuTx.amount, date: new Date(akahuTx.date) },
+                userId
+            );
+
+            // If not matched, apply auto-categorization rules
+            if (!matched) {
+                await applyCategorizationRules(newTx.id, userId);
+            }
 
             newCount++;
         }

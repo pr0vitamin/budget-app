@@ -116,18 +116,18 @@ describe('Scheduled Transaction Utils', () => {
             expect(result.matches).toBe(true);
         });
 
-        it('does not match when amount exceeds 10% tolerance', () => {
+        it('does not match when amount exceeds 20% tolerance', () => {
             const transaction = { amount: -50, date: new Date('2024-01-15') };
-            const scheduled = { amount: -60, nextDue: new Date('2024-01-15') }; // 20% difference
+            const scheduled = { amount: -65, nextDue: new Date('2024-01-15') }; // 30% difference
 
             const result = matchesScheduled(transaction, scheduled);
 
             expect(result.matches).toBe(false);
         });
 
-        it('does not match when date exceeds 3 day tolerance', () => {
-            const transaction = { amount: -50, date: new Date('2024-01-20') };
-            const scheduled = { amount: -50, nextDue: new Date('2024-01-15') }; // 5 days difference
+        it('does not match when date exceeds 5 day tolerance', () => {
+            const transaction = { amount: -50, date: new Date('2024-01-22') };
+            const scheduled = { amount: -50, nextDue: new Date('2024-01-15') }; // 7 days difference
 
             const result = matchesScheduled(transaction, scheduled);
 

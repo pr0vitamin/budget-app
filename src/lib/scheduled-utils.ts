@@ -84,14 +84,14 @@ export function advanceToNextDue(
 
 /**
  * Check if a transaction matches a scheduled transaction
- * Based on amount tolerance (±10%) and date tolerance (±3 days)
+ * Based on amount tolerance (±20%) and date tolerance (±5 days)
  */
 export function matchesScheduled(
     transaction: { amount: number; date: Date },
     scheduled: { amount: number; nextDue: Date }
 ): { matches: boolean; amountDiff: number; daysDiff: number } {
     const amountDiff = Math.abs(Math.abs(transaction.amount) - Math.abs(scheduled.amount));
-    const amountTolerance = Math.abs(scheduled.amount) * 0.1; // 10%
+    const amountTolerance = Math.abs(scheduled.amount) * 0.2; // 20%
 
     const txDate = new Date(transaction.date);
     txDate.setHours(0, 0, 0, 0);
@@ -99,7 +99,7 @@ export function matchesScheduled(
     dueDate.setHours(0, 0, 0, 0);
 
     const daysDiff = Math.abs((txDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-    const dateTolerance = 3; // ±3 days
+    const dateTolerance = 5; // ±5 days
 
     const matches = amountDiff <= amountTolerance && daysDiff <= dateTolerance;
 
