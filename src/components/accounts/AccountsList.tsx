@@ -22,30 +22,8 @@ interface AccountsListProps {
 
 export function AccountsList({ accounts }: AccountsListProps) {
     const router = useRouter();
-    const [refreshingId, setRefreshingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-
-    const handleRefresh = async (accountId: string) => {
-        setRefreshingId(accountId);
-        setError(null);
-
-        try {
-            const res = await fetch(`/api/accounts/${accountId}/refresh`, { method: 'POST' });
-            const data = await res.json();
-
-            if (!res.ok) {
-                setError(data.error || 'Refresh failed');
-                return;
-            }
-
-            router.refresh();
-        } catch {
-            setError('Failed to refresh');
-        } finally {
-            setRefreshingId(null);
-        }
-    };
 
     const handleDelete = async (accountId: string, accountName: string) => {
         if (!confirm(`Remove "${accountName}"? Transactions from this account will be kept.`)) {
@@ -72,35 +50,6 @@ export function AccountsList({ accounts }: AccountsListProps) {
         }
     };
 
-    const handleSyncAll = async () => {
-        setError(null);
-        let refreshedCount = 0;
-        let skippedCount = 0;
-
-        for (const account of accounts) {
-            const rateLimit = getRateLimitInfo(account.lastSyncAt);
-            if (!rateLimit.isLimited) {
-                try {
-                    const res = await fetch(`/api/accounts/${account.id}/refresh`, { method: 'POST' });
-                    if (res.ok) {
-                        refreshedCount++;
-                    } else if (res.status === 429) {
-                        skippedCount++;
-                    }
-                } catch {
-                    // Continue with other accounts
-                }
-            } else {
-                skippedCount++;
-            }
-        }
-
-        if (refreshedCount === 0 && skippedCount > 0) {
-            setError(`All accounts are on cooldown. Try again later.`);
-        }
-
-        router.refresh();
-    };
 
     const formatLastSync = (lastSyncAt: string | null) => {
         if (!lastSyncAt) return 'Never synced';
@@ -133,14 +82,9 @@ export function AccountsList({ accounts }: AccountsListProps) {
             <div className="text-center py-6">
                 <div className="text-4xl mb-3">🏦</div>
                 <p className="text-gray-500 mb-4">No bank accounts connected</p>
-                <button
-                    onClick={handleSyncAll}
-                    className="px-6 py-3 bg-indigo-500 text-white font-medium rounded-xl hover:bg-indigo-600 transition-colors"
-                >
-                    Sync Accounts from Akahu
-                </button>
-                <p className="text-xs text-gray-400 mt-2">
-                    Make sure you've connected accounts at my.akahu.nz
+                <p className="text-sm text-gray-400">
+                    Connect accounts via <a href="https://my.akahu.nz" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">my.akahu.nz</a>,
+                    then sync from the Inbox.
                 </p>
             </div>
         );
@@ -204,28 +148,6 @@ export function AccountsList({ accounts }: AccountsListProps) {
                             </div>
                         )}
 
-                        {/* Refresh button */}
-                        <button
-                            onClick={() => handleRefresh(account.id)}
-                            disabled={refreshingId === account.id || rateLimit.isLimited}
-                            className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${rateLimit.isLimited
-                                ? 'text-gray-400 cursor-not-allowed'
-                                : 'text-indigo-600 hover:bg-indigo-50'
-                                }`}
-                            title={rateLimit.isLimited ? `Rate limited: ${rateLimit.remainingMins}m remaining` : 'Refresh bank data'}
-                        >
-                            {refreshingId === account.id ? (
-                                <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                </svg>
-                            ) : (
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            )}
-                        </button>
-
                         {/* Delete button */}
                         <button
                             onClick={() => handleDelete(account.id, account.name)}
@@ -247,13 +169,6 @@ export function AccountsList({ accounts }: AccountsListProps) {
                     </div>
                 );
             })}
-
-            <button
-                onClick={handleSyncAll}
-                className="w-full py-3 text-indigo-600 font-medium hover:bg-indigo-50 rounded-xl transition-colors"
-            >
-                Refresh All Accounts
-            </button>
         </div>
     );
 }
