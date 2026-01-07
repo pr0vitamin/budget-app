@@ -25,22 +25,31 @@ export default async function HomePage() {
       buckets: {
         orderBy: { sortOrder: 'asc' },
         include: {
-          allocations: true,
+          allocations: true, // Transaction allocations (expenses)
+          budgetAllocations: true, // Budget allocations (income feeding)
         },
       },
     },
     orderBy: { sortOrder: 'asc' },
   });
 
-  // Calculate balances
+  // Calculate balances (budget allocations + transaction allocations)
   const groupsWithBalances = groups.map((group) => ({
     id: group.id,
     name: group.name,
     buckets: group.buckets.map((bucket) => {
-      const balance = bucket.allocations.reduce(
+      // Budget allocations = money added from income pool (positive)
+      const budgetAllocationTotal = bucket.budgetAllocations.reduce(
+        (sum, ba) => sum + Number(ba.amount),
+        0
+      );
+      // Transaction allocations = expenses (negative)
+      const transactionAllocationTotal = bucket.allocations.reduce(
         (sum, alloc) => sum + Number(alloc.amount),
         0
       );
+      const balance = budgetAllocationTotal + transactionAllocationTotal;
+
       return {
         id: bucket.id,
         name: bucket.name,

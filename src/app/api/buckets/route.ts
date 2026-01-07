@@ -27,15 +27,25 @@ export async function GET() {
                     transaction: true,
                 },
             },
+            budgetAllocations: true, // Include budget allocations (income -> bucket)
         },
         orderBy: [{ group: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
     });
 
     // Calculate balance for each bucket
+    // Balance = budget allocations (income) + transaction allocations (expenses)
     const bucketsWithBalances = buckets.map((bucket) => {
-        const balance = bucket.allocations.reduce((sum, allocation) => {
+        // Sum budget allocations (positive - money added from income pool)
+        const budgetAllocationTotal = bucket.budgetAllocations.reduce((sum, ba) => {
+            return sum.add(ba.amount);
+        }, new Prisma.Decimal(0));
+
+        // Sum transaction allocations (negative for expenses)
+        const transactionAllocationTotal = bucket.allocations.reduce((sum, allocation) => {
             return sum.add(allocation.amount);
         }, new Prisma.Decimal(0));
+
+        const balance = budgetAllocationTotal.add(transactionAllocationTotal);
 
         return {
             id: bucket.id,

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { BucketList, BucketForm, ReorderGroupsModal } from '@/components/buckets';
+import { BucketList, BucketForm, ReorderGroupsModal, FeedModal } from '@/components/buckets';
 import { signOut } from './login/actions';
 
 interface Bucket {
@@ -40,6 +40,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
     const [bucketForm, setBucketForm] = useState<BucketFormState>({ isOpen: false, groupId: '' });
     const [isReorderingGroups, setIsReorderingGroups] = useState(false);
     const [reservedByBucket, setReservedByBucket] = useState<Record<string, number>>({});
+    const [feedingBucket, setFeedingBucket] = useState<Bucket | null>(null);
 
     // Fetch reserved amounts on mount and when groups change
     useEffect(() => {
@@ -135,6 +136,23 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
         }
     };
 
+    const handleFeed = async (amount: number, note?: string) => {
+        if (!feedingBucket) return;
+
+        const res = await fetch('/api/budget/allocations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bucketId: feedingBucket.id, amount, note }),
+        });
+
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || 'Failed to feed bucket');
+        }
+
+        router.refresh();
+    };
+
     return (
         <div className="p-4">
             {/* Header */}
@@ -178,6 +196,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                     if (group) handleBucketClick(bucket, group.id);
                 }}
                 onAddBucket={handleAddBucket}
+                onFeed={(bucket) => setFeedingBucket(bucket)}
             />
 
             {/* Add group button */}
@@ -252,6 +271,16 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                     onCancel={() => setIsReorderingGroups(false)}
                 />
             )}
+
+            {/* Feed Modal */}
+            <FeedModal
+                isOpen={feedingBucket !== null}
+                onClose={() => setFeedingBucket(null)}
+                onFeed={handleFeed}
+                bucketName={feedingBucket?.name || ''}
+                bucketColor={feedingBucket?.color || '#6366f1'}
+                availableToBudget={availableToBudget}
+            />
         </div>
     );
 }

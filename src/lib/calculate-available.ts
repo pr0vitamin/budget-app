@@ -2,7 +2,10 @@ import { prisma } from '@/lib/db';
 
 /**
  * Calculate the "Available to Budget" amount for a user.
- * This is the sum of all positive (income) transactions that are not yet allocated.
+ * This is: Total Income (positive transactions) - Total Budget Allocations
+ * 
+ * Income transactions are NOT allocated to individual buckets.
+ * Instead, they form a pool that can be "fed" to buckets via BudgetAllocation.
  */
 export async function calculateAvailableToBudget(userId: string): Promise<number> {
     // Get user's accounts
@@ -12,27 +15,33 @@ export async function calculateAvailableToBudget(userId: string): Promise<number
     });
     const accountIds = userAccounts.map((a) => a.id);
 
-    // Find unallocated positive transactions (income)
-    const unallocatedIncome = await prisma.transaction.findMany({
+    // Sum all income transactions (positive amounts)
+    const incomeResult = await prisma.transaction.aggregate({
         where: {
             OR: [
                 { accountId: { in: accountIds } },
                 { accountId: null, isManual: true },
             ],
             amount: { gt: 0 }, // Positive = income
-            allocations: { none: {} }, // No allocations yet
         },
-        select: { amount: true },
+        _sum: { amount: true },
     });
 
-    // Sum up unallocated income
-    const total = unallocatedIncome.reduce((sum, t) => sum + Number(t.amount), 0);
+    // Sum all budget allocations (money already allocated to buckets)
+    const allocationsResult = await prisma.budgetAllocation.aggregate({
+        where: { userId },
+        _sum: { amount: true },
+    });
 
-    return total;
+    const totalIncome = Number(incomeResult._sum.amount || 0);
+    const totalAllocated = Number(allocationsResult._sum.amount || 0);
+
+    return totalIncome - totalAllocated;
 }
 
 /**
- * Get the count of unallocated transactions for inbox badge
+ * Get the count of unallocated expense transactions for inbox badge
+ * Note: Income transactions are NOT counted as they don't need allocation
  */
 export async function getUnallocatedCount(userId: string): Promise<number> {
     // Get user's accounts
@@ -42,12 +51,14 @@ export async function getUnallocatedCount(userId: string): Promise<number> {
     });
     const accountIds = userAccounts.map((a) => a.id);
 
+    // Only count expense transactions (negative amounts) that are unallocated
     const count = await prisma.transaction.count({
         where: {
             OR: [
                 { accountId: { in: accountIds } },
                 { accountId: null, isManual: true },
             ],
+            amount: { lt: 0 }, // Only expenses need allocation
             allocations: { none: {} },
         },
     });

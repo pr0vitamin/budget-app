@@ -25,16 +25,18 @@ export function SwipeableTransactionItem({
     transaction,
     onAllocate,
 }: SwipeableTransactionItemProps) {
+    const isIncome = transaction.amount > 0;
+
     const { offsetX, direction, handlers } = useSwipe({
-        onSwipeLeft: () => onAllocate(transaction),
+        onSwipeLeft: isIncome ? undefined : () => onAllocate(transaction),
         threshold: 80,
     });
 
     const isExpense = transaction.amount < 0;
     const isAllocated = transaction.allocations.length > 0;
 
-    // Calculate background reveal based on swipe
-    const showAction = direction === 'left' && Math.abs(offsetX) > 20;
+    // Calculate background reveal based on swipe (only for expenses)
+    const showAction = !isIncome && direction === 'left' && Math.abs(offsetX) > 20;
 
     return (
         <div className="relative overflow-hidden rounded-xl">
@@ -59,19 +61,23 @@ export function SwipeableTransactionItem({
             {/* Swipeable content */}
             <div
                 {...handlers}
-                className="relative bg-white p-4 flex items-center gap-3 cursor-grab active:cursor-grabbing"
+                className={`relative bg-white p-4 flex items-center gap-3 ${isIncome ? '' : 'cursor-grab active:cursor-grabbing'}`}
                 style={{
                     transform: `translateX(${offsetX}px)`,
                     transition: offsetX === 0 ? 'transform 0.2s ease-out' : 'none',
                 }}
-                onClick={() => onAllocate(transaction)}
+                onClick={() => !isIncome && onAllocate(transaction)}
             >
                 {/* Icon */}
                 <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isAllocated ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'
+                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isIncome
+                            ? 'bg-green-100 text-green-600'
+                            : isAllocated
+                                ? 'bg-green-100 text-green-600'
+                                : 'bg-orange-100 text-orange-600'
                         }`}
                 >
-                    {isAllocated ? '✓' : '?'}
+                    {isIncome ? '💰' : isAllocated ? '✓' : '?'}
                 </div>
 
                 {/* Details */}
@@ -88,11 +94,18 @@ export function SwipeableTransactionItem({
                                 Amended
                             </span>
                         )}
+                        {isIncome && (
+                            <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-medium flex-shrink-0">
+                                Income
+                            </span>
+                        )}
                     </div>
                     <p className="text-sm text-gray-500 truncate">
-                        {isAllocated
-                            ? transaction.allocations.map((a) => a.bucket.name).join(', ')
-                            : 'Swipe left or tap to allocate'}
+                        {isIncome
+                            ? 'Added to Available to Budget'
+                            : isAllocated
+                                ? transaction.allocations.map((a) => a.bucket.name).join(', ')
+                                : 'Swipe left or tap to allocate'}
                     </p>
                 </div>
 

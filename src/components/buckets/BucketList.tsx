@@ -23,9 +23,10 @@ interface BucketListProps {
     reservedByBucket?: Record<string, number>;
     onBucketClick?: (bucket: Bucket) => void;
     onAddBucket?: (groupId: string) => void;
+    onFeed?: (bucket: Bucket) => void;
 }
 
-export function BucketList({ groups, reservedByBucket = {}, onBucketClick, onAddBucket }: BucketListProps) {
+export function BucketList({ groups, reservedByBucket = {}, onBucketClick, onAddBucket, onFeed }: BucketListProps) {
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
         new Set(groups.map((g) => g.id))
     );
@@ -97,16 +98,28 @@ export function BucketList({ groups, reservedByBucket = {}, onBucketClick, onAdd
                             <div className="px-4 pb-4">
                                 <div className="grid grid-cols-3 gap-4">
                                     {group.buckets.map((bucket) => (
-                                        <CatPiggyBank
-                                            key={bucket.id}
-                                            name={bucket.name}
-                                            balance={bucket.balance}
-                                            color={bucket.color}
-                                            autoAllocationAmount={bucket.autoAllocationAmount}
-                                            reserved={reservedByBucket[bucket.id] || 0}
-                                            isOverspent={bucket.balance < 0}
-                                            onClick={() => onBucketClick?.(bucket)}
-                                        />
+                                        <div key={bucket.id} className="flex flex-col items-center gap-1">
+                                            <CatPiggyBank
+                                                name={bucket.name}
+                                                balance={bucket.balance}
+                                                color={bucket.color}
+                                                autoAllocationAmount={bucket.autoAllocationAmount}
+                                                reserved={reservedByBucket[bucket.id] || 0}
+                                                isOverspent={bucket.balance < 0}
+                                                onClick={() => onBucketClick?.(bucket)}
+                                            />
+                                            {onFeed && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onFeed(bucket);
+                                                    }}
+                                                    className="text-xs px-2 py-1 bg-indigo-100 text-indigo-600 rounded-full hover:bg-indigo-200 transition-colors flex items-center gap-1"
+                                                >
+                                                    🍽️ Feed
+                                                </button>
+                                            )}
+                                        </div>
                                     ))}
                                     {/* Add bucket button */}
                                     <button
