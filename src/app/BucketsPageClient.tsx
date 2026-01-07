@@ -170,7 +170,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Buckets</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Cats</h1>
                     <p className="text-gray-500 text-sm">{userEmail}</p>
                 </div>
                 <div className="text-right">
@@ -180,7 +180,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                     </p>
                     {totalAvailable !== 0 && (
                         <p className="text-xs text-gray-500">
-                            Total in buckets: ${totalAvailable.toFixed(2)}
+                            Total in cats: ${totalAvailable.toFixed(2)}
                         </p>
                     )}
                 </div>

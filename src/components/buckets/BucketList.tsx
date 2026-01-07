@@ -51,8 +51,8 @@ export function BucketList({ groups, reservedByBucket = {}, onBucketClick, onAdd
         return (
             <div className="text-center py-12">
                 <div className="text-6xl mb-4">🐱</div>
-                <h2 className="text-lg font-semibold text-gray-800 mb-2">No buckets yet</h2>
-                <p className="text-gray-500">Create a group to start organizing your money</p>
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">No cats yet</h2>
+                <p className="text-gray-500">Create a clowder to start organizing your money</p>
             </div>
         );
     }

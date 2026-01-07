@@ -162,7 +162,7 @@ export function AllocationModal({
         // Validate
         const validAllocations = allocations.filter((a) => a.bucketId && a.amount !== 0);
         if (validAllocations.length === 0) {
-            setError('Please select at least one bucket');
+            setError('Please select at least one cat');
             return;
         }
 
@@ -305,7 +305,7 @@ export function AllocationModal({
                                 </div>
                             ))}
                         </div>
-                        <p className="text-xs text-green-600 mt-2">Select a different bucket below to change the allocation</p>
+                        <p className="text-xs text-green-600 mt-2">Select a different cat below to change the allocation</p>
                     </div>
                 )}
 
@@ -322,7 +322,7 @@ export function AllocationModal({
                     <>
                         <input
                             type="text"
-                            placeholder="Search buckets..."
+                            placeholder="Search cats..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full px-4 py-3 border border-gray-300 rounded-xl mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -357,7 +357,7 @@ export function AllocationModal({
                             onClick={handleAddSplit}
                             className="text-indigo-600 text-sm font-medium mb-4"
                         >
-                            + Split between multiple buckets
+                            + Split between multiple cats
                         </button>
                     </>
                 )}
@@ -372,7 +372,7 @@ export function AllocationModal({
                                     onChange={(e) => handleSplitBucketChange(index, e.target.value)}
                                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
-                                    <option value="">Select bucket...</option>
+                                    <option value="">Select cat...</option>
                                     {buckets.map((b) => (
                                         <option key={b.id} value={b.id}>
                                             {b.name} ({b.groupName})
@@ -403,7 +403,7 @@ export function AllocationModal({
                             onClick={handleAddSplit}
                             className="text-indigo-600 text-sm font-medium"
                         >
-                            + Add another bucket
+                            + Add another cat
                         </button>
                     </div>
                 )}

@@ -70,7 +70,7 @@ export function BucketForm({
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
             <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 animate-slide-up">
                 <h2 className="text-xl font-bold text-gray-800 mb-4">
-                    {isEditing ? 'Edit Bucket' : 'Create Bucket'}
+                    {isEditing ? 'Edit Cat' : 'Create Cat'}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -95,8 +95,8 @@ export function BucketForm({
                                 type="button"
                                 onClick={() => setFormData((f) => ({ ...f, type: 'spending' }))}
                                 className={`py-3 rounded-xl font-medium transition-colors ${formData.type === 'spending'
-                                        ? 'bg-indigo-500 text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-indigo-500 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
                                 💸 Spending
@@ -105,8 +105,8 @@ export function BucketForm({
                                 type="button"
                                 onClick={() => setFormData((f) => ({ ...f, type: 'savings' }))}
                                 className={`py-3 rounded-xl font-medium transition-colors ${formData.type === 'savings'
-                                        ? 'bg-indigo-500 text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-indigo-500 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
                                 🐷 Savings
@@ -188,7 +188,7 @@ export function BucketForm({
                             disabled={isSubmitting || !formData.name.trim()}
                             className="flex-1 py-3 bg-indigo-500 text-white font-medium rounded-xl hover:bg-indigo-600 transition-colors disabled:opacity-50"
                         >
-                            {isSubmitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Bucket'}
+                            {isSubmitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Cat'}
                         </button>
                     </div>
 

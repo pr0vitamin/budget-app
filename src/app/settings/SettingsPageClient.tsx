@@ -90,7 +90,7 @@ export function SettingsPageClient({
                     </div>
                     <div>
                         <p className="font-medium text-gray-900">{userEmail}</p>
-                        <p className="text-sm text-gray-500">Bucket Budget User</p>
+                        <p className="text-sm text-gray-500">Cat Budget User</p>
                     </div>
                 </div>
             </div>
@@ -189,7 +189,7 @@ export function SettingsPageClient({
                         <span className="text-xl">🏷️</span>
                         <div>
                             <p className="font-medium">Auto-Categorization Rules</p>
-                            <p className="text-sm text-gray-500">Manage merchant → bucket mappings</p>
+                            <p className="text-sm text-gray-500">Manage merchant → cat mappings</p>
                         </div>
                     </div>
                     <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

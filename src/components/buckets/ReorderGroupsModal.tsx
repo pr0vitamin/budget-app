@@ -106,7 +106,7 @@ export function ReorderGroupsModal({ groups, onSave, onCancel }: ReorderGroupsMo
         <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
             <div className="bg-gray-50 w-full max-w-lg rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto">
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Reorder Groups</h2>
-                <p className="text-gray-500 text-sm mb-4">Drag and drop to reorder your bucket groups</p>
+                <p className="text-gray-500 text-sm mb-4">Drag and drop to reorder your clowders</p>
 
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>

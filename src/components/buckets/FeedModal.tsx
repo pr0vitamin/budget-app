@@ -48,7 +48,7 @@ export function FeedModal({
             setNote('');
             onClose();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to feed bucket');
+            setError(err instanceof Error ? err.message : 'Failed to feed cat');
         } finally {
             setIsSubmitting(false);
         }

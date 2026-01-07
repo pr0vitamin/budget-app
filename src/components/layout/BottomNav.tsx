@@ -28,7 +28,7 @@ export function BottomNav() {
     const navItems = [
         {
             href: '/',
-            label: 'Buckets',
+            label: 'Cats',
             icon: (active: boolean) => (
                 <svg
                     className={`w-6 h-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`}

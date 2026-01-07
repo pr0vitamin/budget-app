@@ -105,7 +105,7 @@ export function BucketDetailModal({
     };
 
     const handleDeleteTransactionAllocation = async (transactionId: string) => {
-        if (!confirm('Unallocate this transaction from the bucket?')) return;
+        if (!confirm('Unallocate this transaction from the cat?')) return;
 
         try {
             const res = await fetch(`/api/transactions/${transactionId}/allocations/${bucketId}`, {
