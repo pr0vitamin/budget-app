@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BucketList, BucketForm, ReorderGroupsModal } from '@/components/buckets';
 import { signOut } from './login/actions';
@@ -39,6 +39,23 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
     const [newGroupName, setNewGroupName] = useState('');
     const [bucketForm, setBucketForm] = useState<BucketFormState>({ isOpen: false, groupId: '' });
     const [isReorderingGroups, setIsReorderingGroups] = useState(false);
+    const [reservedByBucket, setReservedByBucket] = useState<Record<string, number>>({});
+
+    // Fetch reserved amounts on mount and when groups change
+    useEffect(() => {
+        const fetchReserved = async () => {
+            try {
+                const res = await fetch('/api/buckets/reserved');
+                if (res.ok) {
+                    const data = await res.json();
+                    setReservedByBucket(data.reserved || {});
+                }
+            } catch {
+                // Silently fail
+            }
+        };
+        fetchReserved();
+    }, [groups]);
 
     const handleCreateGroup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -155,6 +172,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
             {/* Bucket list */}
             <BucketList
                 groups={groups}
+                reservedByBucket={reservedByBucket}
                 onBucketClick={(bucket) => {
                     const group = groups.find(g => g.buckets.some(b => b.id === bucket.id));
                     if (group) handleBucketClick(bucket, group.id);

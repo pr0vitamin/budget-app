@@ -20,11 +20,12 @@ interface BucketGroup {
 
 interface BucketListProps {
     groups: BucketGroup[];
+    reservedByBucket?: Record<string, number>;
     onBucketClick?: (bucket: Bucket) => void;
     onAddBucket?: (groupId: string) => void;
 }
 
-export function BucketList({ groups, onBucketClick, onAddBucket }: BucketListProps) {
+export function BucketList({ groups, reservedByBucket = {}, onBucketClick, onAddBucket }: BucketListProps) {
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
         new Set(groups.map((g) => g.id))
     );
@@ -101,6 +102,8 @@ export function BucketList({ groups, onBucketClick, onAddBucket }: BucketListPro
                                             name={bucket.name}
                                             balance={bucket.balance}
                                             color={bucket.color}
+                                            autoAllocationAmount={bucket.autoAllocationAmount}
+                                            reserved={reservedByBucket[bucket.id] || 0}
                                             isOverspent={bucket.balance < 0}
                                             onClick={() => onBucketClick?.(bucket)}
                                         />

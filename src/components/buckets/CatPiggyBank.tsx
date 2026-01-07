@@ -6,6 +6,8 @@ interface CatPiggyBankProps {
     name: string;
     balance: number;
     target?: number; // For savings goals
+    autoAllocationAmount?: number; // For spending buckets - monthly budget amount
+    reserved?: number; // Amount reserved for upcoming scheduled transactions
     color?: string;
     size?: 'sm' | 'md' | 'lg';
     isOverspent?: boolean;
@@ -22,6 +24,8 @@ export function CatPiggyBank({
     name,
     balance,
     target,
+    autoAllocationAmount = 0,
+    reserved = 0,
     color = '#6366f1',
     size = 'md',
     isOverspent = false,
@@ -29,13 +33,18 @@ export function CatPiggyBank({
 }: CatPiggyBankProps) {
     // Calculate fill percentage (0-100)
     const fillPercent = useMemo(() => {
+        // Savings goals: use target
         if (target && target > 0) {
             return Math.min(100, Math.max(0, (balance / target) * 100));
         }
-        // For spending buckets, we don't show fill based on target
-        // Just show full if positive, empty if negative
+        // Spending buckets: use autoAllocationAmount as the "full" level
+        if (autoAllocationAmount > 0) {
+            if (balance <= 0) return 0;
+            return Math.min(100, (balance / autoAllocationAmount) * 100);
+        }
+        // No target or allocation: binary full/empty
         return balance > 0 ? 100 : 0;
-    }, [balance, target]);
+    }, [balance, target, autoAllocationAmount]);
 
     // Determine cat expression based on state
     const expression = useMemo(() => {
@@ -164,13 +173,25 @@ export function CatPiggyBank({
             <span className="text-xs font-medium text-gray-600 truncate max-w-[80px]">{name}</span>
 
             {/* Balance */}
-            <span
-                className={`text-sm font-bold ${isOverspent || balance < 0 ? 'text-red-500' : 'text-gray-800'
-                    }`}
-            >
-                ${Math.abs(balance).toFixed(2)}
-                {balance < 0 && ' '}
-            </span>
+            {reserved > 0 ? (
+                <div className="flex flex-col items-center">
+                    <span
+                        className={`text-sm font-bold ${isOverspent || balance < 0 ? 'text-red-500' : 'text-gray-800'}`}
+                    >
+                        ${Math.abs(balance).toFixed(2)}
+                    </span>
+                    <span className="text-[10px] text-amber-600">
+                        (${(balance - reserved).toFixed(2)} avail)
+                    </span>
+                </div>
+            ) : (
+                <span
+                    className={`text-sm font-bold ${isOverspent || balance < 0 ? 'text-red-500' : 'text-gray-800'}`}
+                >
+                    ${Math.abs(balance).toFixed(2)}
+                    {balance < 0 && ' '}
+                </span>
+            )}
         </button>
     );
 }

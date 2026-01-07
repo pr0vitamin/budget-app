@@ -278,9 +278,9 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 5.4 Bucket Reserved Amounts
 
-- [ ] Calculate upcoming scheduled amounts per bucket
-- [ ] Display "Available now" vs "Total balance"
-- [ ] Visual indicator for reserved funds
+- [x] Calculate upcoming scheduled amounts per bucket
+- [x] Display "Available now" vs "Total balance"
+- [x] Visual indicator for reserved funds
 
 #### 5.5 Calendar View
 
