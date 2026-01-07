@@ -27,7 +27,7 @@ export default async function SettingsPage() {
             data: {
                 userId: user.id,
                 budgetCycleType: 'fortnightly',
-                budgetCycleStartDay: 4,
+                budgetCycleStartDate: new Date(),
             },
         });
     }
@@ -57,10 +57,11 @@ export default async function SettingsPage() {
                 userEmail={user.email || ''}
                 settings={{
                     budgetCycleType: settings.budgetCycleType,
-                    budgetCycleStartDay: settings.budgetCycleStartDay,
+                    budgetCycleStartDate: settings.budgetCycleStartDate.toISOString(),
                 }}
                 accounts={formattedAccounts}
             />
         </AppShell>
     );
 }
+

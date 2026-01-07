@@ -49,51 +49,53 @@ export type BudgetCycleType = 'weekly' | 'fortnightly' | 'monthly';
 
 export interface BudgetCycleConfig {
     type: BudgetCycleType;
-    startDay: number; // 0-6 for weekly/fortnightly (day of week), 1-31 for monthly
+    startDate: Date; // A known start date of a budget cycle
 }
 
 /**
- * Get the start date of the current budget period
+ * Get the start date of the current budget period.
+ * Works by finding which cycle period the reference date falls into.
  */
 export function getPeriodStartDate(config: BudgetCycleConfig, referenceDate: Date = new Date()): Date {
-    const { type, startDay } = config;
-    const date = new Date(referenceDate);
-    date.setHours(0, 0, 0, 0);
+    const { type, startDate } = config;
+    const ref = new Date(referenceDate);
+    ref.setHours(0, 0, 0, 0);
+
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+
+    // Get interval in days based on type
+    const intervalDays = type === 'weekly' ? 7 : type === 'fortnightly' ? 14 : 0;
 
     if (type === 'monthly') {
-        // For monthly, start on the specified day of the month
-        const currentDay = date.getDate();
-        if (currentDay >= startDay) {
-            // Current period started this month
-            date.setDate(startDay);
-        } else {
-            // Current period started last month
-            date.setMonth(date.getMonth() - 1);
-            date.setDate(startDay);
+        // For monthly, find the most recent occurrence of start day-of-month
+        const startDayOfMonth = start.getDate();
+        const result = new Date(ref);
+        result.setDate(startDayOfMonth);
+
+        if (result > ref) {
+            // Go back one month
+            result.setMonth(result.getMonth() - 1);
+            result.setDate(startDayOfMonth); // Reset in case month wrap changed it
         }
+
+        return result;
     } else {
-        // For weekly/fortnightly, find the most recent occurrence of startDay
-        const currentDayOfWeek = date.getDay();
-        let daysBack = currentDayOfWeek - startDay;
-        if (daysBack < 0) daysBack += 7;
+        // For weekly/fortnightly, calculate how many full periods since start
+        const msPerDay = 1000 * 60 * 60 * 24;
+        const daysSinceStart = Math.floor((ref.getTime() - start.getTime()) / msPerDay);
 
-        // For fortnightly, we need to check if we're in the first or second week
-        if (type === 'fortnightly') {
-            // Use a fixed reference point (Jan 1, 2024 was a Monday)
-            const refPoint = new Date('2024-01-01');
-            const daysSinceRef = Math.floor((date.getTime() - refPoint.getTime()) / (1000 * 60 * 60 * 24));
-            const weeksSinceRef = Math.floor(daysSinceRef / 7);
-
-            // If we're in an odd week from reference, add 7 more days back
-            if (weeksSinceRef % 2 === 1) {
-                daysBack += 7;
-            }
+        if (daysSinceStart < 0) {
+            // Reference is before start date, return start date
+            return new Date(start);
         }
 
-        date.setDate(date.getDate() - daysBack);
-    }
+        const periodsElapsed = Math.floor(daysSinceStart / intervalDays);
+        const result = new Date(start);
+        result.setDate(result.getDate() + (periodsElapsed * intervalDays));
 
-    return date;
+        return result;
+    }
 }
 
 /**

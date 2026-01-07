@@ -66,28 +66,36 @@ describe('calculateBucketBalances', () => {
 
 describe('getPeriodStartDate', () => {
     describe('weekly cycle', () => {
-        it('returns current week start on the start day', () => {
-            const config: BudgetCycleConfig = { type: 'weekly', startDay: 4 }; // Thursday
-            // Jan 9, 2025 is a Thursday
+        it('returns start date when reference is on the start date', () => {
+            // Start date is Thursday Jan 9
+            const config: BudgetCycleConfig = { type: 'weekly', startDate: new Date('2025-01-09') };
             const ref = new Date('2025-01-09T12:00:00');
             const start = getPeriodStartDate(config, ref);
-            expect(start.getDay()).toBe(4); // Thursday
             expect(start.getDate()).toBe(9);
         });
 
-        it('returns previous week start when past start day', () => {
-            const config: BudgetCycleConfig = { type: 'weekly', startDay: 4 }; // Thursday
-            // Jan 11, 2025 is a Saturday
+        it('returns current period start when within period', () => {
+            // Start date is Thursday Jan 9
+            const config: BudgetCycleConfig = { type: 'weekly', startDate: new Date('2025-01-09') };
+            // Jan 11 is Saturday (2 days after start)
             const ref = new Date('2025-01-11T12:00:00');
             const start = getPeriodStartDate(config, ref);
-            expect(start.getDay()).toBe(4); // Thursday
-            expect(start.getDate()).toBe(9); // Previous Thursday
+            expect(start.getDate()).toBe(9); // Should be Jan 9
+        });
+
+        it('returns next period start when one week later', () => {
+            const config: BudgetCycleConfig = { type: 'weekly', startDate: new Date('2025-01-09') };
+            // Jan 16 is the next Thursday
+            const ref = new Date('2025-01-16T12:00:00');
+            const start = getPeriodStartDate(config, ref);
+            expect(start.getDate()).toBe(16);
         });
     });
 
     describe('monthly cycle', () => {
         it('returns current month start when past start day', () => {
-            const config: BudgetCycleConfig = { type: 'monthly', startDay: 15 };
+            // Start on 15th of month
+            const config: BudgetCycleConfig = { type: 'monthly', startDate: new Date('2025-01-15') };
             const ref = new Date('2025-01-20T12:00:00');
             const start = getPeriodStartDate(config, ref);
             expect(start.getDate()).toBe(15);
@@ -95,7 +103,7 @@ describe('getPeriodStartDate', () => {
         });
 
         it('returns previous month start when before start day', () => {
-            const config: BudgetCycleConfig = { type: 'monthly', startDay: 15 };
+            const config: BudgetCycleConfig = { type: 'monthly', startDate: new Date('2025-01-15') };
             const ref = new Date('2025-01-10T12:00:00');
             const start = getPeriodStartDate(config, ref);
             expect(start.getDate()).toBe(15);
@@ -106,14 +114,14 @@ describe('getPeriodStartDate', () => {
 
 describe('getPeriodEndDate', () => {
     it('returns 6 days after start for weekly', () => {
-        const config: BudgetCycleConfig = { type: 'weekly', startDay: 4 };
-        const ref = new Date('2025-01-09T12:00:00'); // Thursday
+        const config: BudgetCycleConfig = { type: 'weekly', startDate: new Date('2025-01-09') };
+        const ref = new Date('2025-01-09T12:00:00');
         const end = getPeriodEndDate(config, ref);
-        expect(end.getDate()).toBe(15); // Wednesday next week
+        expect(end.getDate()).toBe(15); // 6 days after Jan 9 = Jan 15
     });
 
     it('returns 13 days after start for fortnightly', () => {
-        const config: BudgetCycleConfig = { type: 'fortnightly', startDay: 4 };
+        const config: BudgetCycleConfig = { type: 'fortnightly', startDate: new Date('2025-01-09') };
         const ref = new Date('2025-01-09T12:00:00');
         const start = getPeriodStartDate(config, ref);
         const end = getPeriodEndDate(config, ref);

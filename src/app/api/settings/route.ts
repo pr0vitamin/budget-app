@@ -22,14 +22,14 @@ export async function GET() {
             data: {
                 userId: user.id,
                 budgetCycleType: 'fortnightly',
-                budgetCycleStartDay: 4, // Thursday
+                budgetCycleStartDate: new Date(),
             },
         });
     }
 
     return NextResponse.json({
         budgetCycleType: settings.budgetCycleType,
-        budgetCycleStartDay: settings.budgetCycleStartDay,
+        budgetCycleStartDate: settings.budgetCycleStartDate.toISOString(),
     });
 }
 
@@ -44,32 +44,32 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { budgetCycleType, budgetCycleStartDay } = body;
+    const { budgetCycleType, budgetCycleStartDate } = body;
 
     // Validate inputs
     if (budgetCycleType && !['weekly', 'fortnightly', 'monthly'].includes(budgetCycleType)) {
         return NextResponse.json({ error: 'Invalid budget cycle type' }, { status: 400 });
     }
 
-    if (budgetCycleStartDay !== undefined && (budgetCycleStartDay < 0 || budgetCycleStartDay > 31)) {
-        return NextResponse.json({ error: 'Invalid start day' }, { status: 400 });
+    if (budgetCycleStartDate && isNaN(new Date(budgetCycleStartDate).getTime())) {
+        return NextResponse.json({ error: 'Invalid start date' }, { status: 400 });
     }
 
     const settings = await prisma.userSettings.upsert({
         where: { userId: user.id },
         update: {
             ...(budgetCycleType && { budgetCycleType }),
-            ...(budgetCycleStartDay !== undefined && { budgetCycleStartDay }),
+            ...(budgetCycleStartDate && { budgetCycleStartDate: new Date(budgetCycleStartDate) }),
         },
         create: {
             userId: user.id,
             budgetCycleType: budgetCycleType || 'fortnightly',
-            budgetCycleStartDay: budgetCycleStartDay ?? 4,
+            budgetCycleStartDate: budgetCycleStartDate ? new Date(budgetCycleStartDate) : new Date(),
         },
     });
 
     return NextResponse.json({
         budgetCycleType: settings.budgetCycleType,
-        budgetCycleStartDay: settings.budgetCycleStartDay,
+        budgetCycleStartDate: settings.budgetCycleStartDate.toISOString(),
     });
 }

@@ -28,14 +28,14 @@ model User {
 }
 
 model UserSettings {
-  id                  String    @id @default(cuid())
-  userId              String    @unique
-  budgetCycleType     String    @default("fortnightly") // weekly, fortnightly, monthly, custom
-  budgetCycleStartDay Int       @default(1) // Day of month or week (1-7 for weekly, 1-31 for monthly)
-  initialSyncDays     Int       @default(30) // How many days back to sync on first fetch (max 30)
-  akahuAccessToken    String? // Encrypted
-  akahuRefreshToken   String? // Encrypted
-  tokenExpiresAt      DateTime?
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  budgetCycleType      String    @default("fortnightly") // weekly, fortnightly, monthly
+  budgetCycleStartDate DateTime  @default(now()) // Start date of budget cycle
+  initialSyncDays      Int       @default(30) // How many days back to sync on first fetch (max 30)
+  akahuAccessToken     String? // Encrypted
+  akahuRefreshToken    String? // Encrypted
+  tokenExpiresAt       DateTime?
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -7,7 +7,7 @@ import { AccountsList } from '@/components/accounts';
 
 interface Settings {
     budgetCycleType: string;
-    budgetCycleStartDay: number;
+    budgetCycleStartDate: string; // ISO date string
 }
 
 interface Account {
@@ -29,8 +29,6 @@ interface SettingsPageClientProps {
     accounts: Account[];
 }
 
-const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
 export function SettingsPageClient({
     userEmail,
     settings,
@@ -39,7 +37,7 @@ export function SettingsPageClient({
     const router = useRouter();
     const [isEditingCycle, setIsEditingCycle] = useState(false);
     const [cycleType, setCycleType] = useState(settings.budgetCycleType);
-    const [startDay, setStartDay] = useState(settings.budgetCycleStartDay);
+    const [startDate, setStartDate] = useState(settings.budgetCycleStartDate.split('T')[0]); // YYYY-MM-DD
     const [isSaving, setIsSaving] = useState(false);
 
     const handleSaveCycle = async () => {
@@ -49,7 +47,7 @@ export function SettingsPageClient({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 budgetCycleType: cycleType,
-                budgetCycleStartDay: startDay,
+                budgetCycleStartDate: new Date(startDate).toISOString(),
             }),
         });
 
@@ -60,23 +58,39 @@ export function SettingsPageClient({
         setIsSaving(false);
     };
 
+    const formatDisplayDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-NZ', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    };
+
     return (
         <div className="p-4">
             {/* Header */}
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+                <button
+                    onClick={() => signOut()}
+                    className="text-red-500 font-medium"
+                >
+                    Sign Out
+                </button>
+            </div>
 
-            {/* Profile section */}
+            {/* Account info */}
             <div className="bg-white rounded-2xl shadow-sm p-4 mb-4">
-                <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Profile</h2>
+                <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Account</h2>
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center">
-                        <span className="text-lg text-white font-bold">
-                            {userEmail.charAt(0).toUpperCase()}
-                        </span>
+                    <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <span className="text-xl">🐱</span>
                     </div>
                     <div>
                         <p className="font-medium text-gray-900">{userEmail}</p>
-                        <p className="text-sm text-gray-500">Signed in with magic link</p>
+                        <p className="text-sm text-gray-500">Bucket Budget User</p>
                     </div>
                 </div>
             </div>
@@ -95,11 +109,9 @@ export function SettingsPageClient({
                             <span className="text-gray-500 capitalize">{settings.budgetCycleType}</span>
                         </button>
                         <div className="flex items-center justify-between py-2">
-                            <span className="text-gray-700">Start day</span>
+                            <span className="text-gray-700">Start date</span>
                             <span className="text-gray-500">
-                                {settings.budgetCycleType === 'monthly'
-                                    ? `Day ${settings.budgetCycleStartDay}`
-                                    : dayNames[settings.budgetCycleStartDay]}
+                                {formatDisplayDate(settings.budgetCycleStartDate)}
                             </span>
                         </div>
                     </div>
@@ -124,36 +136,20 @@ export function SettingsPageClient({
                             </div>
                         </div>
 
-                        {/* Start day */}
+                        {/* Start date */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {cycleType === 'monthly' ? 'Start Day of Month' : 'Start Day of Week'}
+                                Start Date
                             </label>
-                            {cycleType === 'monthly' ? (
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="28"
-                                    value={startDay}
-                                    onChange={(e) => setStartDay(parseInt(e.target.value) || 1)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
-                            ) : (
-                                <div className="grid grid-cols-4 gap-2">
-                                    {dayNames.map((day, i) => (
-                                        <button
-                                            key={day}
-                                            onClick={() => setStartDay(i)}
-                                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-colors ${startDay === i
-                                                ? 'bg-indigo-500 text-white'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                }`}
-                                        >
-                                            {day.slice(0, 3)}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                            <p className="text-xs text-gray-500 mb-2">
+                                Pick a date when your budget cycle starts (e.g., your last payday)
+                            </p>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
                         </div>
 
                         {/* Actions */}
@@ -178,34 +174,9 @@ export function SettingsPageClient({
 
             {/* Bank accounts */}
             <div className="bg-white rounded-2xl shadow-sm p-4 mb-4">
-                <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
-                    Bank Accounts
-                </h2>
+                <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Bank Accounts</h2>
                 <AccountsList accounts={accounts} />
             </div>
-
-            {/* Data */}
-            <div className="bg-white rounded-2xl shadow-sm p-4 mb-4">
-                <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Data</h2>
-                <div className="space-y-1">
-                    <button className="w-full py-3 text-left text-gray-700 hover:bg-gray-50 rounded-xl px-2 transition-colors">
-                        Export Data
-                    </button>
-                    <a href="/rules" className="block w-full py-3 text-left text-gray-700 hover:bg-gray-50 rounded-xl px-2 transition-colors">
-                        Categorization Rules →
-                    </a>
-                </div>
-            </div>
-
-            {/* Sign out */}
-            <form action={signOut}>
-                <button
-                    type="submit"
-                    className="w-full py-3 text-red-500 font-medium hover:bg-red-50 rounded-xl transition-colors"
-                >
-                    Sign Out
-                </button>
-            </form>
         </div>
     );
 }

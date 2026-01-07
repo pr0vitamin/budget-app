@@ -21,12 +21,12 @@ export async function GET() {
     // Get user's budget cycle settings
     const settings = await prisma.userSettings.findUnique({
         where: { userId: user.id },
-        select: { budgetCycleType: true, budgetCycleStartDay: true },
+        select: { budgetCycleType: true, budgetCycleStartDate: true },
     });
 
     const cycleConfig: BudgetCycleConfig = {
         type: (settings?.budgetCycleType as 'weekly' | 'fortnightly' | 'monthly') || 'monthly',
-        startDay: settings?.budgetCycleStartDay ?? 1,
+        startDate: settings?.budgetCycleStartDate ?? new Date(),
     };
 
     // Get end of current budget cycle
