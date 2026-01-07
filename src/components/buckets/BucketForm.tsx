@@ -199,7 +199,7 @@ export function BucketForm({
                             onClick={onDelete}
                             className="w-full py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
                         >
-                            Delete Bucket
+                            Delete Cat
                         </button>
                     )}
                 </form>

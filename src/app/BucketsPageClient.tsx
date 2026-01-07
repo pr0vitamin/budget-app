@@ -217,7 +217,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                     onClick={() => setIsCreatingGroup(true)}
                     className="w-full mt-4 py-3 text-center text-indigo-600 font-medium hover:bg-indigo-50 rounded-xl transition-colors border-2 border-dashed border-indigo-200"
                 >
-                    + Add Bucket Group
+                    + Add Clowder (Cat Group)
                 </button>
             ) : (
                 <form onSubmit={handleCreateGroup} className="mt-4 bg-white rounded-xl p-4 shadow-sm">

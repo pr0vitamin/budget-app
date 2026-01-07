@@ -173,7 +173,6 @@ export function BucketDetailModal({
                                 className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl"
                                 style={{ backgroundColor: bucketColor }}
                             >
-                                🐱
                             </div>
                             <h2 className="text-2xl font-bold text-gray-900">{bucketName}</h2>
                         </div>
@@ -190,7 +189,7 @@ export function BucketDetailModal({
                         onClick={onEditBucket}
                         className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                     >
-                        ✏️ Edit Bucket
+                        ✏️ Edit Cat
                     </button>
                 </div>
 

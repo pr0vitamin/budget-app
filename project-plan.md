@@ -1,4 +1,4 @@
-# 🐱 Bucket Budget - Project Plan
+# 🐱 Cat Budget - Project Plan
 
 A phased implementation plan breaking down the spec into logical milestones and bite-sized tasks.
 

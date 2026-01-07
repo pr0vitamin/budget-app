@@ -297,7 +297,7 @@ export default function ScheduledPageClient({
                             {/* Bucket */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Bucket
+                                    Cat
                                 </label>
                                 <select
                                     value={formData.bucketId}
@@ -305,7 +305,7 @@ export default function ScheduledPageClient({
                                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     required
                                 >
-                                    <option value="">Select a bucket...</option>
+                                    <option value="">Select a cat...</option>
                                     {bucketGroups.map((group) => (
                                         <optgroup key={group.id} label={group.name}>
                                             {group.buckets.map((bucket) => (

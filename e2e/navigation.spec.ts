@@ -4,7 +4,7 @@ test.describe('Navigation', () => {
     test('authenticated user can view all pages', async ({ page }) => {
         // Buckets page
         await page.goto('/');
-        await expect(page.locator('body')).toContainText('Buckets');
+        await expect(page.locator('body')).toContainText('Cats');
         await expect(page.locator('body')).not.toContainText('Welcome back'); // Not login page
 
         // Inbox page
