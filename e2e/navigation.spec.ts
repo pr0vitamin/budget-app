@@ -11,9 +11,9 @@ test.describe('Navigation', () => {
         await page.goto('/inbox');
         await expect(page.locator('body')).toContainText('Inbox');
 
-        // Calendar page
-        await page.goto('/calendar');
-        await expect(page.locator('body')).toContainText('Calendar');
+        // Upcoming page
+        await page.goto('/upcoming');
+        await expect(page.locator('body')).toContainText('Upcoming');
 
         // Settings page
         await page.goto('/settings');

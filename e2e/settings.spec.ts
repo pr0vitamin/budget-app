@@ -6,6 +6,6 @@ test.describe('Settings Page', () => {
 
         // Should see settings content, not login
         await expect(page.locator('body')).toContainText('Settings');
-        await expect(page.locator('body')).toContainText('Profile');
+        await expect(page.locator('body')).toContainText('Account');
     });
 });
