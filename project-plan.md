@@ -264,9 +264,9 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 5.2 Scheduled Transaction UI
 
-- [ ] Create/edit scheduled transaction form
-- [ ] Frequency selector (weekly, fortnightly, monthly, yearly, custom)
-- [ ] List of scheduled transactions
+- [x] Create/edit scheduled transaction form
+- [x] Frequency selector (weekly, fortnightly, monthly, yearly, custom)
+- [x] List of scheduled transactions
 
 #### 5.3 Auto-Matching
 
