@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BucketList, BucketForm, ReorderGroupsModal, FeedModal, BucketDetailModal } from '@/components/buckets';
-import { signOut } from './login/actions';
+
 
 interface Bucket {
     id: string;
@@ -247,15 +247,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                 </form>
             )}
 
-            {/* Sign out */}
-            <form action={signOut} className="mt-8">
-                <button
-                    type="submit"
-                    className="w-full py-3 text-gray-500 text-sm hover:text-gray-700"
-                >
-                    Sign Out
-                </button>
-            </form>
+
 
             {/* Bucket Form Modal */}
             {bucketForm.isOpen && (
