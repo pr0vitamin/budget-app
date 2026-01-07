@@ -282,7 +282,7 @@ The project is organized into **7 milestones**, each building on the previous. E
 - [x] Display "Available now" vs "Total balance"
 - [x] Visual indicator for reserved funds
 
-#### 5.5 Calendar View
+#### 5.5 Calendar View (Moved to Future Enhancement)
 
 - [ ] Weekly calendar grid
 - [ ] Swipe navigation between weeks
@@ -294,13 +294,13 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 5.6 Unit Tests - Scheduling Logic
 
-- [ ] Test next due date calculation
-- [ ] Test transaction matching (±10%, ±3 days)
-- [ ] Test reserved amount calculation
+- [x] Test next due date calculation
+- [x] Test transaction matching (±20%, ±5 days)
+- [x] Test reserved amount calculation
 
 ### Milestone 5 Deliverable
 
-✅ User can schedule recurring transactions, view calendar, auto-matching works
+✅ User can schedule recurring transactions, auto-matching works, reserved amounts shown
 
 ---
 
