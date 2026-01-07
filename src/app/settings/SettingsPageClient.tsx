@@ -177,6 +177,26 @@ export function SettingsPageClient({
                 <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Bank Accounts</h2>
                 <AccountsList accounts={accounts} />
             </div>
+
+            {/* Navigation */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 mb-4">
+                <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">More</h2>
+                <a
+                    href="/rules"
+                    className="flex items-center justify-between py-3 text-gray-700 hover:text-indigo-600 transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <span className="text-xl">🏷️</span>
+                        <div>
+                            <p className="font-medium">Auto-Categorization Rules</p>
+                            <p className="text-sm text-gray-500">Manage merchant → bucket mappings</p>
+                        </div>
+                    </div>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+            </div>
         </div>
     );
 }
