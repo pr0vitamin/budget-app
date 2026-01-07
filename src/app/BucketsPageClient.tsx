@@ -149,7 +149,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
 
         if (!res.ok) {
             const data = await res.json();
-            throw new Error(data.error || 'Failed to feed bucket');
+            throw new Error(data.error || 'Failed to feed cat');
         }
 
         router.refresh();

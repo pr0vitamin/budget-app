@@ -36,8 +36,8 @@ export default function LoginPage() {
                     <div className="inline-block p-4 bg-white/10 backdrop-blur-lg rounded-3xl mb-4">
                         <span className="text-6xl">🐱</span>
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Bucket Budget</h1>
-                    <p className="text-white/80">Your playful money manager</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">Cat Budget</h1>
+                    <p className="text-white/80">The fluffiest money manager around</p>
                 </div>
 
                 {/* Login Card */}
@@ -99,8 +99,8 @@ export default function LoginPage() {
                     {message && (
                         <div
                             className={`mt-4 p-4 rounded-xl ${message.type === 'success'
-                                    ? 'bg-green-50 text-green-700 border border-green-200'
-                                    : 'bg-red-50 text-red-700 border border-red-200'
+                                ? 'bg-green-50 text-green-700 border border-green-200'
+                                : 'bg-red-50 text-red-700 border border-red-200'
                                 }`}
                         >
                             {message.text}

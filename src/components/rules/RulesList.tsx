@@ -46,7 +46,7 @@ export function RulesList({ rules }: RulesListProps) {
                 <p>No auto-categorization rules yet.</p>
                 <p className="text-sm mt-1">
                     Create rules when allocating transactions by checking
-                    "Always allocate to this bucket".
+                    "Always allocate to this cat".
                 </p>
             </div>
         );

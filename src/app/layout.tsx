@@ -8,13 +8,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Bucket Budget',
+  title: 'Cat Budget',
   description: 'Your playful money manager with cat piggy banks',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Bucket Budget',
+    title: 'Cat Budget',
   },
 };
 

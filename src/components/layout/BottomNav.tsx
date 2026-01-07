@@ -36,12 +36,13 @@ export function BottomNav() {
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                     strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                 >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                    />
+                    <path d="M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21S3 17.9 3 13.44c0-1.2.43-2.37 1-3.44 0 0-1.82-6.42-.42-7 1.39-.58 4.64.26 6.42 2.26.65-.17 1.33-.26 2-.26z" />
+                    <circle cx="9" cy="13" r="1" fill="currentColor" stroke="none" />
+                    <circle cx="15" cy="13" r="1" fill="currentColor" stroke="none" />
+                    <path d="M12 16v.5" />
                 </svg>
             ),
         },

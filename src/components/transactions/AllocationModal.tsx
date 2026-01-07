@@ -418,7 +418,7 @@ export function AllocationModal({
                             className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
                         <span className="text-sm text-gray-700">
-                            Always allocate "{transaction.merchant}" to this bucket
+                            Always allocate "{transaction.merchant}" to this cat
                         </span>
                     </label>
                 )}
