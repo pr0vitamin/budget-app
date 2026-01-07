@@ -60,9 +60,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
 
-    // Verify bucket belongs to user
+    // Verify bucket belongs to user and is not deleted
     const bucket = await prisma.bucket.findFirst({
-        where: { id: bucketId, group: { userId: user.id } },
+        where: { id: bucketId, group: { userId: user.id }, isDeleted: false },
     });
 
     if (!bucket) {

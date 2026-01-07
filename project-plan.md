@@ -97,7 +97,8 @@ The project is organized into **7 milestones**, each building on the previous. E
 - [x] `GET /api/buckets` - list buckets with calculated balances
 - [x] `POST /api/buckets` - create bucket
 - [x] `PATCH /api/buckets/:id` - update bucket
-- [x] `DELETE /api/buckets/:id` - delete bucket
+- [x] `PATCH /api/buckets/:id` - update bucket
+- [ ] `DELETE /api/buckets/:id` - soft delete bucket (rename, hide, keep history)
 - [x] `POST /api/buckets/reorder` - reorder within groups
 - [x] Create bucket list view (grouped, collapsible)
 - [x] Create bucket form (name, type, color, icon, rollover settings)

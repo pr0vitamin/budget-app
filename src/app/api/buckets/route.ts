@@ -16,6 +16,7 @@ export async function GET() {
     // Get buckets with their allocations to calculate balances
     const buckets = await prisma.bucket.findMany({
         where: {
+            isDeleted: false,
             group: {
                 userId: user.id,
             },

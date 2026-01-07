@@ -152,9 +152,26 @@ export async function DELETE(request: Request, { params }: RouteParams) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    await prisma.bucket.delete({
-        where: { id },
-    });
+    // Soft delete: rename, mark as deleted, and remove rules/scheduled transactions
+    // Note: Allocations are NOT deleted to preserve history
+    await prisma.$transaction([
+        // Delete categorization rules
+        prisma.categorizationRule.deleteMany({
+            where: { bucketId: id },
+        }),
+        // Delete scheduled transactions
+        prisma.scheduledTransaction.deleteMany({
+            where: { bucketId: id },
+        }),
+        // Update bucket (soft delete)
+        prisma.bucket.update({
+            where: { id },
+            data: {
+                name: `DELETED: ${existing.name}`,
+                isDeleted: true,
+            },
+        }),
+    ]);
 
     return NextResponse.json({ success: true });
 }

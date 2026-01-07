@@ -23,6 +23,7 @@ export default async function HomePage() {
     where: { userId: user.id },
     include: {
       buckets: {
+        where: { isDeleted: false },
         orderBy: { sortOrder: 'asc' },
         include: {
           allocations: true, // Transaction allocations (expenses)

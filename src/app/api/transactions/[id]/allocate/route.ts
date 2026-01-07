@@ -49,10 +49,13 @@ export async function POST(
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Verify all buckets exist and belong to user
+    // Verify all buckets exist, belong to user, and are not deleted
     const bucketIds = allocations.map((a) => a.bucketId);
     const buckets = await prisma.bucket.findMany({
-        where: { id: { in: bucketIds } },
+        where: {
+            id: { in: bucketIds },
+            isDeleted: false
+        },
         include: { group: { select: { userId: true } } },
     });
 
