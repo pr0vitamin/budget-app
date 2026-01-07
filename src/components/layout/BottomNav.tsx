@@ -1,14 +1,29 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-interface BottomNavProps {
-    inboxBadgeCount?: number;
-}
-
-export function BottomNav({ inboxBadgeCount = 0 }: BottomNavProps) {
+export function BottomNav() {
     const pathname = usePathname();
+    const [inboxCount, setInboxCount] = useState(0);
+
+    // Fetch inbox count on mount and when pathname changes
+    useEffect(() => {
+        const fetchCount = async () => {
+            try {
+                const res = await fetch('/api/inbox/count');
+                if (res.ok) {
+                    const data = await res.json();
+                    setInboxCount(data.count || 0);
+                }
+            } catch {
+                // Silently fail
+            }
+        };
+
+        fetchCount();
+    }, [pathname]); // Refetch when navigating
 
     const navItems = [
         {
@@ -48,11 +63,11 @@ export function BottomNav({ inboxBadgeCount = 0 }: BottomNavProps) {
                     />
                 </svg>
             ),
-            badge: inboxBadgeCount,
+            badge: inboxCount,
         },
         {
-            href: '/calendar',
-            label: 'Calendar',
+            href: '/upcoming',
+            label: 'Upcoming',
             icon: (active: boolean) => (
                 <svg
                     className={`w-6 h-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`}

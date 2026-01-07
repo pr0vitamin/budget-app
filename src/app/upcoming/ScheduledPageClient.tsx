@@ -164,7 +164,7 @@ export default function ScheduledPageClient({
         <div className="p-4 pb-24 max-w-lg mx-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Scheduled</h1>
+                <h1 className="text-2xl font-bold text-gray-800">Upcoming</h1>
                 <button
                     onClick={() => setShowForm(true)}
                     className="w-10 h-10 bg-indigo-500 text-white rounded-full flex items-center justify-center text-2xl font-light shadow-lg hover:bg-indigo-600"
@@ -216,8 +216,8 @@ export default function ScheduledPageClient({
                                         <button
                                             onClick={() => handleToggleEnabled(item)}
                                             className={`text-xs px-2 py-1 rounded ${item.enabled
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-gray-100 text-gray-600'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-gray-100 text-gray-600'
                                                 }`}
                                         >
                                             {item.enabled ? 'Active' : 'Paused'}
@@ -330,8 +330,8 @@ export default function ScheduledPageClient({
                                             type="button"
                                             onClick={() => setFormData({ ...formData, frequency: freq })}
                                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${formData.frequency === freq
-                                                    ? 'bg-indigo-500 text-white'
-                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                ? 'bg-indigo-500 text-white'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                                 }`}
                                         >
                                             {FREQUENCY_LABELS[freq]}

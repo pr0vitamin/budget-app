@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { AppShell } from '@/components/layout';
+import { ensureUserExists } from '@/lib/ensure-user';
 import ScheduledPageClient from './ScheduledPageClient';
 
-export default async function ScheduledPage() {
+export default async function UpcomingPage() {
     const supabase = await createClient();
     const {
         data: { user },
@@ -12,6 +14,9 @@ export default async function ScheduledPage() {
     if (!user) {
         redirect('/login');
     }
+
+    // Ensure user exists in Prisma database
+    await ensureUserExists(user);
 
     // Fetch scheduled transactions with bucket info
     const scheduled = await prisma.scheduledTransaction.findMany({
@@ -49,5 +54,9 @@ export default async function ScheduledPage() {
         bucket: s.bucket,
     }));
 
-    return <ScheduledPageClient scheduled={formattedScheduled} bucketGroups={bucketGroups} />;
+    return (
+        <AppShell>
+            <ScheduledPageClient scheduled={formattedScheduled} bucketGroups={bucketGroups} />
+        </AppShell>
+    );
 }
