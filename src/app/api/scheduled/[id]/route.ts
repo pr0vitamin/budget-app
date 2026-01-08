@@ -70,7 +70,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     // Recalculate nextDue if frequency, interval, or startDate changes
     if (body.startDate !== undefined || body.frequency !== undefined || body.interval !== undefined) {
-        const startDate = body.startDate ? new Date(body.startDate) : existing.startDate;
+        // Parse date as noon UTC to avoid timezone day-shift issues
+        const startDate = body.startDate ? new Date(`${body.startDate}T12:00:00Z`) : existing.startDate;
         const frequency = body.frequency ?? existing.frequency;
         const interval = body.interval ?? existing.interval;
 

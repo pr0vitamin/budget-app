@@ -80,7 +80,9 @@ export async function POST(request: Request) {
         );
     }
 
-    const parsedStartDate = new Date(startDate);
+    // Parse date as noon UTC to avoid timezone day-shift issues
+    // When user selects "2026-01-23", we store it as noon UTC so it displays as Jan 23 in all timezones
+    const parsedStartDate = new Date(`${startDate}T12:00:00Z`);
     const nextDue = calculateNextDue(parsedStartDate, frequency, interval || 1);
 
     const scheduled = await prisma.scheduledTransaction.create({

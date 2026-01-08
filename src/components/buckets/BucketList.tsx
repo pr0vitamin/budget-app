@@ -171,7 +171,7 @@ export function BucketList({ groups, reservedByBucket = {}, recentlyFedIds = new
                         {/* Buckets grid */}
                         {isExpanded && (
                             <div className="px-4 pb-4">
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-3 gap-4 items-start">
                                     {group.buckets.map((bucket) => (
                                         <div key={bucket.id} className="flex flex-col items-center gap-1">
                                             <CatPiggyBank
@@ -198,20 +198,22 @@ export function BucketList({ groups, reservedByBucket = {}, recentlyFedIds = new
                                         </div>
                                     ))}
                                     {/* Add bucket button */}
-                                    <button
-                                        onClick={() => onAddBucket?.(group.id)}
-                                        className="flex flex-col items-center justify-center gap-1 w-20 h-20 rounded-full border-2 border-dashed border-gray-300 text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition-colors"
-                                    >
-                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M12 4v16m8-8H4"
-                                            />
-                                        </svg>
-                                        <span className="text-xs">Add</span>
-                                    </button>
+                                    <div className="flex flex-col items-center gap-1 self-start">
+                                        <button
+                                            onClick={() => onAddBucket?.(group.id)}
+                                            className="flex flex-col items-center justify-center gap-1 w-20 h-20 rounded-full border-2 border-dashed border-gray-300 text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition-colors"
+                                        >
+                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M12 4v16m8-8H4"
+                                                />
+                                            </svg>
+                                            <span className="text-xs">Add</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}

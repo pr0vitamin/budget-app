@@ -34,6 +34,7 @@ export default async function UpcomingPage() {
         where: { userId: user.id },
         include: {
             buckets: {
+                where: { isDeleted: false },
                 select: { id: true, name: true, color: true },
                 orderBy: { sortOrder: 'asc' },
             },
