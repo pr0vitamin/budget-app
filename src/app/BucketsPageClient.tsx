@@ -94,7 +94,6 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
         type: 'spending' | 'savings';
         color: string;
         autoAllocationAmount: number;
-        rollover: boolean;
     }) => {
         const isEditing = !!bucketForm.bucket;
         const url = isEditing
@@ -343,7 +342,6 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                         type: bucketForm.bucket.type as 'spending' | 'savings',
                         color: bucketForm.bucket.color,
                         autoAllocationAmount: bucketForm.bucket.autoAllocationAmount,
-                        rollover: true,
                     } : undefined}
                     bucketId={bucketForm.bucket?.id}
                     onSubmit={handleBucketSubmit}

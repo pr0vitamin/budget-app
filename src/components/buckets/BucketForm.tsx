@@ -8,8 +8,6 @@ interface BucketFormData {
     color: string;
     icon?: string;
     autoAllocationAmount: number;
-    rollover: boolean;
-    rolloverTargetId?: string;
 }
 
 interface BucketFormProps {
@@ -47,8 +45,6 @@ export function BucketForm({
         color: initialData?.color || '#6366f1',
         icon: initialData?.icon,
         autoAllocationAmount: initialData?.autoAllocationAmount || 0,
-        rollover: initialData?.rollover ?? true,
-        rolloverTargetId: initialData?.rolloverTargetId,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -155,24 +151,7 @@ export function BucketForm({
                         </div>
                     </div>
 
-                    {/* Rollover */}
-                    <div className="flex items-center justify-between py-2">
-                        <div>
-                            <p className="font-medium text-gray-800">Roll over balance</p>
-                            <p className="text-sm text-gray-500">Keep unused funds for next period</p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => setFormData((f) => ({ ...f, rollover: !f.rollover }))}
-                            className={`w-12 h-7 rounded-full transition-colors ${formData.rollover ? 'bg-indigo-500' : 'bg-gray-300'
-                                }`}
-                        >
-                            <div
-                                className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${formData.rollover ? 'translate-x-6' : 'translate-x-1'
-                                    }`}
-                            />
-                        </button>
-                    </div>
+
 
                     {/* Actions */}
                     <div className="flex gap-3 pt-4">
