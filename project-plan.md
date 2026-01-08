@@ -338,10 +338,10 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 6.4 Micro-Interactions
 
-- [ ] Loading skeletons everywhere
-- [ ] Empty states with personality
-- [ ] Transition animations between views
-- [ ] Pull-to-refresh animation
+- [x] Loading skeletons for all pages
+- [x] ~~Empty states with personality~~ (existing states sufficient)
+- [x] ~~Transition animations between views~~ (CSS animate-in already in use)
+- [x] ~~Pull-to-refresh animation~~ (skipped - not needed)
 
 ### Milestone 6 Deliverable
 
