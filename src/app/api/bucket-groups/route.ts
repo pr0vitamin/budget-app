@@ -16,6 +16,7 @@ export async function GET() {
         where: { userId: user.id },
         include: {
             buckets: {
+                where: { isDeleted: false },
                 orderBy: { sortOrder: 'asc' },
             },
         },

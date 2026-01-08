@@ -65,6 +65,18 @@ export function BucketList({ groups, reservedByBucket = {}, recentlyFedIds = new
 
     return (
         <div className="space-y-4">
+            {/* Delete error toast */}
+            {deleteError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center justify-between">
+                    <span className="text-sm">{deleteError}</span>
+                    <button
+                        onClick={() => setDeleteError(null)}
+                        className="text-red-500 hover:text-red-700"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
             {groups.map((group) => {
                 const isExpanded = expandedGroups.has(group.id);
                 const total = getGroupTotal(group.buckets);

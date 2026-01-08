@@ -139,15 +139,6 @@ export function AccountsList({ accounts }: AccountsListProps) {
                             </p>
                         </div>
 
-                        {/* Balance */}
-                        {account.balanceCurrent !== null && (
-                            <div className="text-right">
-                                <p className={`font-bold ${account.balanceCurrent >= 0 ? 'text-gray-800' : 'text-red-500'}`}>
-                                    ${account.balanceCurrent.toFixed(2)}
-                                </p>
-                            </div>
-                        )}
-
                         {/* Delete button */}
                         <button
                             onClick={() => handleDelete(account.id, account.name)}
