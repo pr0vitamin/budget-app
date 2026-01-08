@@ -357,12 +357,12 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 7.1 PWA Setup
 
-- [ ] Create web manifest
-- [ ] Configure service worker (Workbox)
-- [ ] Cache shell and static assets
-- [ ] Offline mode (read-only transaction viewing)
-- [ ] Background sync for pending actions
-- [ ] Install prompt UI
+- [x] Create web manifest
+- [x] Configure service worker (Workbox via next-pwa)
+- [x] Cache shell and static assets
+- [x] Offline mode (IndexedDB data layer)
+- [x] Background sync for pending actions
+- [x] Install prompt UI (browser native)
 
 #### 7.2 Push Notifications
 

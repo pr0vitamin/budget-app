@@ -1,40 +1,43 @@
 import type { NextConfig } from 'next';
-import withPWA from 'next-pwa';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Allow webpack plugins from next-pwa while using Turbopack
+  turbopack: {},
 };
 
-const pwaConfig = withPWA({
-  dest: 'public',
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
-  runtimeCaching: [
-    {
-      urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'supabase-api',
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 60 * 60 * 24, // 24 hours
+// Only use next-pwa in production to avoid Turbopack conflicts
+const withPWA = process.env.NODE_ENV === 'production'
+  ? // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('next-pwa')({
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'supabase-api',
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 60 * 60 * 24, // 24 hours
+          },
         },
       },
-    },
-    {
-      urlPattern: /\/api\/.*/i,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'api-cache',
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 60 * 60, // 1 hour
+      {
+        urlPattern: /\/api\/.*/i,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'api-cache',
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 60 * 60, // 1 hour
+          },
+          networkTimeoutSeconds: 10,
         },
-        networkTimeoutSeconds: 10,
       },
-    },
-  ],
-});
+    ],
+  })
+  : (config: NextConfig) => config;
 
-export default pwaConfig(nextConfig);
+export default withPWA(nextConfig);
