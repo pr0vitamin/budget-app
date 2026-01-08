@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/db';
+import { calculateAvailableToBudget } from '@/lib/calculate-available';
 
 /**
  * GET /api/budget/allocations
@@ -69,16 +70,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Bucket not found' }, { status: 404 });
     }
 
-    // Check available budget
-    const incomeResult = await prisma.transaction.aggregate({
-        where: { account: { userId: user.id }, amount: { gt: 0 } },
-        _sum: { amount: true },
-    });
-    const allocationsResult = await prisma.budgetAllocation.aggregate({
-        where: { userId: user.id },
-        _sum: { amount: true },
-    });
-    const availableToBudget = Number(incomeResult._sum.amount || 0) - Number(allocationsResult._sum.amount || 0);
+    // Check available budget using consistent calculation
+    const availableToBudget = await calculateAvailableToBudget(user.id);
 
     if (amount > availableToBudget) {
         return NextResponse.json({ error: 'Insufficient funds available to budget' }, { status: 400 });

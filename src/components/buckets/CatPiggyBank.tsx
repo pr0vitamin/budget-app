@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { motion } from 'motion/react';
+import { SparkleEffect } from '@/components/animations';
 
 interface CatPiggyBankProps {
     name: string;
@@ -12,6 +13,7 @@ interface CatPiggyBankProps {
     color?: string;
     size?: 'sm' | 'md' | 'lg';
     isOverspent?: boolean;
+    showSparkle?: boolean;
     onClick?: () => void;
 }
 
@@ -33,6 +35,7 @@ export function CatPiggyBank({
     color = '#6366f1',
     size = 'md',
     isOverspent = false,
+    showSparkle = false,
     onClick,
 }: CatPiggyBankProps) {
     // Calculate fill percentage (0-100)
@@ -124,6 +127,10 @@ export function CatPiggyBank({
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         >
             <div className={`relative ${sizeClasses[size]}`}>
+                {/* Sparkle effect overlay */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <SparkleEffect trigger={showSparkle} color={color} />
+                </div>
                 <svg viewBox="0 0 80 80" className="w-full h-full drop-shadow-sm">
                     <defs>
                         <clipPath id={`body-clip-${name}`}>

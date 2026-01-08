@@ -16,7 +16,7 @@ interface ConfettiCelebrationProps {
     onComplete?: () => void;
 }
 
-const EMOJIS = ['🎉', '✨', '🐱', '💰', '🌟', '💫'];
+const EMOJIS = ['🐟', '🐠', '🍣', '🍖', '🥩', '🐱', '🐾', '🥛', '🐭', '🦐'];
 const COLORS = ['#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#22c55e', '#f97316'];
 
 export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebrationProps) {

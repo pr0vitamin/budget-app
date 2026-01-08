@@ -45,6 +45,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
     const [detailBucket, setDetailBucket] = useState<Bucket | null>(null);
     const [showFeedAllModal, setShowFeedAllModal] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [recentlyFedCats, setRecentlyFedCats] = useState<Set<string>>(new Set());
 
     // Fetch reserved amounts on mount and when groups change
     useEffect(() => {
@@ -155,6 +156,35 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
             throw new Error(data.error || 'Failed to feed cat');
         }
 
+        // Trigger sparkle on this cat, then refresh after animation
+        setRecentlyFedCats(new Set([feedingBucket.id]));
+        setTimeout(() => {
+            setRecentlyFedCats(new Set());
+            router.refresh();
+        }, 800);
+    };
+
+    const handleRenameGroup = async (groupId: string, newName: string) => {
+        const res = await fetch(`/api/bucket-groups/${groupId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newName }),
+        });
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || 'Failed to rename clowder');
+        }
+        router.refresh();
+    };
+
+    const handleDeleteGroup = async (groupId: string) => {
+        const res = await fetch(`/api/bucket-groups/${groupId}`, {
+            method: 'DELETE',
+        });
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || 'Failed to delete clowder');
+        }
         router.refresh();
     };
 
@@ -173,22 +203,37 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
         const allCats = groups.flatMap(g => g.buckets);
         const catsToFeed = allCats.filter(c => c.autoAllocationAmount > 0);
 
-        // Create allocations for each cat
-        for (const cat of catsToFeed) {
-            const res = await fetch('/api/budget/allocations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bucketId: cat.id, amount: cat.autoAllocationAmount }),
-            });
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.error || `Failed to feed ${cat.name}`);
-            }
+        // Create all allocations in a single batch request
+        const allocations = catsToFeed.map(cat => ({
+            bucketId: cat.id,
+            amount: cat.autoAllocationAmount,
+        }));
+
+        const res = await fetch('/api/budget/allocations/batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ allocations }),
+        });
+
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || 'Failed to feed cats');
         }
 
-        // Success! Trigger confetti
-        setShowConfetti(true);
-        router.refresh();
+        // Close modal first so cats are visible
+        setShowFeedAllModal(false);
+
+        // Small delay to let modal close, then show sparkles on all cats
+        setTimeout(() => {
+            setRecentlyFedCats(new Set(catsToFeed.map(c => c.id)));
+            setShowConfetti(true);
+        }, 100);
+
+        // Clear sparkles and refresh after animation
+        setTimeout(() => {
+            setRecentlyFedCats(new Set());
+            router.refresh();
+        }, 900);
     };
 
     return (
@@ -240,12 +285,15 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
             <BucketList
                 groups={groups}
                 reservedByBucket={reservedByBucket}
+                recentlyFedIds={recentlyFedCats}
                 onBucketClick={(bucket) => {
                     const group = groups.find(g => g.buckets.some(b => b.id === bucket.id));
                     if (group) handleBucketClick(bucket, group.id);
                 }}
                 onAddBucket={handleAddBucket}
                 onFeed={(bucket) => setFeedingBucket(bucket)}
+                onRenameGroup={handleRenameGroup}
+                onDeleteGroup={handleDeleteGroup}
             />
 
             {/* Add group button */}

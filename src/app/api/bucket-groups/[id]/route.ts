@@ -49,13 +49,26 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
     const { id } = await params;
 
-    // Verify ownership
+    // Verify ownership and check for active cats
     const existing = await prisma.bucketGroup.findFirst({
         where: { id, userId: user.id },
+        include: {
+            buckets: {
+                where: { isDeleted: false }, // Only count active cats
+            },
+        },
     });
 
     if (!existing) {
-        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Clowder not found' }, { status: 404 });
+    }
+
+    // Check if group has any active cats
+    if (existing.buckets.length > 0) {
+        return NextResponse.json(
+            { error: `Cannot delete clowder with ${existing.buckets.length} active cat(s). Delete all cats first.` },
+            { status: 400 }
+        );
     }
 
     await prisma.bucketGroup.delete({

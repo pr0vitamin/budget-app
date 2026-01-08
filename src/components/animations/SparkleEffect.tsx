@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface SparkleEffectProps {
     trigger: boolean;
@@ -9,18 +9,26 @@ interface SparkleEffectProps {
     color?: string;
 }
 
+const EMOJIS = ['✨', '⭐', '🌟', '💫'];
+
 export function SparkleEffect({ trigger, onComplete, color = '#fbbf24' }: SparkleEffectProps) {
-    const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; scale: number; rotation: number }>>([]);
+    const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; scale: number; rotation: number; emoji: string }>>([]);
+    const triggerCountRef = useRef(0);
 
     useEffect(() => {
         if (trigger) {
-            // Generate random particles
-            const newParticles = Array.from({ length: 12 }, (_, i) => ({
-                id: i,
-                x: (Math.random() - 0.5) * 80,
-                y: (Math.random() - 0.5) * 80,
-                scale: 0.5 + Math.random() * 0.5,
-                rotation: Math.random() * 360,
+            // Increment counter to ensure unique particle IDs even on re-trigger
+            triggerCountRef.current += 1;
+            const baseId = triggerCountRef.current * 100;
+
+            // Generate more, bigger particles with wider spread
+            const newParticles = Array.from({ length: 20 }, (_, i) => ({
+                id: baseId + i,
+                x: (Math.random() - 0.5) * 150, // Wider spread
+                y: (Math.random() - 0.5) * 150,
+                scale: 1 + Math.random() * 1.5, // Bigger (1x to 2.5x)
+                rotation: Math.random() * 720, // More spin
+                emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
             }));
             setParticles(newParticles);
 
@@ -28,7 +36,7 @@ export function SparkleEffect({ trigger, onComplete, color = '#fbbf24' }: Sparkl
             const timer = setTimeout(() => {
                 setParticles([]);
                 onComplete?.();
-            }, 600);
+            }, 800);
 
             return () => clearTimeout(timer);
         }
@@ -39,22 +47,23 @@ export function SparkleEffect({ trigger, onComplete, color = '#fbbf24' }: Sparkl
             {particles.map((particle) => (
                 <motion.div
                     key={particle.id}
-                    className="absolute pointer-events-none"
+                    className="absolute pointer-events-none text-2xl"
                     initial={{ opacity: 1, scale: 0, x: 0, y: 0, rotate: 0 }}
                     animate={{
-                        opacity: 0,
+                        opacity: [1, 1, 0],
                         scale: particle.scale,
                         x: particle.x,
                         y: particle.y,
                         rotate: particle.rotation,
                     }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
                     style={{ color }}
                 >
-                    ✨
+                    {particle.emoji}
                 </motion.div>
             ))}
         </AnimatePresence>
     );
 }
+
