@@ -9,6 +9,7 @@ interface RouteParams {
 /**
  * GET /api/buckets/:id
  * Get bucket details with budget allocations and transaction allocations
+ * Query params: limit (default 50), offset (default 0)
  */
 export async function GET(request: Request, { params }: RouteParams) {
     const supabase = await createClient();
@@ -21,8 +22,11 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Fetch bucket with allocations
+    // Fetch bucket with paginated allocations
     const bucket = await prisma.bucket.findFirst({
         where: {
             id,
@@ -31,6 +35,8 @@ export async function GET(request: Request, { params }: RouteParams) {
         include: {
             budgetAllocations: {
                 orderBy: { createdAt: 'desc' },
+                take: limit,
+                skip: offset,
             },
             allocations: {
                 include: {
@@ -44,6 +50,8 @@ export async function GET(request: Request, { params }: RouteParams) {
                     },
                 },
                 orderBy: { transaction: { date: 'desc' } },
+                take: limit,
+                skip: offset,
             },
         },
     });
@@ -52,11 +60,21 @@ export async function GET(request: Request, { params }: RouteParams) {
         return NextResponse.json({ error: 'Bucket not found' }, { status: 404 });
     }
 
+    // Get total counts for hasMore calculation
+    const [budgetCount, transactionCount] = await Promise.all([
+        prisma.budgetAllocation.count({ where: { bucketId: id } }),
+        prisma.allocation.count({ where: { bucketId: id } }),
+    ]);
+
+    const totalItems = budgetCount + transactionCount;
+    const hasMore = offset + limit < totalItems;
+
     return NextResponse.json({
         id: bucket.id,
         name: bucket.name,
         color: bucket.color,
         type: bucket.type,
+        hasMore,
         budgetAllocations: bucket.budgetAllocations.map((ba) => ({
             id: ba.id,
             amount: Number(ba.amount),

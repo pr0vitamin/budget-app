@@ -70,6 +70,7 @@ export default async function InboxPage() {
             <InboxPageClient
                 transactions={formattedTransactions}
                 unallocatedCount={unallocatedCount}
+                hasMore={transactions.length >= 50}
             />
         </AppShell>
     );

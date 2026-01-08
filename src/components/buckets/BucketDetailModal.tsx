@@ -42,6 +42,8 @@ export function BucketDetailModal({
     const router = useRouter();
     const [allocations, setAllocations] = useState<AllocationItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editAmount, setEditAmount] = useState('');
     const [editNote, setEditNote] = useState('');
@@ -52,12 +54,17 @@ export function BucketDetailModal({
         }
     }, [isOpen, bucketId]);
 
-    const fetchAllocations = async () => {
-        setIsLoading(true);
+    const fetchAllocations = async (reset = true) => {
+        if (reset) {
+            setIsLoading(true);
+            setAllocations([]);
+        }
         try {
-            const res = await fetch(`/api/buckets/${bucketId}`);
+            const offset = reset ? 0 : allocations.length;
+            const res = await fetch(`/api/buckets/${bucketId}?limit=50&offset=${offset}`);
             if (res.ok) {
                 const data = await res.json();
+                setHasMore(data.hasMore);
 
                 // Combine and sort allocations by date
                 const combined: AllocationItem[] = [
@@ -78,13 +85,23 @@ export function BucketDetailModal({
                     return new Date(dateB).getTime() - new Date(dateA).getTime();
                 });
 
-                setAllocations(combined);
+                if (reset) {
+                    setAllocations(combined);
+                } else {
+                    setAllocations(prev => [...prev, ...combined]);
+                }
             }
         } catch (error) {
             console.error('Failed to fetch allocations:', error);
         } finally {
             setIsLoading(false);
+            setIsLoadingMore(false);
         }
+    };
+
+    const handleLoadMore = () => {
+        setIsLoadingMore(true);
+        fetchAllocations(false);
     };
 
     const handleDeleteBudgetAllocation = async (id: string) => {
@@ -312,6 +329,19 @@ export function BucketDetailModal({
                                     );
                                 }
                             })}
+                        </div>
+                    )}
+
+                    {/* Load More button */}
+                    {hasMore && !isLoading && allocations.length > 0 && (
+                        <div className="flex justify-center py-4">
+                            <button
+                                onClick={handleLoadMore}
+                                disabled={isLoadingMore}
+                                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+                            >
+                                {isLoadingMore ? 'Loading...' : 'Load More'}
+                            </button>
                         </div>
                     )}
                 </div>

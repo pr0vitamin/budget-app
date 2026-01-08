@@ -22,10 +22,14 @@ interface Transaction {
 interface InboxPageClientProps {
     transactions: Transaction[];
     unallocatedCount: number;
+    hasMore?: boolean;
 }
 
-export function InboxPageClient({ transactions, unallocatedCount }: InboxPageClientProps) {
+export function InboxPageClient({ transactions: initialTransactions, unallocatedCount, hasMore: initialHasMore = true }: InboxPageClientProps) {
     const router = useRouter();
+    const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+    const [hasMore, setHasMore] = useState(initialHasMore);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
     const [filter, setFilter] = useState<'all' | 'unallocated'>('all');
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -73,6 +77,39 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
         onRefresh: () => handleSyncTransactions(),
         threshold: 80,
     });
+
+    const handleLoadMore = useCallback(async () => {
+        if (isLoadingMore || !hasMore) return;
+
+        setIsLoadingMore(true);
+        try {
+            const res = await fetch(`/api/transactions?limit=50&offset=${transactions.length}`);
+            const data = await res.json();
+
+            if (data.length === 0) {
+                setHasMore(false);
+            } else {
+                const formatted = data.map((t: { id: string; amount: number; merchant: string | null; date: string; description?: string | null; isManual: boolean; allocations: Array<{ bucket: { id: string; name: string; color: string }; amount: number }> }) => ({
+                    id: t.id,
+                    amount: Number(t.amount),
+                    merchant: t.merchant || 'Unknown',
+                    date: t.date,
+                    description: t.description || undefined,
+                    isManual: t.isManual,
+                    allocations: t.allocations.map((a: { bucket: { id: string; name: string; color: string }; amount: number }) => ({
+                        bucket: { id: a.bucket.id, name: a.bucket.name, color: a.bucket.color },
+                        amount: Number(a.amount),
+                    })),
+                }));
+                setTransactions(prev => [...prev, ...formatted]);
+                if (data.length < 50) setHasMore(false);
+            }
+        } catch (err) {
+            console.error('Failed to load more:', err);
+        } finally {
+            setIsLoadingMore(false);
+        }
+    }, [isLoadingMore, hasMore, transactions.length]);
 
     const filteredTransactions =
         filter === 'unallocated'
@@ -271,6 +308,29 @@ export function InboxPageClient({ transactions, unallocatedCount }: InboxPageCli
                 transactions={filteredTransactions}
                 onTransactionClick={handleTransactionClick}
             />
+
+            {/* Load More button */}
+            {hasMore && filter === 'all' && (
+                <div className="flex justify-center py-4">
+                    <button
+                        onClick={handleLoadMore}
+                        disabled={isLoadingMore}
+                        className="px-6 py-2 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+                    >
+                        {isLoadingMore ? (
+                            <span className="flex items-center gap-2">
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                Loading...
+                            </span>
+                        ) : (
+                            'Load More'
+                        )}
+                    </button>
+                </div>
+            )}
 
             {/* Add transaction form modal */}
             {showAddForm && (
