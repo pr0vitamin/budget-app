@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cat Budget 🐱💰
+
+A playful budgeting app that turns your savings goals into adorable cat piggy banks.
+
+## Features
+
+- **Cat Piggy Banks** - Organize money into cute cat-themed buckets
+- **Bank Sync** - Connect NZ bank accounts via Akahu
+- **Transaction Allocation** - Categorize spending to buckets
+- **Scheduled Transactions** - Track upcoming bills
+- **Offline Support** - PWA with IndexedDB caching
+- **Auto-categorization** - Rules to auto-allocate transactions
+
+## Tech Stack
+
+- **Frontend**: Next.js 16, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Database**: PostgreSQL (via Supabase)
+- **Auth**: Supabase Auth
+- **Banking**: Akahu API (NZ open banking)
+- **PWA**: next-pwa, IndexedDB
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 20+
+- A Supabase project
+- An Akahu developer account (for bank sync)
+
+### Environment Variables
+
+Create a `.env` file:
+
+```env
+# Database (from Supabase)
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+
+# Supabase Auth
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+
+# Akahu (NZ Bank Sync)
+AKAHU_APP_TOKEN="your-app-token"
+AKAHU_USER_TOKEN="your-user-token"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Install dependencies
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Generate Prisma client
+npx prisma generate
 
-## Learn More
+# Push schema to database
+npx prisma db push
 
-To learn more about Next.js, take a look at the following resources:
+# Run Supabase RLS migrations
+# (Run supabase/migrations/20260105_rls_policies.sql in Supabase SQL Editor)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Start dev server
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for full deployment guide.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Quick Deploy to Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx vercel
+```
+
+## Project Structure
+
+```
+src/
+├── app/                 # Next.js App Router pages
+│   ├── api/            # API routes
+│   ├── inbox/          # Transaction inbox
+│   ├── upcoming/       # Scheduled transactions
+│   └── settings/       # User settings
+├── components/
+│   ├── buckets/        # Cat piggy bank components
+│   ├── transactions/   # Transaction UI
+│   ├── layout/         # App shell, nav
+│   └── ui/             # Shared UI components
+├── lib/
+│   ├── db.ts           # Prisma client
+│   ├── supabase/       # Supabase clients
+│   ├── offline/        # PWA/IndexedDB layer
+│   └── *.ts            # Utility functions
+└── types/              # TypeScript declarations
+```
+
+## License
+
+MIT
