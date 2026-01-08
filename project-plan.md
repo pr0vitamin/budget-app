@@ -313,20 +313,20 @@ The project is organized into **7 milestones**, each building on the previous. E
 
 #### 6.1 Cash Stuffing Animations
 
-- [ ] Integrate Motion (Framer Motion) library
-- [ ] Drag-and-drop from money pool to buckets
-- [ ] Allocate pre-configured amount on drop
-- [ ] Sparkle animation on allocation
-- [ ] Quick Allocate All button with cascading animation
-- [ ] Completion confetti celebration
-- [ ] Spring physics for jar interactions
+- [x] ~~Drag-and-drop from money pool to buckets~~ (Simplified to "Feed All" button)
+- [x] "Feed all the cats!" button with confirmation modal
+- [x] Allocate pre-configured amounts on confirm
+- [x] Sparkle animation component (SparkleEffect)
+- [x] Completion confetti celebration (ConfettiCelebration)
+- [x] Spring physics for cat interactions (Motion library)
 
 #### 6.2 Cat Piggy Bank Polish
 
-- [ ] Refine cat-face design with more expressions
-- [ ] Liquid/coins fill animation upgrade
-- [ ] Angry cat for overspending
-- [ ] Happy cat for savings goal progress
+- [x] Refine cat-face design with Kawaii style
+- [x] Liquid fill animation
+- [x] Angry cat expression for overspending
+- [x] Happy cat expression when full
+- [x] Rounded ears and 3 whiskers
 - [ ] Wobble animation when full
 
 #### 6.3 Dark Mode

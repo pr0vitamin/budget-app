@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { motion } from 'motion/react';
 
 interface CatPiggyBankProps {
     name: string;
@@ -115,9 +116,12 @@ export function CatPiggyBank({
     const bgColor = isOverspent ? '#fecaca' : '#fff1f2'; // Very light pinkish-white default
 
     return (
-        <button
+        <motion.button
             onClick={onClick}
-            className={`flex flex-col items-center gap-1 transition-transform active:scale-95 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded-2xl p-1`}
+            className={`flex flex-col items-center gap-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded-2xl p-1`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         >
             <div className={`relative ${sizeClasses[size]}`}>
                 <svg viewBox="0 0 80 80" className="w-full h-full drop-shadow-sm">
@@ -196,6 +200,6 @@ export function CatPiggyBank({
                     </span>
                 )}
             </div>
-        </button>
+        </motion.button>
     );
 }

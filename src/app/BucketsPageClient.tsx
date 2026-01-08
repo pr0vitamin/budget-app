@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BucketList, BucketForm, ReorderGroupsModal, FeedModal, FeedAllModal, BucketDetailModal } from '@/components/buckets';
+import { ConfettiCelebration } from '@/components/animations';
 
 
 interface Bucket {
@@ -43,6 +44,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
     const [feedingBucket, setFeedingBucket] = useState<Bucket | null>(null);
     const [detailBucket, setDetailBucket] = useState<Bucket | null>(null);
     const [showFeedAllModal, setShowFeedAllModal] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
 
     // Fetch reserved amounts on mount and when groups change
     useEffect(() => {
@@ -184,6 +186,8 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
             }
         }
 
+        // Success! Trigger confetti
+        setShowConfetti(true);
         router.refresh();
     };
 
@@ -344,6 +348,12 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                     currentBalance: b.balance,
                 })))}
                 availableToBudget={availableToBudget}
+            />
+
+            {/* Confetti Celebration */}
+            <ConfettiCelebration
+                trigger={showConfetti}
+                onComplete={() => setShowConfetti(false)}
             />
         </div>
     );
