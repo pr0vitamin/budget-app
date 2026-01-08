@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { BucketList, BucketForm, ReorderGroupsModal, FeedModal, BucketDetailModal } from '@/components/buckets';
+import { BucketList, BucketForm, ReorderGroupsModal, FeedModal, FeedAllModal, BucketDetailModal } from '@/components/buckets';
 
 
 interface Bucket {
@@ -42,6 +42,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
     const [reservedByBucket, setReservedByBucket] = useState<Record<string, number>>({});
     const [feedingBucket, setFeedingBucket] = useState<Bucket | null>(null);
     const [detailBucket, setDetailBucket] = useState<Bucket | null>(null);
+    const [showFeedAllModal, setShowFeedAllModal] = useState(false);
 
     // Fetch reserved amounts on mount and when groups change
     useEffect(() => {
@@ -165,6 +166,27 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
         }
     };
 
+    const handleFeedAll = async () => {
+        // Get all cats with auto-allocation configured
+        const allCats = groups.flatMap(g => g.buckets);
+        const catsToFeed = allCats.filter(c => c.autoAllocationAmount > 0);
+
+        // Create allocations for each cat
+        for (const cat of catsToFeed) {
+            const res = await fetch('/api/budget/allocations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bucketId: cat.id, amount: cat.autoAllocationAmount }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || `Failed to feed ${cat.name}`);
+            }
+        }
+
+        router.refresh();
+    };
+
     return (
         <div className="p-4">
             {/* Header */}
@@ -186,6 +208,17 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                 </div>
             </div>
 
+            {/* Feed All Cats button */}
+            {availableToBudget > 0 && groups.some(g => g.buckets.some(b => b.autoAllocationAmount > 0)) && (
+                <button
+                    onClick={() => setShowFeedAllModal(true)}
+                    className="w-full mb-4 py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-colors flex items-center justify-center gap-2 shadow-md"
+                >
+                    <span className="text-xl">🍽️</span>
+                    Feed all the cats!
+                </button>
+            )}
+
             {/* Reorder button */}
             {groups.length > 1 && (
                 <button
@@ -195,7 +228,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
                     </svg>
-                    Reorder Groups
+                    Reorder Clowders
                 </button>
             )}
 
@@ -297,6 +330,21 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                     onEditBucket={handleEditFromDetail}
                 />
             )}
+
+            {/* Feed All Modal */}
+            <FeedAllModal
+                isOpen={showFeedAllModal}
+                onClose={() => setShowFeedAllModal(false)}
+                onConfirm={handleFeedAll}
+                cats={groups.flatMap(g => g.buckets.map(b => ({
+                    id: b.id,
+                    name: b.name,
+                    color: b.color,
+                    autoAllocationAmount: b.autoAllocationAmount,
+                    currentBalance: b.balance,
+                })))}
+                availableToBudget={availableToBudget}
+            />
         </div>
     );
 }
