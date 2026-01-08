@@ -30,21 +30,10 @@ A playful budgeting app that turns your savings goals into adorable cat piggy ba
 
 ### Environment Variables
 
-Create a `.env` file:
+Copy the example env file and fill in your values:
 
-```env
-# Database (from Supabase)
-DATABASE_URL="postgresql://..."
-DIRECT_URL="postgresql://..."
-
-# Supabase Auth
-NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
-SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
-
-# Akahu (NZ Bank Sync)
-AKAHU_APP_TOKEN="your-app-token"
-AKAHU_USER_TOKEN="your-user-token"
+```bash
+cp .env.example .env
 ```
 
 ### Setup
