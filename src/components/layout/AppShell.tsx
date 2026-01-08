@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { BottomNav } from './BottomNav';
+import { OfflineIndicator } from './OfflineIndicator';
 
 interface AppShellProps {
     children: ReactNode;
@@ -9,6 +10,9 @@ interface AppShellProps {
 export function AppShell({ children, showNav = true }: AppShellProps) {
     return (
         <div className="min-h-screen bg-gray-50">
+            {/* Offline indicator banner */}
+            <OfflineIndicator />
+
             {/* Main content area with bottom padding for nav */}
             <main className={showNav ? 'pb-20' : ''}>{children}</main>
 
