@@ -195,7 +195,7 @@ export function CatPiggyBank({
 
             {/* Label & Balance */}
             <div className="flex flex-col items-center">
-                <span className="text-xs font-semibold text-gray-700 truncate max-w-[80px]">{name}</span>
+                <span className="text-xs font-semibold text-gray-700 truncate max-w-[140px]">{name}</span>
 
                 {reserved > 0 ? (
                     <div className="flex flex-col items-center leading-none mt-1">
