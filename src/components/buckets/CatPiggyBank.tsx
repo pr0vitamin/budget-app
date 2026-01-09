@@ -58,6 +58,11 @@ export function CatPiggyBank({
         return 'neutral';
     }, [isOverspent, balance, fillPercent]);
 
+    // Sanitize name for SVG ID (remove spaces and special characters)
+    const sanitizedId = useMemo(() => {
+        return name.replace(/[^a-zA-Z0-9]/g, '-');
+    }, [name]);
+
     // Dynamic eyes based on expression
     const renderEyes = () => {
         const eyeColor = "#374151";
@@ -133,7 +138,7 @@ export function CatPiggyBank({
                 </div>
                 <svg viewBox="0 0 80 80" className="w-full h-full drop-shadow-sm">
                     <defs>
-                        <clipPath id={`body-clip-${name}`}>
+                        <clipPath id={`body-clip-${sanitizedId}`}>
                             <path d={headPath} />
                         </clipPath>
                     </defs>
@@ -149,7 +154,7 @@ export function CatPiggyBank({
                     <path d={headPath} fill={bgColor} stroke={fillColor} strokeWidth="2.5" className="transition-colors duration-300" />
 
                     {/* Liquid Fill Level */}
-                    <g clipPath={`url(#body-clip-${name})`}>
+                    <g clipPath={`url(#body-clip-${sanitizedId})`}>
                         <rect
                             x="0"
                             y={75 - (fillPercent * 0.6)} // Map 0-100% to approximate height within path
