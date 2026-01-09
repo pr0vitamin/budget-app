@@ -59,12 +59,14 @@ export function SettingsPageClient({
     };
 
     const formatDisplayDate = (dateStr: string) => {
+        // Parse as UTC to avoid timezone shift
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-NZ', {
             weekday: 'short',
             day: 'numeric',
             month: 'short',
-            year: 'numeric'
+            year: 'numeric',
+            timeZone: 'UTC'
         });
     };
 
