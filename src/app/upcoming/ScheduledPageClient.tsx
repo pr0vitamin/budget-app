@@ -50,6 +50,13 @@ export default function ScheduledPageClient({
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Tomorrow's date as default and minimum for start date
+    const getTomorrow = () => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split('T')[0];
+    };
+
     // Form state
     const [formData, setFormData] = useState({
         name: '',
@@ -57,7 +64,7 @@ export default function ScheduledPageClient({
         bucketId: '',
         frequency: 'monthly',
         interval: 1,
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: getTomorrow(),
     });
 
     const resetForm = () => {
@@ -67,7 +74,7 @@ export default function ScheduledPageClient({
             bucketId: '',
             frequency: 'monthly',
             interval: 1,
-            startDate: new Date().toISOString().split('T')[0],
+            startDate: getTomorrow(),
         });
         setEditingId(null);
         setShowForm(false);
@@ -364,6 +371,7 @@ export default function ScheduledPageClient({
                                 <input
                                     type="date"
                                     value={formData.startDate}
+                                    min={getTomorrow()}
                                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     required

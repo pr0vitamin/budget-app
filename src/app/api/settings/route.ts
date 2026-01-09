@@ -59,12 +59,16 @@ export async function PATCH(request: Request) {
         where: { userId: user.id },
         update: {
             ...(budgetCycleType && { budgetCycleType }),
-            ...(budgetCycleStartDate && { budgetCycleStartDate: new Date(`${budgetCycleStartDate}T12:00:00Z`) }),
+            ...(budgetCycleStartDate && {
+                budgetCycleStartDate: new Date(`${budgetCycleStartDate.split('T')[0]}T12:00:00Z`)
+            }),
         },
         create: {
             userId: user.id,
             budgetCycleType: budgetCycleType || 'fortnightly',
-            budgetCycleStartDate: budgetCycleStartDate ? new Date(`${budgetCycleStartDate}T12:00:00Z`) : new Date(),
+            budgetCycleStartDate: budgetCycleStartDate
+                ? new Date(`${budgetCycleStartDate.split('T')[0]}T12:00:00Z`)
+                : new Date(),
         },
     });
 

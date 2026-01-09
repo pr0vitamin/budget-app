@@ -47,7 +47,7 @@ export function SettingsPageClient({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 budgetCycleType: cycleType,
-                budgetCycleStartDate: new Date(startDate).toISOString(),
+                ...(startDate && { budgetCycleStartDate: startDate }),
             }),
         });
 
