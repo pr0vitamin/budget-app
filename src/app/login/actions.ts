@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 
 export async function sendMagicLink(formData: FormData) {
     const email = formData.get('email') as string;
@@ -10,12 +11,18 @@ export async function sendMagicLink(formData: FormData) {
         return { error: 'Email is required' };
     }
 
+    // Get the origin from the request headers
+    const headersList = await headers();
+    const host = headersList.get('host');
+    const protocol = headersList.get('x-forwarded-proto') || 'https';
+    const origin = `${protocol}://${host}`;
+
     const supabase = await createClient();
 
     const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+            emailRedirectTo: `${origin}/auth/callback`,
         },
     });
 
