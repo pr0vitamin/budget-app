@@ -75,13 +75,13 @@ export async function GET(request: Request, { params }: RouteParams) {
         color: bucket.color,
         type: bucket.type,
         hasMore,
-        budgetAllocations: bucket.budgetAllocations.map((ba) => ({
+        budgetAllocations: bucket.budgetAllocations.map((ba: { id: string; amount: unknown; note: string | null; createdAt: Date }) => ({
             id: ba.id,
             amount: Number(ba.amount),
             note: ba.note,
             createdAt: ba.createdAt.toISOString(),
         })),
-        transactionAllocations: bucket.allocations.map((a) => ({
+        transactionAllocations: bucket.allocations.map((a: { id: string; transactionId: string; amount: unknown; transaction: { merchant: string | null; date: Date } }) => ({
             id: a.id,
             transactionId: a.transactionId,
             amount: Number(a.amount),
