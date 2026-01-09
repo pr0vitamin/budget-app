@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { TransactionList, TransactionForm, AllocationModal } from '@/components/transactions';
 import { usePullToRefresh } from '@/hooks';
@@ -37,6 +37,12 @@ export function InboxPageClient({ transactions: initialTransactions, unallocated
     const [showSyncModal, setShowSyncModal] = useState(false);
     const [syncDays, setSyncDays] = useState(14);
     const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+    // Sync local state with props when server data changes (after router.refresh())
+    useEffect(() => {
+        setTransactions(initialTransactions);
+        setHasMore(initialHasMore);
+    }, [initialTransactions, initialHasMore]);
 
     // Check if this is a first-time sync (no transactions yet)
     const isFirstSync = transactions.length === 0;
