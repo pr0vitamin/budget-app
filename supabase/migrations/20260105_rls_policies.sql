@@ -2,11 +2,6 @@
 -- These policies ensure users can only access their own data
 
 -- ============================================================================
--- PRISMA MIGRATIONS (admin-only, block all user access)
--- ============================================================================
-ALTER TABLE "_prisma_migrations" ENABLE ROW LEVEL SECURITY;
--- No policies = no access for authenticated users (only service role can access)
--- ============================================================================
 -- USER
 -- ============================================================================
 ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;

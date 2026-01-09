@@ -65,13 +65,14 @@ Add these in Vercel Dashboard → Settings → Environment Variables:
 
 | Variable | Value |
 |----------|-------|
-| `DATABASE_URL` | `postgresql://postgres:[password]@db.[project].supabase.co:5432/postgres?pgbouncer=true` |
-| `DIRECT_URL` | `postgresql://postgres:[password]@db.[project].supabase.co:5432/postgres` |
+| `DATABASE_URL` | Transaction pooler connection string with `?pgbouncer=true` |
+| `DIRECT_URL` | Direct connection string (for migrations) |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://[project].supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Your service role key |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Your anon/publishable key |
+| `SUPABASE_SECRET_KEY` | Your service role/secret key |
 | `AKAHU_APP_TOKEN` | Your Akahu app token |
 | `AKAHU_USER_TOKEN` | Your Akahu user token |
+| `NEXT_PUBLIC_APP_URL` | Your production URL |
 
 ### Custom Domain (Optional)
 

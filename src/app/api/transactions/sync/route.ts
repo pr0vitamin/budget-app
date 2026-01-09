@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/db';
-import { refreshAccount } from '@/lib/akahu';
+import { refreshAccount, getAccounts as getAkahuAccounts } from '@/lib/akahu';
 import { syncAllAccountTransactions } from '@/lib/sync-transactions';
 
 // Rate limit: 1 refresh per hour per account (Akahu's limit)
@@ -36,17 +36,74 @@ export async function POST(request: Request) {
     }
 
     // Get all user's accounts
-    const accounts = await prisma.account.findMany({
+    let accounts = await prisma.account.findMany({
         where: { userId: user.id },
         select: { id: true, akahuId: true, lastSyncAt: true },
     });
 
+    // If no accounts, try to sync them from Akahu first
     if (accounts.length === 0) {
-        return NextResponse.json({
-            success: false,
-            error: 'No bank accounts connected',
-            needsConnection: true,
-        });
+        try {
+            const akahuAccounts = await getAkahuAccounts();
+
+            if (akahuAccounts.length === 0) {
+                return NextResponse.json({
+                    success: false,
+                    error: 'No bank accounts connected in Akahu',
+                    needsConnection: true,
+                });
+            }
+
+            // Create accounts in database
+            await Promise.all(
+                akahuAccounts.map(async (akahuAccount) => {
+                    return prisma.account.upsert({
+                        where: {
+                            userId_akahuId: {
+                                userId: user.id,
+                                akahuId: akahuAccount._id,
+                            },
+                        },
+                        update: {
+                            name: akahuAccount.name,
+                            institution: akahuAccount.connection.name,
+                            accountType: akahuAccount.type.toLowerCase(),
+                            formattedAccount: akahuAccount.formatted_account || null,
+                            balanceCurrent: akahuAccount.balance?.current ?? null,
+                            balanceAvailable: akahuAccount.balance?.available ?? null,
+                            currency: akahuAccount.balance?.currency || 'NZD',
+                            status: akahuAccount.status,
+                            connectionLogo: akahuAccount.connection.logo || null,
+                        },
+                        create: {
+                            userId: user.id,
+                            akahuId: akahuAccount._id,
+                            name: akahuAccount.name,
+                            institution: akahuAccount.connection.name,
+                            accountType: akahuAccount.type.toLowerCase(),
+                            formattedAccount: akahuAccount.formatted_account || null,
+                            balanceCurrent: akahuAccount.balance?.current ?? null,
+                            balanceAvailable: akahuAccount.balance?.available ?? null,
+                            currency: akahuAccount.balance?.currency || 'NZD',
+                            status: akahuAccount.status,
+                            connectionLogo: akahuAccount.connection.logo || null,
+                        },
+                    });
+                })
+            );
+
+            // Re-fetch accounts after creating them
+            accounts = await prisma.account.findMany({
+                where: { userId: user.id },
+                select: { id: true, akahuId: true, lastSyncAt: true },
+            });
+        } catch (error) {
+            console.error('Error syncing accounts from Akahu:', error);
+            return NextResponse.json({
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to connect to Akahu',
+            }, { status: 500 });
+        }
     }
 
     // Check cooldown and refresh accounts that aren't limited
