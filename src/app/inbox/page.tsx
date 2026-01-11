@@ -45,7 +45,7 @@ export default async function InboxPage() {
     });
 
     // Count unallocated
-    const unallocatedCount = transactions.filter((t) => t.allocations.length === 0).length;
+    const unallocatedCount = transactions.filter((t) => t.allocations.length === 0 && Number(t.amount) < 0).length;
 
     // Format for client
     const formattedTransactions = transactions.map((t) => ({

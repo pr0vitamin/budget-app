@@ -119,7 +119,7 @@ export function InboxPageClient({ transactions: initialTransactions, unallocated
 
     const filteredTransactions =
         filter === 'unallocated'
-            ? transactions.filter((t) => t.allocations.length === 0)
+            ? transactions.filter((t) => t.allocations.length === 0 && t.amount < 0)
             : transactions;
 
     const handleAddTransaction = async (data: {
