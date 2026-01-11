@@ -25,30 +25,38 @@ export default async function HomePage() {
       buckets: {
         where: { isDeleted: false },
         orderBy: { sortOrder: 'asc' },
-        include: {
-          allocations: true, // Transaction allocations (expenses)
-          budgetAllocations: true, // Budget allocations (income feeding)
-        },
       },
     },
     orderBy: { sortOrder: 'asc' },
   });
 
-  // Calculate balances (budget allocations + transaction allocations)
+  const bucketIds = groups.flatMap(g => g.buckets.map(b => b.id));
+
+  // Aggregate transaction allocations (expenses - negative)
+  const transactionAllocations = await prisma.allocation.groupBy({
+    by: ['bucketId'],
+    where: { bucketId: { in: bucketIds } },
+    _sum: { amount: true },
+  });
+
+  // Aggregate budget allocations (income feeds - positive)
+  const budgetAllocations = await prisma.budgetAllocation.groupBy({
+    by: ['bucketId'],
+    where: { bucketId: { in: bucketIds } },
+    _sum: { amount: true },
+  });
+
+  // Create lookup maps for fast access
+  const transactionMap = new Map(transactionAllocations.map(a => [a.bucketId, Number(a._sum.amount || 0)]));
+  const budgetMap = new Map(budgetAllocations.map(a => [a.bucketId, Number(a._sum.amount || 0)]));
+
+  // Calculate balances
   const groupsWithBalances = groups.map((group) => ({
     id: group.id,
     name: group.name,
     buckets: group.buckets.map((bucket) => {
-      // Budget allocations = money added from income pool (positive)
-      const budgetAllocationTotal = bucket.budgetAllocations.reduce(
-        (sum, ba) => sum + Number(ba.amount),
-        0
-      );
-      // Transaction allocations = expenses (negative)
-      const transactionAllocationTotal = bucket.allocations.reduce(
-        (sum, alloc) => sum + Number(alloc.amount),
-        0
-      );
+      const budgetAllocationTotal = budgetMap.get(bucket.id) || 0;
+      const transactionAllocationTotal = transactionMap.get(bucket.id) || 0;
       const balance = budgetAllocationTotal + transactionAllocationTotal;
 
       return {
