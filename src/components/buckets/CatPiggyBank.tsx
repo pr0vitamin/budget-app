@@ -203,7 +203,7 @@ export function CatPiggyBank({
                             ${Math.abs(balance).toFixed(0)}
                         </span>
                         <span className="text-[9px] text-indigo-500 font-medium">
-                            +${reserved}
+                            -${reserved}
                         </span>
                     </div>
                 ) : (
