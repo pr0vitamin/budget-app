@@ -194,6 +194,7 @@ export function AllocationModal({
 
     if (!isOpen) return null;
 
+    const isIncome = transaction.amount >= 0;
     const isSplitMode = allocations.length > 1;
     const selectedBucket = allocations[0]?.bucketId
         ? buckets.find((b) => b.id === allocations[0].bucketId)
@@ -206,7 +207,9 @@ export function AllocationModal({
             <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 animate-slide-up max-h-[85vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-gray-800">Allocate Transaction</h2>
+                    <h2 className="text-xl font-bold text-gray-800">
+                        {isIncome ? 'Transaction Details' : 'Allocate Transaction'}
+                    </h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">
                         ×
                     </button>
@@ -285,8 +288,18 @@ export function AllocationModal({
                     )}
                 </div>
 
+                {/* Income explanation */}
+                {isIncome && (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                        <p className="text-sm font-medium text-green-800 mb-1">💰 Income Transaction</p>
+                        <p className="text-xs text-green-700">
+                            Income is automatically added to your "Available to Budget" pool. No allocation needed.
+                        </p>
+                    </div>
+                )}
+
                 {/* Current allocation display */}
-                {transaction.allocations && transaction.allocations.length > 0 && (
+                {!isIncome && transaction.allocations && transaction.allocations.length > 0 && (
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
                         <p className="text-sm font-medium text-green-800 mb-2">✓ Currently allocated to:</p>
                         <div className="space-y-2">
@@ -318,7 +331,7 @@ export function AllocationModal({
 
 
                 {/* Simple mode: Bucket selector */}
-                {!isSplitMode && (
+                {!isIncome && !isSplitMode && (
                     <>
                         <input
                             type="text"
@@ -363,7 +376,7 @@ export function AllocationModal({
                 )}
 
                 {/* Split mode */}
-                {isSplitMode && (
+                {!isIncome && isSplitMode && (
                     <div className="space-y-3 mb-4">
                         {allocations.map((alloc, index) => (
                             <div key={index} className="flex gap-2 items-center">
@@ -409,7 +422,7 @@ export function AllocationModal({
                 )}
 
                 {/* Create rule checkbox */}
-                {transaction.merchant && (
+                {!isIncome && transaction.merchant && (
                     <label className="flex items-center gap-2 mb-4 cursor-pointer">
                         <input
                             type="checkbox"
@@ -429,15 +442,17 @@ export function AllocationModal({
                         onClick={onClose}
                         className="flex-1 py-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
                     >
-                        Cancel
+                        {isIncome ? 'Close' : 'Cancel'}
                     </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting || (!selectedBucket && !isSplitMode)}
-                        className="flex-1 py-3 bg-indigo-500 text-white font-medium rounded-xl hover:bg-indigo-600 transition-colors disabled:opacity-50"
-                    >
-                        {isSubmitting ? 'Allocating...' : 'Allocate'}
-                    </button>
+                    {!isIncome && (
+                        <button
+                            onClick={handleSubmit}
+                            disabled={isSubmitting || (!selectedBucket && !isSplitMode)}
+                            className="flex-1 py-3 bg-indigo-500 text-white font-medium rounded-xl hover:bg-indigo-600 transition-colors disabled:opacity-50"
+                        >
+                            {isSubmitting ? 'Allocating...' : 'Allocate'}
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

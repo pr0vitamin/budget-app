@@ -141,11 +141,7 @@ export function InboxPageClient({ transactions: initialTransactions, unallocated
     };
 
     const handleTransactionClick = (transaction: Transaction) => {
-        // Only allow allocation for expenses (negative amounts)
-        // Income (positive amounts) goes to the "Available to Budget" pool
-        if (transaction.amount < 0) {
-            setSelectedTransaction(transaction);
-        }
+        setSelectedTransaction(transaction);
     };
 
     const handleAllocate = async (
