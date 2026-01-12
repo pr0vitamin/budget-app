@@ -202,7 +202,7 @@ export function CatPiggyBank({
                         <span className={`text-sm font-bold ${isOverspent || balance < 0 ? 'text-red-500' : 'text-gray-900'}`}>
                             ${Math.abs(balance).toFixed(0)}
                         </span>
-                        <span className="text-[9px] text-indigo-500 font-medium">
+                        <span className="text-[9px] text-red-500 font-medium">
                             -${reserved}
                         </span>
                     </div>
