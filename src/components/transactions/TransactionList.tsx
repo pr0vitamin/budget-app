@@ -58,7 +58,7 @@ export function TransactionList({ transactions, onTransactionClick }: Transactio
                             <SwipeableTransactionItem
                                 key={t.id}
                                 transaction={t}
-                                onAllocate={(transaction) => onTransactionClick?.(transaction)}
+                                onClick={(transaction) => onTransactionClick?.(transaction)}
                             />
                         ))}
                     </div>
