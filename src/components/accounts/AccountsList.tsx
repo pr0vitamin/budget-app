@@ -110,7 +110,8 @@ export function AccountsList({ accounts }: AccountsListProps) {
                         {/* Logo or fallback */}
                         <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden">
                             {account.connectionLogo ? (
-                                <Image
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
                                     src={account.connectionLogo}
                                     alt={account.institution}
                                     width={48}
