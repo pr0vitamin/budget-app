@@ -293,7 +293,7 @@ export function AllocationModal({
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
                         <p className="text-sm font-medium text-green-800 mb-1">💰 Income Transaction</p>
                         <p className="text-xs text-green-700">
-                            Income is automatically added to your "Available to Budget" pool. No allocation needed.
+                            Income is automatically added to your &quot;Available to Budget&quot; pool. No allocation needed.
                         </p>
                     </div>
                 )}
@@ -431,7 +431,7 @@ export function AllocationModal({
                             className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
                         <span className="text-sm text-gray-700">
-                            Always allocate "{transaction.merchant}" to this cat
+                            Always allocate &quot;{transaction.merchant}&quot; to this cat
                         </span>
                     </label>
                 )}

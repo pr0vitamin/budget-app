@@ -96,7 +96,7 @@ export function FeedAllModal({
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 flex items-start gap-2">
                         <span className="text-amber-500 text-lg">⚠️</span>
                         <p className="text-sm text-amber-700">
-                            You don't have enough funds to feed all cats. You're short by{' '}
+                            You don&apos;t have enough funds to feed all cats. You&apos;re short by{' '}
                             <strong>${(totalRequired - availableToBudget).toFixed(2)}</strong>.
                         </p>
                     </div>

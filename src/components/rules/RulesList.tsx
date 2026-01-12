@@ -46,7 +46,7 @@ export function RulesList({ rules }: RulesListProps) {
                 <p>No auto-categorization rules yet.</p>
                 <p className="text-sm mt-1">
                     Create rules when allocating transactions by checking
-                    "Always allocate to this cat".
+                    &quot;Always allocate to this cat&quot;.
                 </p>
             </div>
         );
@@ -70,7 +70,7 @@ export function RulesList({ rules }: RulesListProps) {
                     {/* Rule details */}
                     <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-800 truncate">
-                            "{rule.merchantPattern}"
+                            &quot;{rule.merchantPattern}&quot;
                         </p>
                         <p className="text-sm text-gray-500 truncate">
                             → {rule.bucket.name}

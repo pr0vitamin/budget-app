@@ -9,6 +9,8 @@ interface ConfettiPiece {
     delay: number;
     color: string;
     emoji: string;
+    rotateDirection: number;
+    duration: number;
 }
 
 interface ConfettiCelebrationProps {
@@ -22,6 +24,7 @@ const COLORS = ['#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#22c55e', '#f97316'
 export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebrationProps) {
     const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
 
+     
     useEffect(() => {
         if (trigger) {
             // Generate confetti pieces
@@ -31,6 +34,8 @@ export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebration
                 delay: Math.random() * 0.3,
                 color: COLORS[Math.floor(Math.random() * COLORS.length)],
                 emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
+                rotateDirection: Math.random() > 0.5 ? 360 : -360,
+                duration: 2 + Math.random(),
             }));
             setPieces(newPieces);
 
@@ -57,10 +62,10 @@ export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebration
                             animate={{
                                 y: window.innerHeight + 50,
                                 opacity: [1, 1, 0],
-                                rotate: Math.random() > 0.5 ? 360 : -360,
+                                rotate: piece.rotateDirection,
                             }}
                             transition={{
-                                duration: 2 + Math.random(),
+                                duration: piece.duration,
                                 delay: piece.delay,
                                 ease: 'easeIn',
                             }}

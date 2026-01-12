@@ -2,7 +2,7 @@
  * Sync pending transactions from Akahu
  */
 import { prisma } from './db';
-import { getPendingTransactions, AkahuPendingTransaction } from './akahu';
+import { getPendingTransactions } from './akahu';
 
 interface SyncPendingResult {
     newCount: number;

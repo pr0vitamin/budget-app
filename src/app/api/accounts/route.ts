@@ -29,7 +29,7 @@ export async function GET() {
  * POST /api/accounts/sync-from-akahu
  * Sync accounts from Akahu and store in database
  */
-export async function POST(request: Request) {
+export async function POST() {
     const supabase = await createClient();
     const {
         data: { user },

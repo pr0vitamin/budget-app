@@ -13,7 +13,7 @@ export function calculateNextDue(
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
-    let current = new Date(startDate);
+    const current = new Date(startDate);
     current.setHours(0, 0, 0, 0);
 
     // If start date is in the future, that's the next due date

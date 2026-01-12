@@ -1,5 +1,5 @@
 import { AppShell } from '@/components/layout';
-import { BucketSkeleton, PageSkeleton } from '@/components/ui/Skeleton';
+import { BucketSkeleton } from '@/components/ui/Skeleton';
 
 export default function Loading() {
     return (

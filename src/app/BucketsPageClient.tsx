@@ -80,7 +80,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
         }
     };
 
-    const handleBucketClick = (bucket: Bucket, groupId: string) => {
+    const handleBucketClick = (bucket: Bucket) => {
         // Show detail modal instead of edit form
         setDetailBucket(bucket);
     };
@@ -286,8 +286,7 @@ export function BucketsPageClient({ groups, totalAvailable, availableToBudget, u
                 reservedByBucket={reservedByBucket}
                 recentlyFedIds={recentlyFedCats}
                 onBucketClick={(bucket) => {
-                    const group = groups.find(g => g.buckets.some(b => b.id === bucket.id));
-                    if (group) handleBucketClick(bucket, group.id);
+                    handleBucketClick(bucket);
                 }}
                 onAddBucket={handleAddBucket}
                 onFeed={(bucket) => setFeedingBucket(bucket)}

@@ -52,9 +52,7 @@ test.describe('Inbox Page', () => {
             }
         }
 
-        // Manual transactions should show pencil indicator
-        const pencilBadge = page.locator('text=✏️');
-        // May or may not exist depending on if manual transaction was created
+        // Manual transactions should show pencil indicator (if any were created)
     });
 
     test('can navigate between All and Needs Review filters', async ({ page }) => {
