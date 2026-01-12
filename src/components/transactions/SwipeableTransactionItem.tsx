@@ -8,6 +8,7 @@ interface Transaction {
     description?: string;
     isManual: boolean;
     isAmended?: boolean;
+    isPending?: boolean;
     allocations: Array<{
         bucket: { id: string; name: string; color: string };
         amount: number;
@@ -26,10 +27,14 @@ export function TransactionItem({
     const isIncome = transaction.amount > 0;
     const isExpense = transaction.amount < 0;
     const isAllocated = transaction.allocations.length > 0;
+    const isPending = transaction.isPending;
 
     return (
         <div
-            className="relative bg-white rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors"
+            className={`relative rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-colors ${isPending
+                    ? 'bg-white border-2 border-dashed border-gray-300 hover:border-gray-400'
+                    : 'bg-white hover:bg-gray-50'
+                }`}
             onClick={() => onClick(transaction)}
         >
             {/* Icon */}
@@ -56,6 +61,11 @@ export function TransactionItem({
                     {transaction.isAmended && (
                         <span className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium flex-shrink-0">
                             Amended
+                        </span>
+                    )}
+                    {isPending && (
+                        <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded font-medium flex-shrink-0">
+                            Pending
                         </span>
                     )}
                     {isIncome && (

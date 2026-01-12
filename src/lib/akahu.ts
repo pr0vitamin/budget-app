@@ -189,3 +189,24 @@ export async function getAllTransactions(start?: string, end?: string): Promise<
 export async function refreshAccount(accountId: string): Promise<void> {
     await akahuFetch(`/refresh/${accountId}`, { method: 'POST' });
 }
+
+/**
+ * Pending transaction from Akahu
+ * Note: These don't have stable IDs and are not enriched
+ */
+export interface AkahuPendingTransaction {
+    _account: string;
+    date: string;
+    description: string;
+    amount: number;
+    type: string;
+    updated_at: string;
+}
+
+/**
+ * Get all pending transactions across all accounts
+ */
+export async function getPendingTransactions(): Promise<AkahuPendingTransaction[]> {
+    const response = await akahuFetch<AkahuResponse<AkahuPendingTransaction>>('/transactions/pending');
+    return response.items || [];
+}

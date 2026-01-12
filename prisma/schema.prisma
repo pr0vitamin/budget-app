@@ -130,7 +130,7 @@ model Transaction {
   merchant          String?
   description       String?
   date              DateTime @db.Date
-  status            String   @default("pending") // pending, cleared, amended
+  status            String   @default("confirmed") // pending, confirmed
   matchedScheduleId String?
   isManual          Boolean  @default(false)
   isAmended         Boolean  @default(false) // Transaction was amended by bank

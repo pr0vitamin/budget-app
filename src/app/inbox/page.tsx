@@ -44,7 +44,7 @@ export default async function InboxPage() {
         take: 50,
     });
 
-    // Count unallocated
+    // Count unallocated (expenses only, includes pending)
     const unallocatedCount = transactions.filter((t) => t.allocations.length === 0 && Number(t.amount) < 0).length;
 
     // Format for client
@@ -55,6 +55,8 @@ export default async function InboxPage() {
         date: t.date.toISOString(),
         description: t.description || undefined,
         isManual: t.isManual,
+        isAmended: t.isAmended,
+        isPending: t.status === 'pending',
         allocations: t.allocations.map((a) => ({
             bucket: {
                 id: a.bucket.id,

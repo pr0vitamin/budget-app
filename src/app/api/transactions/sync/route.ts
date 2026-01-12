@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/db';
 import { refreshAccount, getAccounts as getAkahuAccounts } from '@/lib/akahu';
 import { syncAllAccountTransactions } from '@/lib/sync-transactions';
+import { syncPendingTransactions } from '@/lib/sync-pending';
 
 // Rate limit: 1 refresh per hour per account (Akahu's limit)
 const REFRESH_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
@@ -165,11 +166,15 @@ export async function POST(request: Request) {
 
     // Now sync transactions
     try {
+        // Sync pending first, then confirmed (so matching works correctly)
+        const pendingResult = await syncPendingTransactions(user.id);
         const result = await syncAllAccountTransactions(user.id, initialDays);
 
         return NextResponse.json({
             success: true,
             refreshedAccounts: refreshedCount,
+            pendingNew: pendingResult.newCount,
+            pendingDeleted: pendingResult.deletedCount,
             ...result,
         });
     } catch (error) {

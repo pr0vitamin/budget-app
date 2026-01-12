@@ -79,34 +79,44 @@ export async function syncAccountTransactions(
             }
             // Skip non-amended existing transactions (no need to update balance constantly)
         } else {
-            // Create new transaction
-            const newTx = await prisma.transaction.create({
-                data: {
-                    accountId: accountId,
-                    externalId: akahuTx._id,
-                    amount: akahuTx.amount,
-                    date: new Date(akahuTx.date),
-                    merchant: akahuTx.merchant?.name || extractMerchant(akahuTx.description),
-                    description: akahuTx.description,
-                    category: akahuTx.category?.name || null,
-                    balance: akahuTx.balance ?? null,
-                    transactionType: akahuTx.type.toLowerCase(),
-                    isManual: false,
-                },
-            });
+            // Try to match to a pending transaction first
+            const matchedPending = await findMatchingPending(accountId, akahuTx);
 
-            // Try to auto-match to scheduled transactions (allocates + advances nextDue)
-            const matched = await autoMatchToScheduled(
-                { id: newTx.id, amount: akahuTx.amount, date: new Date(akahuTx.date) },
-                userId
-            );
+            if (matchedPending) {
+                // Update pending to confirmed
+                await confirmPendingTransaction(matchedPending, akahuTx);
+                updatedCount++;
+            } else {
+                // Create new confirmed transaction
+                const newTx = await prisma.transaction.create({
+                    data: {
+                        accountId: accountId,
+                        externalId: akahuTx._id,
+                        amount: akahuTx.amount,
+                        date: new Date(akahuTx.date),
+                        merchant: akahuTx.merchant?.name || extractMerchant(akahuTx.description),
+                        description: akahuTx.description,
+                        category: akahuTx.category?.name || null,
+                        balance: akahuTx.balance ?? null,
+                        transactionType: akahuTx.type.toLowerCase(),
+                        status: 'confirmed',
+                        isManual: false,
+                    },
+                });
 
-            // If not matched, apply auto-categorization rules
-            if (!matched) {
-                await applyCategorizationRules(newTx.id, userId);
+                // Try to auto-match to scheduled transactions (allocates + advances nextDue)
+                const matched = await autoMatchToScheduled(
+                    { id: newTx.id, amount: akahuTx.amount, date: new Date(akahuTx.date) },
+                    userId
+                );
+
+                // If not matched, apply auto-categorization rules
+                if (!matched) {
+                    await applyCategorizationRules(newTx.id, userId);
+                }
+
+                newCount++;
             }
-
-            newCount++;
         }
     }
 
@@ -217,6 +227,115 @@ async function handleAmendedTransaction(
             description: akahu.description,
             isAmended: true,
             // If split was removed, transaction goes back to unallocated state
+        },
+    });
+}
+
+/**
+ * Find a pending transaction that matches a confirmed Akahu transaction
+ * Matching criteria: same account, ±5 days, ±30% amount, similar description
+ */
+async function findMatchingPending(
+    accountId: string,
+    akahuTx: AkahuTransaction
+): Promise<{ id: string; allocations: { id: string; amount: { toNumber(): number } }[] } | null> {
+    const txDate = new Date(akahuTx.date);
+    const fiveDaysAgo = new Date(txDate);
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+    const fiveDaysAhead = new Date(txDate);
+    fiveDaysAhead.setDate(fiveDaysAhead.getDate() + 5);
+
+    const pendingCandidates = await prisma.transaction.findMany({
+        where: {
+            accountId,
+            status: 'pending',
+            date: {
+                gte: fiveDaysAgo,
+                lte: fiveDaysAhead,
+            },
+        },
+        include: { allocations: true },
+    });
+
+    // Find best match based on amount and description similarity
+    for (const pending of pendingCandidates) {
+        const pendingAmount = Number(pending.amount);
+        const akahuAmount = akahuTx.amount;
+
+        // Amount within ±30%
+        const amountDiff = Math.abs(pendingAmount - akahuAmount);
+        const tolerance = Math.abs(pendingAmount) * 0.3;
+        if (amountDiff > tolerance) continue;
+
+        // Description should contain some common substring (case-insensitive)
+        const pendingDesc = (pending.description || '').toLowerCase();
+        const akahuDesc = akahuTx.description.toLowerCase();
+        if (!descriptionsSimilar(pendingDesc, akahuDesc)) continue;
+
+        return pending;
+    }
+
+    return null;
+}
+
+/**
+ * Check if two descriptions are similar (case-insensitive contains check)
+ */
+function descriptionsSimilar(desc1: string, desc2: string): boolean {
+    // If either contains the other, or they share a significant substring
+    if (desc1.includes(desc2) || desc2.includes(desc1)) return true;
+
+    // Check for common words (at least 3 chars)
+    const words1 = desc1.split(/\s+/).filter(w => w.length >= 3);
+    const words2 = desc2.split(/\s+/).filter(w => w.length >= 3);
+
+    for (const w1 of words1) {
+        for (const w2 of words2) {
+            if (w1 === w2) return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Confirm a pending transaction when its confirmed version arrives
+ * - Updates status to confirmed
+ * - Updates amount and externalId
+ * - Handles allocations (single: update amount, multi: delete all)
+ */
+async function confirmPendingTransaction(
+    pending: { id: string; allocations: { id: string; amount: { toNumber(): number } }[] },
+    akahuTx: AkahuTransaction
+): Promise<void> {
+    const hasMultipleAllocations = pending.allocations.length > 1;
+    const hasSingleAllocation = pending.allocations.length === 1;
+
+    if (hasMultipleAllocations) {
+        // Multi-bucket split: delete all allocations, user must reallocate
+        await prisma.allocation.deleteMany({
+            where: { transactionId: pending.id },
+        });
+    } else if (hasSingleAllocation) {
+        // Single allocation: update amount to match confirmed
+        await prisma.allocation.update({
+            where: { id: pending.allocations[0].id },
+            data: { amount: akahuTx.amount },
+        });
+    }
+
+    // Update transaction to confirmed
+    await prisma.transaction.update({
+        where: { id: pending.id },
+        data: {
+            externalId: akahuTx._id,
+            amount: akahuTx.amount,
+            merchant: akahuTx.merchant?.name || extractMerchant(akahuTx.description),
+            description: akahuTx.description,
+            category: akahuTx.category?.name || null,
+            balance: akahuTx.balance ?? null,
+            status: 'confirmed',
+            isAmended: pending.allocations.length > 0 && Number(pending.allocations.reduce((sum, a) => sum + a.amount.toNumber(), 0)) !== akahuTx.amount,
         },
     });
 }

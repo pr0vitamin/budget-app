@@ -90,6 +90,7 @@ export async function POST(request: Request) {
             merchant,
             description,
             isManual: true,
+            status: 'confirmed',
         },
         include: {
             account: true,
