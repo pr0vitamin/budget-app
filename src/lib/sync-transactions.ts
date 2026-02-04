@@ -57,67 +57,136 @@ export async function syncAccountTransactions(
         startDate.toISOString().split('T')[0]
     );
 
+    if (akahuTransactions.length === 0) {
+        return { newCount: 0, updatedCount: 0, amendedCount: 0 };
+    }
+
+    // PERFORMANCE: Batch fetch all existing transactions in a single query
+    const akahuIds = akahuTransactions.map(t => t._id);
+    const existingTransactions = await prisma.transaction.findMany({
+        where: {
+            externalId: { in: akahuIds },
+        },
+        include: { allocations: true },
+    });
+    const existingByExternalId = new Map(
+        existingTransactions.map(t => [t.externalId, t])
+    );
+
+    // PERFORMANCE: Batch fetch pending transactions for matching
+    const pendingTransactions = await prisma.transaction.findMany({
+        where: {
+            accountId,
+            status: 'pending',
+        },
+        include: { allocations: true },
+    });
+
     let newCount = 0;
     let updatedCount = 0;
     let amendedCount = 0;
 
-    // Process each transaction
+    // Separate transactions into categories for batch processing
+    const toCreate: Array<{
+        akahuTx: AkahuTransaction;
+    }> = [];
+    const toAmend: Array<{
+        existing: typeof existingTransactions[0];
+        akahuTx: AkahuTransaction;
+    }> = [];
+    const toConfirmPending: Array<{
+        pending: typeof pendingTransactions[0];
+        akahuTx: AkahuTransaction;
+    }> = [];
+
+    // Categorize each Akahu transaction
     for (const akahuTx of akahuTransactions) {
-        const existingTx = await prisma.transaction.findFirst({
-            where: { externalId: akahuTx._id },
-            include: { allocations: true },
-        });
+        const existingTx = existingByExternalId.get(akahuTx._id);
 
         if (existingTx) {
             // Check for amendments
-            const isAmended = detectAmendment(existingTx, akahuTx);
-
-            if (isAmended) {
-                await handleAmendedTransaction(existingTx, akahuTx);
-                amendedCount++;
-                updatedCount++;
+            if (detectAmendment(existingTx, akahuTx)) {
+                toAmend.push({ existing: existingTx, akahuTx });
             }
-            // Skip non-amended existing transactions (no need to update balance constantly)
+            // Skip non-amended existing transactions
         } else {
-            // Try to match to a pending transaction first
-            const matchedPending = await findMatchingPending(accountId, akahuTx);
+            // Try to match to a pending transaction
+            const matchedPending = findMatchingPendingFromList(pendingTransactions, akahuTx);
 
             if (matchedPending) {
-                // Update pending to confirmed
-                await confirmPendingTransaction(matchedPending, akahuTx);
-                updatedCount++;
+                toConfirmPending.push({ pending: matchedPending, akahuTx });
+                // Remove from list to prevent double-matching
+                const idx = pendingTransactions.indexOf(matchedPending);
+                if (idx > -1) pendingTransactions.splice(idx, 1);
             } else {
-                // Create new confirmed transaction
-                const newTx = await prisma.transaction.create({
-                    data: {
-                        accountId: accountId,
-                        externalId: akahuTx._id,
-                        amount: akahuTx.amount,
-                        date: new Date(akahuTx.date),
-                        merchant: akahuTx.merchant?.name || extractMerchant(akahuTx.description),
-                        description: akahuTx.description,
-                        category: akahuTx.category?.name || null,
-                        balance: akahuTx.balance ?? null,
-                        transactionType: akahuTx.type.toLowerCase(),
-                        status: 'confirmed',
-                        isManual: false,
-                    },
-                });
-
-                // Try to auto-match to scheduled transactions (allocates + advances nextDue)
-                const matched = await autoMatchToScheduled(
-                    { id: newTx.id, amount: akahuTx.amount, date: new Date(akahuTx.date) },
-                    userId
-                );
-
-                // If not matched, apply auto-categorization rules
-                if (!matched) {
-                    await applyCategorizationRules(newTx.id, userId);
-                }
-
-                newCount++;
+                toCreate.push({ akahuTx });
             }
         }
+    }
+
+    // BATCH: Handle amendments
+    for (const { existing, akahuTx } of toAmend) {
+        await handleAmendedTransaction(existing, akahuTx);
+        amendedCount++;
+        updatedCount++;
+    }
+
+    // BATCH: Confirm pending transactions
+    for (const { pending, akahuTx } of toConfirmPending) {
+        await confirmPendingTransaction(pending, akahuTx);
+        updatedCount++;
+    }
+
+    // BATCH: Create new transactions using createMany for performance
+    if (toCreate.length > 0) {
+        const createData = toCreate.map(({ akahuTx }) => ({
+            accountId: accountId,
+            externalId: akahuTx._id,
+            amount: akahuTx.amount,
+            date: new Date(akahuTx.date),
+            merchant: akahuTx.merchant?.name || extractMerchant(akahuTx.description),
+            description: akahuTx.description,
+            category: akahuTx.category?.name || null,
+            balance: akahuTx.balance ?? null,
+            transactionType: akahuTx.type.toLowerCase(),
+            status: 'confirmed',
+            isManual: false,
+        }));
+
+        await prisma.transaction.createMany({ data: createData });
+        newCount = toCreate.length;
+
+        // Fetch the newly created transactions to get their IDs for auto-matching/categorization
+        const newTransactions = await prisma.transaction.findMany({
+            where: {
+                externalId: { in: toCreate.map(t => t.akahuTx._id) },
+            },
+            select: { id: true, externalId: true, amount: true, date: true },
+        });
+
+        // Create a map from externalId to new transaction for matching
+        const newTxByExternalId = new Map(
+            newTransactions.map(t => [t.externalId, t])
+        );
+
+        // PARALLEL: Run auto-matching and auto-categorization concurrently
+        const autoProcessing = toCreate.map(async ({ akahuTx }) => {
+            const newTx = newTxByExternalId.get(akahuTx._id);
+            if (!newTx) return;
+
+            // Try to auto-match to scheduled transactions
+            const matched = await autoMatchToScheduled(
+                { id: newTx.id, amount: Number(newTx.amount), date: newTx.date },
+                userId
+            );
+
+            // If not matched, apply auto-categorization rules
+            if (!matched) {
+                await applyCategorizationRules(newTx.id, userId);
+            }
+        });
+
+        await Promise.all(autoProcessing);
     }
 
     return { newCount, updatedCount, amendedCount };
@@ -229,6 +298,53 @@ async function handleAmendedTransaction(
             // If split was removed, transaction goes back to unallocated state
         },
     });
+}
+
+/**
+ * Find a matching pending transaction from an in-memory list
+ * Used for batched sync to avoid N+1 database queries
+ * Matching criteria: ±5 days, ±30% amount, similar description
+ */
+function findMatchingPendingFromList<T extends {
+    id: string;
+    date: Date;
+    description: string | null;
+    amount: { toNumber?: () => number } | number;
+    allocations: { id: string; amount: { toNumber(): number } }[];
+}>(
+    pendingList: T[],
+    akahuTx: AkahuTransaction
+): T | null {
+    const txDate = new Date(akahuTx.date);
+    const fiveDaysAgo = new Date(txDate);
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+    const fiveDaysAhead = new Date(txDate);
+    fiveDaysAhead.setDate(fiveDaysAhead.getDate() + 5);
+
+    for (const pending of pendingList) {
+        // Check date range
+        if (pending.date < fiveDaysAgo || pending.date > fiveDaysAhead) continue;
+
+        // Handle both Decimal and number amounts
+        const pendingAmount = typeof pending.amount === 'number'
+            ? pending.amount
+            : pending.amount.toNumber?.() ?? Number(pending.amount);
+        const akahuAmount = akahuTx.amount;
+
+        // Amount within ±30%
+        const amountDiff = Math.abs(pendingAmount - akahuAmount);
+        const tolerance = Math.abs(pendingAmount) * 0.3;
+        if (amountDiff > tolerance) continue;
+
+        // Description should contain some common substring (case-insensitive)
+        const pendingDesc = (pending.description || '').toLowerCase();
+        const akahuDesc = akahuTx.description.toLowerCase();
+        if (!descriptionsSimilar(pendingDesc, akahuDesc)) continue;
+
+        return pending;
+    }
+
+    return null;
 }
 
 /**

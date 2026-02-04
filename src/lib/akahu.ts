@@ -184,10 +184,77 @@ export async function getAllTransactions(start?: string, end?: string): Promise<
 
 /**
  * Refresh account data (triggers Akahu to fetch latest from bank)
- * Note: Subject to rate limits
+ * Note: Subject to rate limits. This is asynchronous on Akahu's side.
  */
 export async function refreshAccount(accountId: string): Promise<void> {
     await akahuFetch(`/refresh/${accountId}`, { method: 'POST' });
+}
+
+/**
+ * Trigger a refresh and wait for it to complete by polling the account.
+ * Polls until the refreshed.transactions timestamp updates or timeout.
+ * 
+ * @param accountId - The Akahu account ID
+ * @param maxWaitMs - Maximum time to wait for refresh (default 30 seconds)
+ * @param pollIntervalMs - Interval between polls (default 2 seconds)
+ * @returns Object indicating if refresh completed and any error
+ */
+export async function refreshAccountAndWait(
+    accountId: string,
+    maxWaitMs: number = 30000,
+    pollIntervalMs: number = 2000
+): Promise<{ refreshed: boolean; newTimestamp?: string; error?: string }> {
+    // Get current refresh timestamp before triggering
+    let initialTimestamp: string | undefined;
+    try {
+        const account = await getAccount(accountId);
+        initialTimestamp = account.refreshed?.transactions;
+    } catch (error) {
+        // If we can't get the account, proceed anyway
+        console.warn('Could not get initial refresh timestamp:', error);
+    }
+
+    // Trigger the refresh
+    try {
+        await refreshAccount(accountId);
+    } catch (error) {
+        return {
+            refreshed: false,
+            error: error instanceof Error ? error.message : 'Failed to trigger refresh',
+        };
+    }
+
+    // Poll for completion
+    const startTime = Date.now();
+    while (Date.now() - startTime < maxWaitMs) {
+        // Wait before polling
+        await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+
+        try {
+            const account = await getAccount(accountId);
+            const currentTimestamp = account.refreshed?.transactions;
+
+            // If timestamp changed (or we didn't have an initial one), refresh is complete
+            if (currentTimestamp && currentTimestamp !== initialTimestamp) {
+                return { refreshed: true, newTimestamp: currentTimestamp };
+            }
+
+            // If no initial timestamp and now we have one, also counts as refreshed
+            if (!initialTimestamp && currentTimestamp) {
+                return { refreshed: true, newTimestamp: currentTimestamp };
+            }
+        } catch (error) {
+            // Log but continue polling
+            console.warn('Error polling for refresh completion:', error);
+        }
+    }
+
+    // Timeout - but we still triggered the refresh, so transactions might be available
+    // Return partial success since the refresh was triggered even if we couldn't confirm
+    return {
+        refreshed: true, // Proceed with fetching anyway
+        error: 'Refresh triggered but confirmation timed out - proceeding with fetch',
+    };
 }
 
 /**

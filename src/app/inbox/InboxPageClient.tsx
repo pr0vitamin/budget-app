@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { TransactionList, TransactionForm, AllocationModal } from '@/components/transactions';
 import { usePullToRefresh } from '@/hooks';
@@ -38,33 +38,77 @@ export function InboxPageClient({ transactions: initialTransactions, unallocated
     const [syncDays, setSyncDays] = useState(14);
     const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
+    // Refs to track sync state across re-renders and handle cancellation
+    const syncInProgressRef = useRef(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
+
     // Sync local state with props when server data changes (after router.refresh())
     useEffect(() => {
         setTransactions(initialTransactions);
         setHasMore(initialHasMore);
     }, [initialTransactions, initialHasMore]);
 
+    // Cleanup abort controller on unmount
+    useEffect(() => {
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, []);
+
     // Check if this is a first-time sync (no transactions yet)
     const isFirstSync = transactions.length === 0;
 
     const handleSyncTransactions = useCallback(async (days?: number) => {
+        // Prevent duplicate syncs using ref (survives re-renders)
+        if (syncInProgressRef.current) {
+            console.log('Sync already in progress, skipping');
+            return;
+        }
+
+        syncInProgressRef.current = true;
+        abortControllerRef.current = new AbortController();
+
         setIsSyncing(true);
         setShowSyncModal(false);
         setSyncMessage(null);
+
         try {
             const res = await fetch('/api/transactions/sync', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ initialDays: days ?? 30 }),
+                signal: abortControllerRef.current.signal,
             });
+
+            // Check if request was aborted before processing response
+            if (abortControllerRef.current?.signal.aborted) {
+                console.log('Sync was cancelled');
+                return;
+            }
+
             const data = await res.json();
 
             if (data.onCooldown) {
                 setSyncMessage(data.message);
-            } else if (res.ok) {
+            } else if (res.ok && data.success) {
+                // Only refresh if sync was successful
                 router.refresh();
+            } else if (!res.ok) {
+                setSyncMessage(data.error || 'Sync failed. Please try again.');
             }
+        } catch (error) {
+            // Don't show error for aborted requests
+            if (error instanceof Error && error.name === 'AbortError') {
+                console.log('Sync fetch aborted');
+                return;
+            }
+            console.error('Sync error:', error);
+            setSyncMessage('Failed to sync. Please try again.');
         } finally {
+            syncInProgressRef.current = false;
+            abortControllerRef.current = null;
             setIsSyncing(false);
         }
     }, [router]);

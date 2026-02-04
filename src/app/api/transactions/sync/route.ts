@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/db';
-import { refreshAccount, getAccounts as getAkahuAccounts } from '@/lib/akahu';
+import { refreshAccountAndWait, getAccounts as getAkahuAccounts } from '@/lib/akahu';
 import { syncAllAccountTransactions } from '@/lib/sync-transactions';
 import { syncPendingTransactions } from '@/lib/sync-pending';
 
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
     // Check cooldown and refresh accounts that aren't limited
     let allOnCooldown = true;
     let minRemainingMs = 0;
-    let refreshedCount = 0;
+    const accountsToSync: string[] = []; // Track accounts that were successfully refreshed
 
     for (const account of accounts) {
         let isLimited = false;
@@ -130,16 +130,32 @@ export async function POST(request: Request) {
         if (!isLimited) {
             allOnCooldown = false;
             try {
-                // Refresh data from bank via Akahu
-                await refreshAccount(account.akahuId);
+                // Refresh data from bank via Akahu and WAIT for completion
+                // This polls Akahu until the refresh is complete (up to 30s)
+                const refreshResult = await refreshAccountAndWait(account.akahuId, 30000, 2000);
 
-                // Update last sync timestamp
-                await prisma.account.update({
-                    where: { id: account.id },
-                    data: { lastSyncAt: new Date(), connectionError: null },
-                });
+                if (refreshResult.refreshed) {
+                    // Track this account for syncing - we'll update lastSyncAt AFTER successful sync
+                    accountsToSync.push(account.id);
 
-                refreshedCount++;
+                    // Clear any previous connection errors
+                    await prisma.account.update({
+                        where: { id: account.id },
+                        data: { connectionError: null },
+                    });
+
+                    if (refreshResult.error) {
+                        // Partial success - refresh was triggered but confirmation timed out
+                        console.warn(`Refresh warning for account ${account.id}: ${refreshResult.error}`);
+                    }
+                } else {
+                    // Refresh failed completely
+                    console.error(`Failed to refresh account ${account.id}: ${refreshResult.error}`);
+                    await prisma.account.update({
+                        where: { id: account.id },
+                        data: { connectionError: refreshResult.error || 'Refresh failed' },
+                    });
+                }
             } catch (error) {
                 console.error(`Error refreshing account ${account.id}:`, error);
                 await prisma.account.update({
@@ -161,8 +177,7 @@ export async function POST(request: Request) {
         });
     }
 
-    // Wait a moment for Akahu to process the refresh before syncing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // No fixed delay needed - refreshAccountAndWait already waited for completion
 
     // Now sync transactions
     try {
@@ -170,15 +185,26 @@ export async function POST(request: Request) {
         const pendingResult = await syncPendingTransactions(user.id);
         const result = await syncAllAccountTransactions(user.id, initialDays);
 
+        // SUCCESS: Only now update lastSyncAt for accounts that were refreshed
+        // This ensures cooldown only applies if we successfully synced transactions
+        if (accountsToSync.length > 0) {
+            await prisma.account.updateMany({
+                where: { id: { in: accountsToSync } },
+                data: { lastSyncAt: new Date() },
+            });
+        }
+
         return NextResponse.json({
             success: true,
-            refreshedAccounts: refreshedCount,
+            refreshedAccounts: accountsToSync.length,
             pendingNew: pendingResult.newCount,
             pendingDeleted: pendingResult.deletedCount,
             ...result,
         });
     } catch (error) {
         console.error('Error syncing transactions:', error);
+        // Note: We intentionally do NOT update lastSyncAt here
+        // This allows the user to retry without hitting cooldown
 
         return NextResponse.json(
             { error: error instanceof Error ? error.message : 'Failed to sync transactions' },
