@@ -559,7 +559,7 @@ git commit -m "feat: cat piggy bank adapted to new bucket model"
 
 **Files:** Create `src/app/page.tsx` (replace placeholder), `src/components/buckets/BucketList.tsx` (new, simple)
 
-- [ ] **Step 1: Bucket list (groups + cats grid)**
+- [x] **Step 1: Bucket list (groups + cats grid)**
 
 `src/components/buckets/BucketList.tsx`:
 ```tsx
@@ -603,7 +603,7 @@ export function BucketList({
 }
 ```
 
-- [ ] **Step 2: Home page — cache-first, instant feed**
+- [x] **Step 2: Home page — cache-first, instant feed**
 
 `src/app/page.tsx`:
 ```tsx
@@ -679,7 +679,7 @@ export default function HomePage() {
 
 Note: confirm the recovered `ConfettiCelebration` prop names are `trigger`/`onComplete` and `Skeleton` accepts `className`; if the recovered components differ, match their actual props (read the files) rather than guessing.
 
-- [ ] **Step 3: Typecheck & commit**
+- [x] **Step 3: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
