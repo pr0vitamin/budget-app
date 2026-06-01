@@ -426,7 +426,7 @@ git commit -m "feat: RLS policies for durable-ledger model"
 - Create: `src/lib/domain/classify.ts`
 - Test: `src/lib/domain/classify.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -457,12 +457,12 @@ describe('classifyKind', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run src/lib/domain/classify.test.ts`
 Expected: FAIL — cannot find module `./classify`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```typescript
 export type TransactionKind = 'income' | 'expense' | 'transfer';
@@ -487,12 +487,12 @@ export function classifyKind({ type, amount }: ClassifyInput): TransactionKind {
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run src/lib/domain/classify.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/domain/classify.ts src/lib/domain/classify.test.ts
