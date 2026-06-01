@@ -132,7 +132,7 @@ git commit -m "chore: clean-slate reset for rebuild (remove old lib/api/ui, swap
 **Files:**
 - Modify (replace body below the generator/datasource blocks): `prisma/schema.prisma`
 
-- [ ] **Step 1: Replace the model definitions**
+- [x] **Step 1: Replace the model definitions**
 
 Replace everything in `prisma/schema.prisma` *after* the `datasource db { ... }` block with:
 
@@ -316,7 +316,7 @@ model CategorizationRule {
 }
 ```
 
-- [ ] **Step 2: Reset the database to the new schema**
+- [x] **Step 2: Reset the database to the new schema**
 
 Run:
 ```bash
@@ -324,12 +324,12 @@ npm run db:push
 ```
 Expected: Prisma reports the schema is in sync and regenerates the client. (Fresh DB per the spec — no data migration.)
 
-- [ ] **Step 3: Verify the client generated**
+- [x] **Step 3: Verify the client generated**
 
 Run: `npx prisma generate`
 Expected: "Generated Prisma Client" with no errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add prisma/schema.prisma
