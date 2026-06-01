@@ -507,7 +507,7 @@ git commit -m "feat: transaction kind classification"
 - Create: `src/lib/domain/balances.ts`
 - Test: `src/lib/domain/balances.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -541,12 +541,12 @@ describe('calculateAvailableToBudget', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run src/lib/domain/balances.test.ts`
 Expected: FAIL — cannot find module `./balances`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```typescript
 const sum = (xs: number[]): number => xs.reduce((a, b) => a + b, 0);
@@ -572,12 +572,12 @@ export function calculateAvailableToBudget({ incomeTotal, feedsTotal }: Availabl
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run src/lib/domain/balances.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/domain/balances.ts src/lib/domain/balances.test.ts
