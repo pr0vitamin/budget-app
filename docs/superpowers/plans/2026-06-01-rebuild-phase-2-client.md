@@ -466,7 +466,7 @@ git commit -m "feat: optimistic mutation hooks for instant feedback"
 **Files:** Recover from `1db8878` and adapt:
 `src/components/animations/{SparkleEffect,ConfettiCelebration,index}.tsx`, `src/components/ui/{Skeleton,ErrorBoundary,index}.tsx`, `src/components/layout/{AppShell,BottomNav,OfflineIndicator,index}.tsx`, `src/app/globals.css`.
 
-- [ ] **Step 1: Recover the pure-visual files verbatim**
+- [x] **Step 1: Recover the pure-visual files verbatim**
 
 ```bash
 mkdir -p src/components/animations src/components/ui src/components/layout
@@ -478,7 +478,7 @@ git show 1db8878:src/app/globals.css > src/app/globals.css
 ```
 The animations and `Skeleton` are presentational and need no changes. (`ErrorBoundary` is a class component with no removed deps — keep as-is.)
 
-- [ ] **Step 2: Recover + adapt the layout shell**
+- [x] **Step 2: Recover + adapt the layout shell**
 
 ```bash
 for f in AppShell.tsx BottomNav.tsx OfflineIndicator.tsx index.ts; do
@@ -490,12 +490,12 @@ Then **adapt**:
 - `BottomNav.tsx`: remove any nav item pointing to dropped routes (`/upcoming`, `/rules` as a top-level tab if present). Keep tabs: Buckets (`/`), Inbox (`/inbox`), Settings (`/settings`). Keep the inbox badge but have it read from `useOverview().data?.inboxCount` (import the hook) instead of fetching `/api/inbox/count` directly.
 - `AppShell.tsx`: if it imported `@/lib/offline` or pull-to-refresh hooks, remove those imports; keep the visual shell (header, `<BottomNav/>`, `<OfflineIndicator/>`, children container). Pull-to-refresh is reintroduced in Phase 3.
 
-- [ ] **Step 3: Verify no dangling imports**
+- [x] **Step 3: Verify no dangling imports**
 
 Run: `npm run typecheck`
 Expected: PASS. If any recovered file still imports a deleted module (`@/lib/offline`, `@/hooks`, `@dnd-kit`, `@/lib/budget-utils`, etc.), remove that import and the small piece of UI that used it until typecheck passes.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/components/animations src/components/ui src/components/layout src/app/globals.css
