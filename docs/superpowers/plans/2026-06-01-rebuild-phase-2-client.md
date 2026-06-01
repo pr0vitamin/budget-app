@@ -860,7 +860,7 @@ git commit -m "feat: manual entry, settings, bucket management, tap reorder"
 
 **Files:** Create `src/components/transactions/AllocationModal.test.tsx`
 
-- [ ] **Step 1: Auto-remainder test**
+- [x] **Step 1: Auto-remainder test**
 
 `src/components/transactions/AllocationModal.test.tsx`:
 ```tsx
@@ -892,7 +892,7 @@ describe('AllocationModal auto-remainder', () => {
 ```
 Note to implementer: replace the commented section with real interactions matching the adapted modal markup (the auto-remainder logic itself is already unit-tested in `split.test.ts`; this test verifies the modal wires it). If the modal's markup makes a full interaction test brittle, assert instead that submitting a single-bucket allocation calls `onAllocate` with the full `-12.90`, and keep the remainder math covered by `split.test.ts`.
 
-- [ ] **Step 2: Run tests, typecheck, commit**
+- [x] **Step 2: Run tests, typecheck, commit**
 
 Run: `npm run test:run` (Expected: all green, including the 29 Phase 1 tests + new component tests) and `npm run typecheck` (PASS).
 ```bash
