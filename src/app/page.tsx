@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { AppShell } from '@/components/layout';
 import { BucketList } from '@/components/buckets/BucketList';
+import { FeedModal } from '@/components/buckets/FeedModal';
 import { ConfettiCelebration } from '@/components/animations';
 import { Skeleton } from '@/components/ui';
 import { useOverview } from '@/lib/query/hooks';
@@ -13,6 +14,7 @@ export default function HomePage() {
   const feedAll = useFeedAll();
   const [sparkles, setSparkles] = useState<Set<string>>(new Set());
   const [confetti, setConfetti] = useState(false);
+  const [feedModalOpen, setFeedModalOpen] = useState(false);
 
   const sparkle = (ids: string[]) => {
     setSparkles(new Set(ids));
@@ -42,18 +44,33 @@ export default function HomePage() {
     if (avail <= 0.001) setConfetti(true);
   };
 
+  // Custom-amount feed: called from FeedModal
+  const onCustomFeed = (bucketId: string, amount: number) => {
+    sparkle([bucketId]);
+    feed.mutate({ bucketId, amount });
+    if ((data?.availableToBudget ?? 0) - amount <= 0.001) setConfetti(true);
+  };
+
   return (
     <AppShell>
       <div className="p-4">
         <div className="mb-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 p-5 text-white">
           <p className="text-sm opacity-90">Available to Budget</p>
           <p className="text-3xl font-bold">${(data?.availableToBudget ?? 0).toFixed(2)}</p>
-          <button
-            onClick={onFeedAll}
-            className="mt-3 w-full rounded-xl bg-white/20 py-2 font-medium backdrop-blur active:scale-95 transition-transform"
-          >
-            🐱 Feed All
-          </button>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={onFeedAll}
+              className="flex-1 rounded-xl bg-white/20 py-2 font-medium backdrop-blur active:scale-95 transition-transform"
+            >
+              🐱 Feed All
+            </button>
+            <button
+              onClick={() => setFeedModalOpen(true)}
+              className="rounded-xl bg-white/20 px-4 py-2 font-medium backdrop-blur active:scale-95 transition-transform text-sm"
+            >
+              ＋ Custom
+            </button>
+          </div>
         </div>
 
         {isLoading && !data ? (
@@ -62,7 +79,18 @@ export default function HomePage() {
           <BucketList groups={data?.groups ?? []} onFeed={onFeed} sparkleBucketIds={sparkles} />
         )}
       </div>
+
       <ConfettiCelebration trigger={confetti} onComplete={() => setConfetti(false)} />
+
+      {data && (
+        <FeedModal
+          isOpen={feedModalOpen}
+          onClose={() => setFeedModalOpen(false)}
+          onFeed={onCustomFeed}
+          groups={data.groups}
+          availableToBudget={data.availableToBudget}
+        />
+      )}
     </AppShell>
   );
 }
