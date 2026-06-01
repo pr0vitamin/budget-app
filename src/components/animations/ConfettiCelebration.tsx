@@ -24,10 +24,9 @@ const COLORS = ['#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#22c55e', '#f97316'
 export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebrationProps) {
     const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
 
-     
     useEffect(() => {
         if (trigger) {
-            // Generate confetti pieces
+            // Generate confetti pieces from external trigger prop.
             const newPieces = Array.from({ length: 30 }, (_, i) => ({
                 id: i,
                 x: Math.random() * 100, // % from left
@@ -37,6 +36,7 @@ export function ConfettiCelebration({ trigger, onComplete }: ConfettiCelebration
                 rotateDirection: Math.random() > 0.5 ? 360 : -360,
                 duration: 2 + Math.random(),
             }));
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setPieces(newPieces);
 
             // Clear after animation
