@@ -817,7 +817,7 @@ git commit -m "feat: categorization rule matching"
 
 These pure helpers are consumed by the Phase 3 sync engine but belong with the domain logic and are unit-testable now.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -878,12 +878,12 @@ describe('transactionsMatch', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run src/lib/domain/dedup.test.ts`
 Expected: FAIL — cannot find module `./dedup`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```typescript
 const isoDate = (d: Date): string => d.toISOString().split('T')[0];
@@ -939,12 +939,12 @@ export function transactionsMatch(a: MatchCandidate, b: MatchCandidate): boolean
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run src/lib/domain/dedup.test.ts`
 Expected: PASS (7 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/domain/dedup.ts src/lib/domain/dedup.test.ts
