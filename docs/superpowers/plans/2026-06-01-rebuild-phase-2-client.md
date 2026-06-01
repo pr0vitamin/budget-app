@@ -116,7 +116,7 @@ git commit -m "feat: overview read-model endpoint for cache-first home"
 
 **Files:** Create `src/lib/query/idb-storage.ts`, `src/lib/query/client.ts`, `src/app/providers.tsx`; modify `src/app/layout.tsx`
 
-- [ ] **Step 1: IndexedDB AsyncStorage**
+- [x] **Step 1: IndexedDB AsyncStorage**
 
 `src/lib/query/idb-storage.ts`:
 ```typescript
@@ -149,7 +149,7 @@ export const idbStorage = {
 };
 ```
 
-- [ ] **Step 2: QueryClient factory**
+- [x] **Step 2: QueryClient factory**
 
 `src/lib/query/client.ts`:
 ```typescript
@@ -170,7 +170,7 @@ export function makeQueryClient(): QueryClient {
 }
 ```
 
-- [ ] **Step 3: Providers**
+- [x] **Step 3: Providers**
 
 `src/app/providers.tsx`:
 ```tsx
@@ -197,7 +197,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 ```
 
-- [ ] **Step 4: Wrap the app**
+- [x] **Step 4: Wrap the app**
 
 Replace `src/app/layout.tsx` with:
 ```tsx
@@ -230,7 +230,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-- [ ] **Step 5: Typecheck & commit**
+- [x] **Step 5: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
