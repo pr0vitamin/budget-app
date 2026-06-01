@@ -45,7 +45,7 @@
 
 **Files:** Create `src/app/api/overview/route.ts`
 
-- [ ] **Step 1: Implement the endpoint**
+- [x] **Step 1: Implement the endpoint**
 
 ```typescript
 import { NextResponse } from 'next/server';
@@ -102,7 +102,7 @@ export async function GET() {
 }
 ```
 
-- [ ] **Step 2: Typecheck & commit**
+- [x] **Step 2: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
