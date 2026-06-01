@@ -959,7 +959,7 @@ git commit -m "feat: akahu dedup and account identity helpers"
 - Create: `src/lib/auth.ts`
 - Keep: `src/lib/ensure-user.ts` (already correct against the new `User` model)
 
-- [ ] **Step 1: Implement the helper**
+- [x] **Step 1: Implement the helper**
 
 ```typescript
 import { createClient } from '@/lib/supabase/server';
@@ -981,12 +981,12 @@ export async function getAuthedUserId(): Promise<string | null> {
 }
 ```
 
-- [ ] **Step 2: Verify it typechecks**
+- [x] **Step 2: Verify it typechecks**
 
 Run: `npm run typecheck`
 Expected: PASS (the helper reuses the kept `@/lib/supabase/server` and `@/lib/ensure-user`).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/lib/auth.ts
