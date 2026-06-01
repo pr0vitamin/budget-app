@@ -828,7 +828,7 @@ git commit -m "feat: inbox and allocation with auto-remainder"
 
 **Files:** Recover + adapt `src/components/transactions/TransactionForm.tsx`, `src/components/buckets/{BucketForm,BucketDetailModal}.tsx`, `src/app/settings/page.tsx`, `src/components/buckets/ReorderGroupsModal.tsx`
 
-- [ ] **Step 1: Recover the forms/modals**
+- [x] **Step 1: Recover the forms/modals**
 
 ```bash
 for f in buckets/BucketForm.tsx buckets/BucketDetailModal.tsx buckets/ReorderGroupsModal.tsx transactions/TransactionForm.tsx; do
@@ -836,17 +836,17 @@ for f in buckets/BucketForm.tsx buckets/BucketDetailModal.tsx buckets/ReorderGro
 done
 ```
 
-- [ ] **Step 2: Adapt**
+- [x] **Step 2: Adapt**
 
 - `BucketForm.tsx` / `BucketDetailModal.tsx`: remove fields for dropped concepts (`type` savings/spending, `rollover`, `rolloverTarget`, scheduled). Keep: name, color, icon, `topUpAmount`, optional `targetAmount`. Wire submit to `api.createBucket` / `api.updateBucket` via `useOverviewMutation`.
 - `ReorderGroupsModal.tsx`: **remove all `@dnd-kit` usage.** Replace drag handles with ▲/▼ buttons that swap adjacent items in local order state; on save call `api.reorderGroups(order)` (and an equivalent for buckets). This is the tap-based reorder from the spec.
 - `TransactionForm.tsx`: manual entry — fields amount, date, merchant, and a kind toggle (expense/income). Submit via `api.createTransaction`; invalidate `qk.overview` and `qk.inbox`.
 
-- [ ] **Step 3: Settings page**
+- [x] **Step 3: Settings page**
 
 `src/app/settings/page.tsx`: cache-first using `useSettings`. Show `initialSyncDays` (number input, 1–30) and `theme` (system/light/dark); save via `api.updateSettings` with optimistic invalidation. Include a sign-out button (reuse the recovered logic from the old `settings/SettingsPageClient.tsx` at `1db8878` — recover it for reference: `git show 1db8878:src/app/settings/SettingsPageClient.tsx`). Account management UI is Phase 3 — leave a placeholder section labeled "Bank accounts (coming in sync phase)".
 
-- [ ] **Step 4: Typecheck & commit**
+- [x] **Step 4: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
