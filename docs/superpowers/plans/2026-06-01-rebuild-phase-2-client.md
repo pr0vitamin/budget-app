@@ -358,7 +358,7 @@ git commit -m "feat: api client and read hooks"
 
 This is the instant-feedback core (spec §5). Optimistic updates mutate the cached overview immediately; the animation is driven by the caller off the same instant state. No `router.refresh()`.
 
-- [ ] **Step 1: Implement mutations**
+- [x] **Step 1: Implement mutations**
 
 `src/lib/query/mutations.ts`:
 ```typescript
@@ -451,7 +451,7 @@ export function useOverviewMutation<TVars>(fn: (v: TVars) => Promise<unknown>) {
 }
 ```
 
-- [ ] **Step 2: Typecheck & commit**
+- [x] **Step 2: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
