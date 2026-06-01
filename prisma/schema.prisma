@@ -14,61 +14,55 @@ datasource db {
 // ============================================================================
 
 model User {
-  id           String   @id @default(cuid())
+  id           String   @id // Supabase auth user id (uuid as text)
   email        String   @unique
   createdAt    DateTime @default(now())
   lastActiveAt DateTime @default(now())
 
-  // Relations
-  accounts              Account[]
-  bucketGroups          BucketGroup[]
-  categorizationRules   CategorizationRule[]
-  scheduledTransactions ScheduledTransaction[]
-  budgetAllocations     BudgetAllocation[]
-  settings              UserSettings?
+  accounts            Account[]
+  bucketGroups        BucketGroup[]
+  transactions        Transaction[]
+  budgetAllocations   BudgetAllocation[]
+  categorizationRules CategorizationRule[]
+  settings            UserSettings?
 }
 
 model UserSettings {
-  id                   String    @id @default(cuid())
-  userId               String    @unique
-  budgetCycleType      String    @default("fortnightly") // weekly, fortnightly, monthly
-  budgetCycleStartDate DateTime  @default(now()) // Start date of budget cycle
-  initialSyncDays      Int       @default(30) // How many days back to sync on first fetch (max 30)
-  akahuAccessToken     String? // Encrypted
-  akahuRefreshToken    String? // Encrypted
-  tokenExpiresAt       DateTime?
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  initialSyncDays Int     @default(30) // how far back the first Akahu sync reaches (max 30)
+  theme           String  @default("system") // system | light | dark
 
-  // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ============================================================================
-// BANK ACCOUNTS
+// BANK ACCOUNTS (a replaceable link, never the owner of transactions)
 // ============================================================================
 
 model Account {
   id               String    @id @default(cuid())
   userId           String
-  akahuId          String    // Akahu account ID (was akahuAccountId)
+  akahuId          String // Akahu account id (volatile across reconnection)
+  accountNumber    String? // stable formatted account number, e.g. "12-1234-1234567-00"
   name             String
   institution      String
-  accountType      String    // checking, savings, creditcard, etc.
-  formattedAccount String?   // e.g., "12-1234-1234567-00"
+  accountType      String
   balanceCurrent   Decimal?  @db.Decimal(12, 2)
   balanceAvailable Decimal?  @db.Decimal(12, 2)
   currency         String    @default("NZD")
-  status           String    @default("ACTIVE") // ACTIVE, INACTIVE
-  connectionLogo   String?   // URL to institution logo
+  status           String    @default("ACTIVE")
+  connectionLogo   String?
   lastSyncAt       DateTime?
-  connectionError  String?   // Last error message if sync failed
+  connectionError  String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  // Relations
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
 
   @@unique([userId, akahuId])
+  @@unique([userId, accountNumber])
   @@index([userId])
 }
 
@@ -77,14 +71,14 @@ model Account {
 // ============================================================================
 
 model BucketGroup {
-  id        String   @id @default(cuid())
-  userId    String
-  name      String
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  sortOrder   Int      @default(0)
+  isCollapsed Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  // Relations
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   buckets Bucket[]
 
@@ -92,71 +86,67 @@ model BucketGroup {
 }
 
 model Bucket {
-  id                   String  @id @default(cuid())
-  groupId              String
-  name                 String
-  type                 String  @default("spending") // spending, savings
-  icon                 String? // Cat variant or emoji
-  color                String  @default("#6366f1") // Hex color
-  autoAllocationAmount Decimal @default(0) @db.Decimal(12, 2)
-  rollover             Boolean @default(true)
-  rolloverTargetId     String? // If rollover=false, where does leftover go?
-  sortOrder            Int     @default(0)
-  isDeleted            Boolean @default(false)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id           String   @id @default(cuid())
+  groupId      String
+  name         String
+  icon         String?
+  color        String   @default("#6366f1")
+  targetAmount Decimal? @db.Decimal(12, 2) // optional goal; drives the fill gauge
+  topUpAmount  Decimal  @default(0) @db.Decimal(12, 2) // single-feed amount / Feed All amount
+  sortOrder    Int      @default(0)
+  isArchived   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  // Relations
-  group                 BucketGroup            @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  rolloverTarget        Bucket?                @relation("RolloverTarget", fields: [rolloverTargetId], references: [id], onDelete: SetNull)
-  rolloverSources       Bucket[]               @relation("RolloverTarget")
-  allocations           Allocation[]
-  budgetAllocations     BudgetAllocation[]
-  scheduledTransactions ScheduledTransaction[]
-  categorizationRules   CategorizationRule[]
+  group               BucketGroup          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  allocations         Allocation[]
+  budgetAllocations   BudgetAllocation[]
+  categorizationRules CategorizationRule[]
 
   @@index([groupId])
 }
 
 // ============================================================================
-// TRANSACTIONS & ALLOCATIONS
+// TRANSACTIONS & ALLOCATIONS (user-owned ledger)
 // ============================================================================
 
 model Transaction {
-  id                String   @id @default(cuid())
-  accountId         String?
-  externalId        String?  @unique // Akahu transaction ID
-  amount            Decimal  @db.Decimal(12, 2) // Negative = outflow, positive = inflow
-  merchant          String?
-  description       String?
-  date              DateTime @db.Date
-  status            String   @default("confirmed") // pending, confirmed
-  matchedScheduleId String?
-  isManual          Boolean  @default(false)
-  isAmended         Boolean  @default(false) // Transaction was amended by bank
-  transactionType   String?  // credit, debit, payment, transfer, etc.
-  category          String?  // Akahu-provided category
-  balance           Decimal? @db.Decimal(12, 2) // Account balance after transaction
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String // owner — survives account deletion
+  accountId      String? // nullable link; SetNull on account delete
+  source         String   @default("manual") // akahu | manual
+  externalId     String?  @unique // Akahu transaction id
+  hash           String? // Akahu dedup hash
+  kind           String   @default("expense") // income | expense | transfer
+  amount         Decimal  @db.Decimal(12, 2) // signed: negative = outflow
+  merchant       String?
+  description    String?
+  date           DateTime @db.Date
+  category       String?
+  balanceAfter   Decimal? @db.Decimal(12, 2)
+  status         String   @default("confirmed") // pending | confirmed
+  isReclassified Boolean  @default(false)
+  needsReview    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  // Relations
-  account           Account?              @relation(fields: [accountId], references: [id], onDelete: SetNull)
-  matchedSchedule   ScheduledTransaction? @relation(fields: [matchedScheduleId], references: [id], onDelete: SetNull)
-  allocations       Allocation[]
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account     Account?     @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  allocations Allocation[]
 
+  @@index([userId])
   @@index([accountId])
   @@index([date])
   @@index([status])
+  @@index([hash])
 }
 
 model Allocation {
   id            String  @id @default(cuid())
   transactionId String
   bucketId      String
-  amount        Decimal @db.Decimal(12, 2) // Portion allocated to this bucket
+  amount        Decimal @db.Decimal(12, 2) // signed; carries the transaction's sign
 
-  // Relations
   transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   bucket      Bucket      @relation(fields: [bucketId], references: [id], onDelete: Cascade)
 
@@ -164,50 +154,19 @@ model Allocation {
   @@index([bucketId])
 }
 
-// Budget allocations - money allocated from income pool to buckets
 model BudgetAllocation {
   id        String   @id @default(cuid())
   userId    String
   bucketId  String
-  amount    Decimal  @db.Decimal(12, 2) // Amount allocated from income pool
+  amount    Decimal  @db.Decimal(12, 2) // positive — money fed from income pool into a bucket
   note      String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  // Relations
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   bucket Bucket @relation(fields: [bucketId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([bucketId])
-}
-
-// ============================================================================
-// SCHEDULED TRANSACTIONS
-// ============================================================================
-
-model ScheduledTransaction {
-  id        String   @id @default(cuid())
-  userId    String
-  bucketId  String
-  name      String
-  amount    Decimal  @db.Decimal(12, 2)
-  frequency String // weekly, fortnightly, monthly, yearly, custom
-  interval  Int      @default(1) // Every X periods (for custom)
-  startDate DateTime @db.Date
-  nextDue   DateTime @db.Date
-  enabled   Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bucket              Bucket        @relation(fields: [bucketId], references: [id], onDelete: Cascade)
-  matchedTransactions Transaction[]
-
-  @@index([userId])
-  @@index([bucketId])
-  @@index([nextDue])
 }
 
 // ============================================================================
@@ -218,10 +177,9 @@ model CategorizationRule {
   id              String   @id @default(cuid())
   userId          String
   bucketId        String
-  merchantPattern String // Pattern to match merchant name
+  merchantPattern String // stored lowercase; substring match
   createdAt       DateTime @default(now())
 
-  // Relations
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   bucket Bucket @relation(fields: [bucketId], references: [id], onDelete: Cascade)
 
