@@ -1368,7 +1368,7 @@ git commit -m "feat: transactions API with reclassification"
 - Create: `src/app/api/transactions/[id]/allocate/route.ts`
 - Create: `src/app/api/transactions/[id]/allocations/[bucketId]/route.ts`
 
-- [ ] **Step 1: Allocate (single or split) with server-side validation**
+- [x] **Step 1: Allocate (single or split) with server-side validation**
 
 `src/app/api/transactions/[id]/allocate/route.ts`:
 ```typescript
@@ -1429,7 +1429,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 }
 ```
 
-- [ ] **Step 2: Remove a single allocation from a split**
+- [x] **Step 2: Remove a single allocation from a split**
 
 `src/app/api/transactions/[id]/allocations/[bucketId]/route.ts`:
 ```typescript
@@ -1453,12 +1453,12 @@ export async function DELETE(
 }
 ```
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/app/api/transactions
