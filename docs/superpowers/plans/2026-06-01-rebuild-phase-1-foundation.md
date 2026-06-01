@@ -344,7 +344,7 @@ git commit -m "feat: durable user-owned ledger schema"
 - Create: `supabase/migrations/20260601_rls_v2.sql`
 - Delete: `supabase/migrations/20260105_rls_policies.sql`
 
-- [ ] **Step 1: Write the new RLS policy file**
+- [x] **Step 1: Write the new RLS policy file**
 
 Because `Transaction` now has a direct `userId`, transaction/allocation policies simplify. Create `supabase/migrations/20260601_rls_v2.sql`:
 
@@ -403,7 +403,7 @@ CREATE POLICY "rule_all" ON "CategorizationRule" FOR ALL
   USING ("userId" = auth.uid()::text) WITH CHECK ("userId" = auth.uid()::text);
 ```
 
-- [ ] **Step 2: Remove the old policy file and apply the new one**
+- [x] **Step 2: Remove the old policy file and apply the new one**
 
 Run:
 ```bash
@@ -411,7 +411,7 @@ git rm supabase/migrations/20260105_rls_policies.sql
 ```
 Then run the contents of `supabase/migrations/20260601_rls_v2.sql` in the Supabase SQL editor (the server uses the Prisma service connection, but RLS protects any anon/client access). Note: the API routes use Prisma over the pooled service connection, so functionally the API is authorized in code via `getAuthedUserId` (Task 9); RLS is defense-in-depth.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add supabase/migrations
