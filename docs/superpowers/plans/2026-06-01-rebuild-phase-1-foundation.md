@@ -592,7 +592,7 @@ git commit -m "feat: bucket balance and available-to-budget calculations"
 - Create: `src/lib/domain/split.ts`
 - Test: `src/lib/domain/split.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 import { describe, it, expect } from 'vitest';
@@ -648,12 +648,12 @@ describe('validateSplit', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run src/lib/domain/split.test.ts`
 Expected: FAIL — cannot find module `./split`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```typescript
 const round2 = (n: number): number => Math.round(n * 100) / 100;
@@ -694,12 +694,12 @@ export function validateSplit(
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run src/lib/domain/split.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/domain/split.ts src/lib/domain/split.test.ts
