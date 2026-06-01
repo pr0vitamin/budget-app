@@ -46,8 +46,9 @@ export const api = {
   deleteTransaction: (id: string) => http(`/api/transactions/${id}`, { method: 'DELETE' }),
 
   createGroup: (name: string) => http('/api/bucket-groups', { method: 'POST', body: JSON.stringify({ name }) }),
+  deleteGroup: (id: string) => http(`/api/bucket-groups/${id}`, { method: 'DELETE' }),
   reorderGroups: (order: string[]) => http('/api/bucket-groups/reorder', { method: 'POST', body: JSON.stringify({ order }) }),
-  createBucket: (data: { groupId: string; name: string; color?: string; topUpAmount?: number; targetAmount?: number | null }) =>
+  createBucket: (data: { groupId: string; name: string; color?: string; icon?: string; topUpAmount?: number; targetAmount?: number | null }) =>
     http('/api/buckets', { method: 'POST', body: JSON.stringify(data) }),
   updateBucket: (id: string, data: Record<string, unknown>) =>
     http(`/api/buckets/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
