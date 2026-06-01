@@ -76,6 +76,17 @@ in spirit, though auth still scopes all data per user.
 - **Local-first rendering** with TanStack Query + IndexedDB persistence (see §6).
 - **Tap-based cash stuffing and reordering** (see §5).
 
+### New behaviour (added during review)
+
+- **Auto-remainder on split** — when one bucket is left in a split, it auto-fills the remaining
+  amount (see §5).
+- **Durable pending allocations** — allocations survive the pending → confirmed lifecycle and any
+  Akahu-side field changes; nothing is ever silently unallocated by a sync (see §4 `needsReview`, §8).
+- **Instant feed animations** — sparkle/confetti fire immediately from optimistic local state, with
+  no network or `router.refresh()` on the critical path (see §5).
+- **Rules apply to pending** — categorization rules auto-allocate at ingestion for pending as well as
+  confirmed expenses (see §5).
+
 ## 4. Data Model — the durable ledger
 
 > The single most important change. Principle: **the user owns the ledger; the bank account is just
@@ -125,12 +136,16 @@ _Removed_: `type`, `rollover`, `rolloverTargetId`.
 (unique, Akahu txn id), `hash?` (Akahu dedup hash), `kind` (`income` | `expense` | `transfer`),
 `amount` (Decimal, signed: negative = outflow, positive = inflow), `merchant?`, `description?`,
 `date`, `category?` (Akahu-provided), `balanceAfter?`, `status` (`pending` | `confirmed`),
-`isReclassified` (user overrode the auto `kind`), timestamps.
+`isReclassified` (user overrode the auto `kind`), `needsReview` (an amount change or dropped-pending
+left this transaction's allocations possibly out of date — surfaced to the user, never auto-wiped),
+timestamps.
 Indexes on `userId`, `date`, `status`, `accountId`.
 
 **Allocation** — an expense (or refund) assigned to a bucket. Supports splits.
 `id`, `transactionId`, `bucketId`, `amount` (Decimal, signed — carries the transaction's sign).
-Unique `(transactionId, bucketId)`. Sum of a transaction's allocations must equal its amount.
+Unique `(transactionId, bucketId)`. Allocations must sum to the transaction amount **at allocation
+time** (enforced by the allocation modal); a later Akahu-side amount change can break this, which
+sets `needsReview` (§8) rather than silently editing the user's splits.
 
 **BudgetAllocation** ("feed") — money stuffed from the income pool into a bucket.
 `id`, `userId`, `bucketId`, `amount` (positive Decimal), `note?`, `createdAt`. A feed is reversible
@@ -169,11 +184,36 @@ allocation; `income` flows to the Available-to-Budget pool; `transfer` is hidden
 4. **Completion**: confetti when Available-to-Budget reaches \$0.
 5. Feeding is blocked from making Available-to-Budget negative.
 
+**Instant feedback — no network on the critical path.** Today the sparkle/confetti fire only *after*
+the feed POST completes _and_ a full server re-render (`router.refresh()`), so on a cold free-tier
+server the animation lags badly. In the rebuild, a tap updates the bucket balance and
+Available-to-Budget **optimistically in local state and fires the animation immediately** (target:
+< 16 ms to first frame, never gated on the network). The POST runs in the background and reconciles
+the cache on success, or rolls the balance back with an error toast on failure. **No
+`router.refresh()` is ever on the animation path.** "Feed All" animates every cat in one pass from
+the optimistic state, rather than waiting on the batch request.
+
 ### Allocation (inbox)
 
 Tap an expense → pick a bucket, or split across several buckets (the allocation modal enforces that
 the split sums to the transaction amount). Optionally "Always allocate \<merchant\> to \<bucket\>"
-creates a CategorizationRule; future matching transactions auto-allocate on sync.
+creates a CategorizationRule; future matching expense transactions auto-allocate on sync.
+
+**Rules apply to pending transactions too.** Categorization runs the moment an expense is ingested —
+whether it arrives **pending or confirmed** — so a known merchant lands in its bucket immediately
+rather than waiting days for confirmation. Akahu does not enrich pending transactions (no merchant
+object, only a raw description), so pending matching runs against the description-derived merchant
+using the same case-insensitive substring match the rules already use. The auto-allocation then
+rides through the pending → confirmed lifecycle (§8): it is preserved, and its amount is updated if
+the confirmed total differs. Matching is idempotent — a transaction that already has an allocation
+(auto or manual) is never re-allocated.
+
+**Auto-remainder on split.** The modal always shows a running "remaining to allocate" figure. When
+exactly **one** chosen bucket still has no amount entered, that bucket's amount auto-fills with the
+remainder and stays in sync as the other amounts change — so the user never hand-calculates the last
+split. With two or more buckets still unentered, no auto-fill happens (there is no unambiguous
+remainder). Example: a \$12.90 supermarket transaction split across Pet and Groceries — entering
+\$4.50 for Pet auto-assigns \$8.40 to Groceries.
 
 ### Reordering (tap-based — no drag)
 
@@ -233,9 +273,32 @@ _Removed_: all `/scheduled*` endpoints.
   the ledger.
 - **Full refresh** action: fetches a wide window and reconciles by dedup key, so historical gaps
   self-heal instead of being permanently lost to the narrow incremental window.
-- **Pending transactions** are shown but clearly marked; confirmed versions reconcile onto the
-  pending record via dedup.
 - Sync failures surface a non-blocking warning banner; the app keeps working from cache.
+
+### Pending transaction lifecycle (allocations must survive)
+
+Pending transactions are allocatable and shown but clearly marked. Akahu pending transactions have
+**no stable ID** and mutate as they settle (amount, description, and date all change), so the old
+delete-and-recreate-by-key approach destroyed allocations on nearly every sync. The rebuilt rules:
+
+- **Reconcile in place, never delete-and-recreate.** Each real-world transaction maps to one stable
+  local row that allocations hang off. On sync, a pending Akahu transaction is matched to its
+  existing row via the §4 dedup machinery (Akahu `hash` if present, else account + approximate date
+  + amount-within-tolerance + description similarity) and **updated in place** — even if amount or
+  description has changed. The row id, and therefore its allocations, are preserved.
+- **Pending → confirmed preserves allocations.** When the confirmed version arrives it reconciles
+  onto the same row (flip `status` to `confirmed`, set `externalId`/`hash`), keeping allocations:
+  - **Single allocation**: update the allocation amount to the confirmed total, preserving the
+    bucket choice.
+  - **Split (multiple allocations)**: **never delete.** Keep the existing splits; if they no longer
+    sum to the new amount, set `needsReview` and surface the transaction in the inbox so the user
+    adjusts it — the auto-remainder feature (§5) makes that a one-tap fix.
+- **Disappearing pending.** If Akahu stops reporting a pending transaction: remove the local row
+  only if it has **no allocations** (a transient pre-auth that vanished). If it has allocations,
+  keep it and set `needsReview` rather than destroying the user's intent — pending holds often
+  reappear as a confirmed transaction with a different key.
+- **Net effect:** allocating a pending transaction is safe; nothing the user assigns is ever silently
+  unallocated by a sync. The only outcome of an Akahu-side change is, at worst, a `needsReview` flag.
 
 ## 9. PWA & offline
 
