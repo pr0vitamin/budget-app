@@ -720,7 +720,7 @@ git commit -m "feat: custom-amount feed modal"
 
 **Files:** Recover + heavily adapt `src/components/transactions/AllocationModal.tsx`; create `src/app/inbox/page.tsx`; recover `src/components/transactions/{TransactionList,index}.tsx`
 
-- [ ] **Step 1: Recover the modal + list**
+- [x] **Step 1: Recover the modal + list**
 
 ```bash
 mkdir -p src/components/transactions
@@ -729,7 +729,7 @@ for f in AllocationModal.tsx TransactionList.tsx index.ts; do
 done
 ```
 
-- [ ] **Step 2: Adapt AllocationModal to cached buckets + auto-remainder**
+- [x] **Step 2: Adapt AllocationModal to cached buckets + auto-remainder**
 
 Edit `AllocationModal.tsx`:
 - Replace the `useEffect` that does `fetch('/api/bucket-groups')` with a prop `buckets: { id: string; name: string; color: string; groupName: string }[]` passed in from the page (derived from `useOverview`). Remove the internal fetch.
@@ -738,7 +738,7 @@ Edit `AllocationModal.tsx`:
 - On submit, fill the single null row with the computed remainder, then validate with `validateSplit` (signed amounts: expense rows negative). Call the `onAllocate(id, allocations)` prop (which the page wires to `useAllocate().mutate`). Remove the local `createRule` POST and instead pass `createRule` up; the page creates the rule via `api.createRule` when true.
 - Keep income display (income isn't allocated) and the manual edit/delete affordances, but route edit/delete through props the page supplies.
 
-- [ ] **Step 3: Inbox page**
+- [x] **Step 3: Inbox page**
 
 `src/app/inbox/page.tsx` (cache-first):
 ```tsx
@@ -814,7 +814,7 @@ export default function InboxPage() {
 ```
 Adjust the `AllocationModal` prop types so its `onAllocate` signature matches `(id, allocations, createRule, merchant)` and it accepts `buckets`. Match the modal's actual `transaction` shape to the `Transaction` type from `@/lib/api`.
 
-- [ ] **Step 4: Typecheck & commit**
+- [x] **Step 4: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
