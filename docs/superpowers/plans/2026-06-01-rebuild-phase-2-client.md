@@ -904,17 +904,17 @@ git commit -m "test: allocation modal wiring"
 
 ## Task 12: Phase 2 verification
 
-- [ ] **Step 1: Full gate**
+- [x] **Step 1: Full gate**
 
 Run: `npm run typecheck && npm run lint && npm run test:run`
 Expected: typecheck PASS, lint clean (fix any unused imports left from recoveries), all tests green.
 
-- [ ] **Step 2: Confirm no forbidden deps/imports remain**
+- [x] **Step 2: Confirm no forbidden deps/imports remain**
 
 Run: `grep -rn "@dnd-kit\|@/lib/offline\|@/lib/budget-utils\|router.refresh\|/api/inbox/count" src/ || echo "clean"`
 Expected: `clean` (or only intentional matches). `router.refresh()` must not appear in any feed/allocation path.
 
-- [ ] **Step 3: Commit any lint fixes**
+- [x] **Step 3: Commit any lint fixes**
 
 ```bash
 git add -A
