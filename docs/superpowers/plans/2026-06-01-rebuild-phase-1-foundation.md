@@ -1707,7 +1707,7 @@ git commit -m "feat: categorization rules API"
 - Create: `src/app/api/settings/route.ts`
 - Create: `src/app/api/inbox/count/route.ts`
 
-- [ ] **Step 1: Settings (get with default-create; patch)**
+- [x] **Step 1: Settings (get with default-create; patch)**
 
 `src/app/api/settings/route.ts`:
 ```typescript
@@ -1745,7 +1745,7 @@ export async function PATCH(request: Request) {
 }
 ```
 
-- [ ] **Step 2: Inbox count (unallocated expenses)**
+- [x] **Step 2: Inbox count (unallocated expenses)**
 
 `src/app/api/inbox/count/route.ts`:
 ```typescript
@@ -1765,12 +1765,12 @@ export async function GET() {
 }
 ```
 
-- [ ] **Step 3: Whole-phase verification**
+- [x] **Step 3: Whole-phase verification**
 
 Run: `npm run typecheck && npm run test:run`
 Expected: typecheck PASS, and all domain tests (classify, balances, split, rules, dedup) green. No remaining references to deleted `budget-utils`/`sync-*` tests.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/app/api/settings src/app/api/inbox
