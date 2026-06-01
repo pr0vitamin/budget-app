@@ -51,7 +51,7 @@ This is a greenfield rebuild: clear the old `lib`, API, and UI surface so Phase 
 **Files:**
 - Modify: `package.json`, `src/app/layout.tsx`, `src/app/page.tsx`
 
-- [ ] **Step 1: Remove drag + add data-layer deps**
+- [x] **Step 1: Remove drag + add data-layer deps**
 
 Run:
 ```bash
@@ -59,7 +59,7 @@ npm remove @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 npm install @tanstack/react-query@^5 @tanstack/react-query-persist-client@^5 @tanstack/query-async-storage-persister@^5
 ```
 
-- [ ] **Step 2: Delete the old lib, API, and UI surface**
+- [x] **Step 2: Delete the old lib, API, and UI surface**
 
 Run:
 ```bash
@@ -84,7 +84,7 @@ git rm -r src/app/inbox src/app/settings src/app/upcoming src/app/rules
 git rm -r src/components
 ```
 
-- [ ] **Step 3: Replace layout + home with a minimal placeholder**
+- [x] **Step 3: Replace layout + home with a minimal placeholder**
 
 `src/app/layout.tsx`:
 ```tsx
@@ -113,12 +113,12 @@ export default function HomePage() {
 }
 ```
 
-- [ ] **Step 4: Verify a clean slate**
+- [x] **Step 4: Verify a clean slate**
 
 Run: `npm run typecheck`
 Expected: PASS — no dangling imports. If any file still references a deleted module, delete or stub that file until typecheck passes (it belongs to the old UI and is rebuilt in Phase 2). Keep the files in the "Keep" list above.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
