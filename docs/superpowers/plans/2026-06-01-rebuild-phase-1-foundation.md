@@ -1628,7 +1628,7 @@ git commit -m "feat: budget feed, feed-all and available API"
 - Create: `src/app/api/rules/route.ts`
 - Create: `src/app/api/rules/[id]/route.ts`
 
-- [ ] **Step 1: Collection (list + create)**
+- [x] **Step 1: Collection (list + create)**
 
 `src/app/api/rules/route.ts`:
 ```typescript
@@ -1670,7 +1670,7 @@ export async function POST(request: Request) {
 }
 ```
 
-- [ ] **Step 2: Item (delete)**
+- [x] **Step 2: Item (delete)**
 
 `src/app/api/rules/[id]/route.ts`:
 ```typescript
@@ -1691,7 +1691,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 }
 ```
 
-- [ ] **Step 3: Typecheck & commit**
+- [x] **Step 3: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
