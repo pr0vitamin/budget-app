@@ -693,20 +693,20 @@ git commit -m "feat: cache-first buckets home with instant feed"
 
 **Files:** Recover + adapt `src/components/buckets/FeedModal.tsx`; wire into `src/app/page.tsx`
 
-- [ ] **Step 1: Recover + adapt**
+- [x] **Step 1: Recover + adapt**
 
 ```bash
 git show 1db8878:src/components/buckets/FeedModal.tsx > src/components/buckets/FeedModal.tsx
 ```
 Adapt: the modal collects an amount (and optional note) and calls an `onFeed(amount, note?)` prop. Remove any reference to deleted modules. Keep the visual form. It should default the amount to the bucket's `topUpAmount`.
 
-- [ ] **Step 2: Wire a long-press / secondary action**
+- [x] **Step 2: Wire a long-press / secondary action**
 
 In `src/app/page.tsx`, add state `feedingBucket` and open `FeedModal` when the user wants a custom amount. Since tap = instant default feed (Task 7), expose custom-amount via a small "＋ custom" affordance in the header or a long-press handler on the cat is out of scope — instead add a tiny "Custom feed" button in the available-to-budget card that opens the modal with a bucket picker. On submit, call `feed.mutate({ bucketId, amount })` and `sparkle([bucketId])`.
 
 Keep this minimal; the primary flow is tap-to-feed.
 
-- [ ] **Step 3: Typecheck & commit**
+- [x] **Step 3: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
