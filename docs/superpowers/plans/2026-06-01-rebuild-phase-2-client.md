@@ -244,7 +244,7 @@ git commit -m "feat: tanstack-query client persisted to indexeddb"
 
 **Files:** Create `src/lib/api.ts`, `src/lib/query/keys.ts`, `src/lib/query/hooks.ts`
 
-- [ ] **Step 1: Typed fetch wrappers**
+- [x] **Step 1: Typed fetch wrappers**
 
 `src/lib/api.ts`:
 ```typescript
@@ -313,7 +313,7 @@ export const api = {
 };
 ```
 
-- [ ] **Step 2: Query keys**
+- [x] **Step 2: Query keys**
 
 `src/lib/query/keys.ts`:
 ```typescript
@@ -326,7 +326,7 @@ export const qk = {
 };
 ```
 
-- [ ] **Step 3: Read hooks**
+- [x] **Step 3: Read hooks**
 
 `src/lib/query/hooks.ts`:
 ```typescript
@@ -342,7 +342,7 @@ export const useSettings = () => useQuery({ queryKey: qk.settings, queryFn: api.
 export const useRules = () => useQuery({ queryKey: qk.rules, queryFn: api.rules });
 ```
 
-- [ ] **Step 4: Typecheck & commit**
+- [x] **Step 4: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
