@@ -1240,7 +1240,7 @@ git commit -m "feat: buckets and bucket-groups API"
 - Create: `src/app/api/transactions/route.ts`
 - Create: `src/app/api/transactions/[id]/route.ts`
 
-- [ ] **Step 1: Collection (list + manual create)**
+- [x] **Step 1: Collection (list + manual create)**
 
 `src/app/api/transactions/route.ts`:
 ```typescript
@@ -1300,7 +1300,7 @@ export async function POST(request: Request) {
 }
 ```
 
-- [ ] **Step 2: Item (patch incl. reclassify; delete manual only)**
+- [x] **Step 2: Item (patch incl. reclassify; delete manual only)**
 
 `src/app/api/transactions/[id]/route.ts`:
 ```typescript
@@ -1348,12 +1348,12 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 }
 ```
 
-- [ ] **Step 3: Typecheck the new files**
+- [x] **Step 3: Typecheck the new files**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/app/api/transactions
