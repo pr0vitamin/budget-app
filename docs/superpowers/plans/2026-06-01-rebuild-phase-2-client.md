@@ -508,14 +508,14 @@ git commit -m "feat: recover and adapt app shell, animations, ui primitives"
 
 **Files:** Recover `src/components/buckets/CatPiggyBank.tsx`; create `src/components/buckets/CatPiggyBank.test.tsx`
 
-- [ ] **Step 1: Recover**
+- [x] **Step 1: Recover**
 
 ```bash
 mkdir -p src/components/buckets
 git show 1db8878:src/components/buckets/CatPiggyBank.tsx > src/components/buckets/CatPiggyBank.tsx
 ```
 
-- [ ] **Step 2: Adapt the props to the new model**
+- [x] **Step 2: Adapt the props to the new model**
 
 Edit `CatPiggyBank.tsx`:
 - Rename the prop `autoAllocationAmount` → `topUpAmount` (interface + destructure + the `fillPercent` calculation that referenced it).
@@ -523,7 +523,7 @@ Edit `CatPiggyBank.tsx`:
 - **Remove** the `reserved` prop and the entire `reserved > 0 ? (...)` branch in the label (scheduled/reserved was dropped) — always render the single balance `<span>`.
 - Keep everything else (SVG, expressions, sparkle) unchanged.
 
-- [ ] **Step 3: Write a render test**
+- [x] **Step 3: Write a render test**
 
 `src/components/buckets/CatPiggyBank.test.tsx`:
 ```tsx
@@ -545,7 +545,7 @@ describe('CatPiggyBank', () => {
 });
 ```
 
-- [ ] **Step 4: Run test, typecheck, commit**
+- [x] **Step 4: Run test, typecheck, commit**
 
 Run: `npx vitest run src/components/buckets/CatPiggyBank.test.tsx` (Expected: PASS, 2 tests), then `npm run typecheck` (PASS).
 ```bash
