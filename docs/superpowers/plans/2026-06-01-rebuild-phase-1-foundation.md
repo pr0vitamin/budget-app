@@ -1475,7 +1475,7 @@ git commit -m "feat: allocation API with split validation"
 - Create: `src/app/api/budget/allocations/batch/route.ts`
 - Create: `src/app/api/budget/allocations/[id]/route.ts`
 
-- [ ] **Step 1: Available to budget**
+- [x] **Step 1: Available to budget**
 
 `src/app/api/budget/available/route.ts`:
 ```typescript
@@ -1501,7 +1501,7 @@ export async function GET() {
 }
 ```
 
-- [ ] **Step 2: Feed one bucket**
+- [x] **Step 2: Feed one bucket**
 
 `src/app/api/budget/allocations/route.ts`:
 ```typescript
@@ -1546,7 +1546,7 @@ export async function POST(request: Request) {
 }
 ```
 
-- [ ] **Step 3: Feed All (batch)**
+- [x] **Step 3: Feed All (batch)**
 
 `src/app/api/budget/allocations/batch/route.ts`:
 ```typescript
@@ -1591,7 +1591,7 @@ export async function POST() {
 }
 ```
 
-- [ ] **Step 4: Un-feed (delete a budget allocation)**
+- [x] **Step 4: Un-feed (delete a budget allocation)**
 
 `src/app/api/budget/allocations/[id]/route.ts`:
 ```typescript
@@ -1612,7 +1612,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 }
 ```
 
-- [ ] **Step 5: Typecheck & commit**
+- [x] **Step 5: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
