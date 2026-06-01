@@ -1007,7 +1007,7 @@ git commit -m "feat: getAuthedUserId route helper"
 
 Note: all old API routes were removed in Task 1, so these are created fresh.
 
-- [ ] **Step 1: Bucket groups collection + item + reorder**
+- [x] **Step 1: Bucket groups collection + item + reorder**
 
 `src/app/api/bucket-groups/route.ts`:
 ```typescript
@@ -1109,7 +1109,7 @@ export async function POST(request: Request) {
 }
 ```
 
-- [ ] **Step 2: Buckets collection + item + reorder**
+- [x] **Step 2: Buckets collection + item + reorder**
 
 `src/app/api/buckets/route.ts`:
 ```typescript
@@ -1220,12 +1220,12 @@ export async function POST(request: Request) {
 }
 ```
 
-- [ ] **Step 3: Typecheck**
+- [x] **Step 3: Typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/app/api/buckets src/app/api/bucket-groups
