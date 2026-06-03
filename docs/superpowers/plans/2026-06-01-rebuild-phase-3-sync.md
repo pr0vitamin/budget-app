@@ -242,7 +242,7 @@ git commit -m "feat: pure sync reconciliation logic (create/update/confirm + all
 
 **Files:** Create `src/app/api/accounts/route.ts`, `src/app/api/accounts/[id]/route.ts`, `src/app/api/accounts/[id]/refresh/route.ts`
 
-- [ ] **Step 1: List + connect/sync accounts**
+- [x] **Step 1: List + connect/sync accounts**
 
 `src/app/api/accounts/route.ts`:
 ```typescript
@@ -305,7 +305,7 @@ export async function POST() {
 }
 ```
 
-- [ ] **Step 2: Delete (unlink, never cascade)**
+- [x] **Step 2: Delete (unlink, never cascade)**
 
 `src/app/api/accounts/[id]/route.ts`:
 ```typescript
@@ -328,7 +328,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 }
 ```
 
-- [ ] **Step 3: Refresh one account**
+- [x] **Step 3: Refresh one account**
 
 `src/app/api/accounts/[id]/refresh/route.ts`:
 ```typescript
@@ -350,7 +350,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 }
 ```
 
-- [ ] **Step 4: Typecheck & commit**
+- [x] **Step 4: Typecheck & commit**
 
 Run: `npm run typecheck` (PASS).
 ```bash
