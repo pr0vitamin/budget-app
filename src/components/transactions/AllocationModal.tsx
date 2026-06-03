@@ -8,6 +8,7 @@ interface Bucket {
     name: string;
     color: string;
     groupName: string;
+    balance: number;
 }
 
 interface AllocationRow {
@@ -358,12 +359,24 @@ export function AllocationModal({
                                         style={{ backgroundColor: bucket.color }}
                                     />
                                     <p className="font-medium text-sm truncate">{bucket.name}</p>
-                                    <p
-                                        className={`text-xs truncate ${selectedBucket?.id === bucket.id ? 'text-indigo-200' : 'text-gray-500'
-                                            }`}
-                                    >
-                                        {bucket.groupName}
-                                    </p>
+                                    <div className="flex items-center justify-between gap-1">
+                                        <p
+                                            className={`text-xs truncate ${selectedBucket?.id === bucket.id ? 'text-indigo-200' : 'text-gray-500'
+                                                }`}
+                                        >
+                                            {bucket.groupName}
+                                        </p>
+                                        <p
+                                            className={`text-xs font-semibold whitespace-nowrap ${selectedBucket?.id === bucket.id
+                                                ? 'text-white'
+                                                : bucket.balance < 0
+                                                    ? 'text-red-600'
+                                                    : 'text-gray-700'
+                                                }`}
+                                        >
+                                            ${bucket.balance.toFixed(2)}
+                                        </p>
+                                    </div>
                                 </button>
                             ))}
                         </div>
@@ -397,7 +410,7 @@ export function AllocationModal({
                                         <option value="">Select cat...</option>
                                         {buckets.map((b) => (
                                             <option key={b.id} value={b.id}>
-                                                {b.name} ({b.groupName})
+                                                {b.name} ({b.groupName}) — ${b.balance.toFixed(2)}
                                             </option>
                                         ))}
                                     </select>

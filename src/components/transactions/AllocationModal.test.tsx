@@ -3,8 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AllocationModal } from './AllocationModal';
 
 const buckets = [
-  { id: 'pet', name: 'Pet', color: '#f00', groupName: 'Life' },
-  { id: 'groceries', name: 'Groceries', color: '#0f0', groupName: 'Life' },
+  { id: 'pet', name: 'Pet', color: '#f00', groupName: 'Life', balance: 12.5 },
+  { id: 'groceries', name: 'Groceries', color: '#0f0', groupName: 'Life', balance: 0 },
 ];
 
 const txn = {

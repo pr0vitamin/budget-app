@@ -20,7 +20,7 @@ export default function TransactionsPage() {
   const [addOpen, setAddOpen] = useState(false);
 
   const buckets = (overview?.groups ?? []).flatMap((g) =>
-    g.buckets.map((b) => ({ id: b.id, name: b.name, color: b.color, groupName: g.name }))
+    g.buckets.map((b) => ({ id: b.id, name: b.name, color: b.color, groupName: g.name, balance: b.balance }))
   );
 
   const onAllocate = async (
