@@ -44,7 +44,7 @@
 
 **Files:** Recover `src/lib/akahu.ts`
 
-- [ ] **Step 1: Recover and sanity-check**
+- [x] **Step 1: Recover and sanity-check**
 
 ```bash
 mkdir -p src/lib
@@ -52,7 +52,7 @@ git show 1db8878:src/lib/akahu.ts > src/lib/akahu.ts
 ```
 Read it. It uses `AKAHU_APP_TOKEN` + `AKAHU_USER_TOKEN` (personal-app auth) and exposes `getAccounts`, `getTransactions(accountId, start?, end?)`, `getPendingTransactions`, `refreshAccountAndWait`, and the `AkahuAccount` / `AkahuTransaction` / `AkahuPendingTransaction` types. It has no imports of deleted modules. Make no behavioural changes; only fix imports/types if `npm run typecheck` complains.
 
-- [ ] **Step 2: Typecheck & commit**
+- [x] **Step 2: Typecheck & commit**
 
 Run: `npm run typecheck` (Expected: PASS).
 ```bash
