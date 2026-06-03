@@ -661,7 +661,7 @@ git commit -m "feat: pull-to-refresh sync + accounts api/hooks"
 
 **Files:** Recover `src/components/accounts/AccountsList.tsx` (+ `index.ts`); modify `src/app/settings/page.tsx`
 
-- [ ] **Step 1: Recover + adapt**
+- [x] **Step 1: Recover + adapt**
 
 ```bash
 mkdir -p src/components/accounts
@@ -670,11 +670,11 @@ git show 1db8878:src/components/accounts/index.ts > src/components/accounts/inde
 ```
 Adapt: remove deleted-module imports; drive data from `useAccounts()` and actions from `api.connectAccounts` / `api.removeAccount` / `api.refreshAccount` (invalidate `['accounts']` and `qk.overview` after). Show each account's name, institution, balance, `lastSyncAt`, and `connectionError` if present. Provide a "Connect / sync accounts" button (calls `connectAccounts`) and a per-account remove (with a confirm noting transactions are kept).
 
-- [ ] **Step 2: Replace the Settings placeholder**
+- [x] **Step 2: Replace the Settings placeholder**
 
 In `src/app/settings/page.tsx`, replace the "Bank accounts (coming in sync phase)" placeholder with `<AccountsList />`, plus a **"Sync now"** button calling `api.sync()` and a **"Full refresh"** button calling `api.sync(true)`, each invalidating `qk.overview` + `qk.transactions('all')` and showing the returned counts (created/confirmed/flaggedReview) in a small toast/line.
 
-- [ ] **Step 3: Typecheck & commit**
+- [x] **Step 3: Typecheck & commit**
 
 Run: `npm run typecheck` (PASS).
 ```bash
