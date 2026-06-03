@@ -25,7 +25,7 @@ export default function HomePage() {
   const feedAll = useFeedAll();
   const [sparkles, setSparkles] = useState<Set<string>>(new Set());
   const [confetti, setConfetti] = useState(false);
-  const [feedModalOpen, setFeedModalOpen] = useState(false);
+  const [feedBucketId, setFeedBucketId] = useState<string | null>(null);
   const [manageMode, setManageMode] = useState(false);
   const [modal, setModal] = useState<Modal | null>(null);
   const [newGroupName, setNewGroupName] = useState('');
@@ -45,15 +45,6 @@ export default function HomePage() {
   const sparkle = (ids: string[]) => {
     setSparkles(new Set(ids));
     setTimeout(() => setSparkles(new Set()), 900);
-  };
-
-  const onFeed = (bucketId: string) => {
-    const bucket = data?.groups.flatMap((g) => g.buckets).find((b) => b.id === bucketId);
-    if (!bucket || bucket.topUpAmount <= 0) return;
-    if (bucket.topUpAmount > (data?.availableToBudget ?? 0) + 0.001) return;
-    sparkle([bucketId]);
-    feed.mutate({ bucketId, amount: bucket.topUpAmount });
-    if ((data?.availableToBudget ?? 0) - bucket.topUpAmount <= 0.001) setConfetti(true);
   };
 
   const onFeedAll = () => {
@@ -110,20 +101,12 @@ export default function HomePage() {
           </div>
           <p className="text-3xl font-bold">${(data?.availableToBudget ?? 0).toFixed(2)}</p>
           {!manageMode && (
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={onFeedAll}
-                className="flex-1 rounded-xl bg-white/20 py-2 font-medium backdrop-blur active:scale-95 transition-transform"
-              >
-                🐱 Feed All
-              </button>
-              <button
-                onClick={() => setFeedModalOpen(true)}
-                className="rounded-xl bg-white/20 px-4 py-2 font-medium backdrop-blur active:scale-95 transition-transform text-sm"
-              >
-                ＋ Custom
-              </button>
-            </div>
+            <button
+              onClick={onFeedAll}
+              className="mt-3 w-full rounded-xl bg-white/20 py-2 font-medium backdrop-blur active:scale-95 transition-transform"
+            >
+              🐱 Feed All
+            </button>
           )}
         </div>
 
@@ -210,41 +193,35 @@ export default function HomePage() {
               <section key={group.id}>
                 <h2 className="text-sm font-semibold text-gray-500 mb-2 px-1">{group.name}</h2>
                 <div className="grid grid-cols-3 gap-3">
-                  {group.buckets.map((b) => {
-                    const canFeed =
-                      b.topUpAmount > 0 && b.topUpAmount <= (data?.availableToBudget ?? 0) + 0.001;
-                    return (
-                      <div key={b.id} className="flex flex-col items-center gap-1">
-                        <CatPiggyBank
-                          name={b.name}
-                          balance={b.balance}
-                          target={b.targetAmount ?? undefined}
-                          topUpAmount={b.topUpAmount}
-                          color={b.color}
-                          isOverspent={b.balance < 0}
-                          showSparkle={sparkles.has(b.id)}
-                          onClick={() =>
-                            setModal({
-                              kind: 'bucketDetail',
-                              bucketId: b.id,
-                              bucketName: b.name,
-                              bucketColor: b.color,
-                              bucketBalance: b.balance,
-                            })
-                          }
-                        />
-                        {b.topUpAmount > 0 && (
-                          <button
-                            onClick={() => onFeed(b.id)}
-                            disabled={!canFeed}
-                            className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 disabled:opacity-40 active:scale-95 transition-transform"
-                          >
-                            ＋ ${b.topUpAmount.toFixed(0)}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {group.buckets.map((b) => (
+                    <div key={b.id} className="flex flex-col items-center gap-1">
+                      <CatPiggyBank
+                        name={b.name}
+                        balance={b.balance}
+                        target={b.targetAmount ?? undefined}
+                        topUpAmount={b.topUpAmount}
+                        color={b.color}
+                        isOverspent={b.balance < 0}
+                        showSparkle={sparkles.has(b.id)}
+                        onClick={() =>
+                          setModal({
+                            kind: 'bucketDetail',
+                            bucketId: b.id,
+                            bucketName: b.name,
+                            bucketColor: b.color,
+                            bucketBalance: b.balance,
+                          })
+                        }
+                      />
+                      <button
+                        onClick={() => setFeedBucketId(b.id)}
+                        disabled={(data?.availableToBudget ?? 0) <= 0.001}
+                        className="text-xs font-medium px-3 py-0.5 rounded-full bg-indigo-50 text-indigo-600 disabled:opacity-40 active:scale-95 transition-transform"
+                      >
+                        🍽️ Feed
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </section>
             ))}
@@ -254,13 +231,15 @@ export default function HomePage() {
 
       <ConfettiCelebration trigger={confetti} onComplete={() => setConfetti(false)} />
 
-      {data && !manageMode && (
+      {data && feedBucketId && (
         <FeedModal
-          isOpen={feedModalOpen}
-          onClose={() => setFeedModalOpen(false)}
+          key={feedBucketId}
+          isOpen
+          onClose={() => setFeedBucketId(null)}
           onFeed={onCustomFeed}
           groups={data.groups}
           availableToBudget={data.availableToBudget}
+          initialBucketId={feedBucketId}
         />
       )}
 

@@ -186,10 +186,9 @@ allocating (the Transactions page flags the unallocated ones, and the nav badges
 ### Cash stuffing (tap-based — no drag)
 
 1. Income lands → Available-to-Budget pool grows.
-2. **Feed one cat**: tap the cat's **feed control** (a "＋ \$topUp" pill) → adds its `topUpAmount`
-   → sparkle animation, pool decreases. (Tapping the cat *itself* opens its **details** — balance,
-   activity, edit — not a feed; feeding is the deliberate pill tap. A custom amount is available via
-   the "＋ Custom" modal in the header.)
+2. **Feed one cat**: tap the cat's **Feed** button → opens the feed modal pre-targeted to that cat,
+   with the amount defaulted to its `topUpAmount` (editable) → on confirm, sparkle animation, pool
+   decreases. (Tapping the cat *itself* opens its **details** — balance, activity, edit — not a feed.)
 3. **Feed All**: one button feeds every cat its `topUpAmount` → cascading sparkles across the cats.
 4. **Completion**: confetti when Available-to-Budget reaches \$0.
 5. Feeding is blocked from making Available-to-Budget negative.
@@ -229,9 +228,9 @@ remainder). Example: a \$12.90 supermarket transaction split across Pet and Groc
 
 ### Cat & Clowder management (Cats page, Manage mode)
 
-The Cats page has a **Manage** toggle. In its default (feed) mode, each cat shows a feed pill
-("＋ \$topUp") and tapping the cat opens its **details** (balance, activity feed via
-`GET /api/buckets/:id`, and an edit affordance). Switching to Manage mode reveals: create a Clowder,
+The Cats page has a **Manage** toggle. In its default (feed) mode, each cat shows a **Feed**
+button (opens the custom-feed modal for that cat) and tapping the cat opens its **details** (balance,
+activity feed via `GET /api/buckets/:id`, and an edit affordance); the header has **Feed All**. Switching to Manage mode reveals: create a Clowder,
 add Cats to a Clowder, edit/delete a Cat, and **reorder**
 cats and clowders via tap move-up/down controls (no drag) — persisting `sortOrder` through the
 reorder endpoints. Keeping management behind a toggle preserves the primary tap-to-feed gesture.
