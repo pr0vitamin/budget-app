@@ -33,21 +33,20 @@ export function useFeedBucket() {
   });
 }
 
-// Feed All: every non-archived bucket with topUp <= remaining available, in order.
+// Feed All is all-or-nothing: only feeds when the pool covers every cat's full
+// top-up. The optimistic patch mirrors that — feed every cat with a top-up, or
+// nothing. (The caller/button guards this too; the server enforces it as well.)
 export function useFeedAll() {
   const { qc, patch } = usePatchOverview();
   return useMutation({
     mutationFn: () => api.feedAll(),
     onMutate: () =>
       patch((o) => {
-        let avail = o.availableToBudget;
-        for (const g of o.groups)
-          for (const b of g.buckets)
-            if (b.topUpAmount > 0 && b.topUpAmount <= avail + 0.001) {
-              b.balance += b.topUpAmount;
-              avail -= b.topUpAmount;
-            }
-        o.availableToBudget = avail;
+        const cats = o.groups.flatMap((g) => g.buckets).filter((b) => b.topUpAmount > 0);
+        const total = cats.reduce((s, b) => s + b.topUpAmount, 0);
+        if (total === 0 || total > o.availableToBudget + 0.001) return o; // can't feed all → no-op
+        for (const b of cats) b.balance += b.topUpAmount;
+        o.availableToBudget -= total;
         return o;
       }).then((prev) => ({ prev })),
     onError: (_e, _v, ctx) => ctx?.prev && qc.setQueryData(qk.overview, ctx.prev),

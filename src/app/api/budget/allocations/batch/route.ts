@@ -3,8 +3,8 @@ import { prisma } from '@/lib/db';
 import { getAuthedUserId } from '@/lib/auth';
 import { calculateAvailableToBudget } from '@/lib/domain/balances';
 
-// Feeds every non-archived bucket its topUpAmount, capped at what's available.
-// Buckets are processed in sortOrder; once available runs out, the rest are skipped.
+// Feeds every non-archived cat its topUpAmount — ALL-OR-NOTHING. If the pool
+// can't cover every cat's full top-up, nothing is fed (returns { fed: [] }).
 export async function POST() {
   const userId = await getAuthedUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -18,22 +18,20 @@ export async function POST() {
     }),
   ]);
 
-  let available = calculateAvailableToBudget({
+  const available = calculateAvailableToBudget({
     incomeTotal: Number(income._sum.amount ?? 0),
     feedsTotal: Number(feeds._sum.amount ?? 0),
   });
 
-  const toCreate: { userId: string; bucketId: string; amount: number }[] = [];
-  for (const bucket of buckets) {
-    const topUp = Number(bucket.topUpAmount);
-    if (topUp <= available + 0.001) {
-      toCreate.push({ userId, bucketId: bucket.id, amount: topUp });
-      available -= topUp;
-    }
+  const total = buckets.reduce((s, b) => s + Number(b.topUpAmount), 0);
+
+  // All-or-nothing: refuse to feed unless every cat can be fully fed.
+  if (buckets.length === 0 || total > available + 0.001) {
+    return NextResponse.json({ fed: [] });
   }
 
-  if (toCreate.length > 0) {
-    await prisma.budgetAllocation.createMany({ data: toCreate });
-  }
-  return NextResponse.json({ fed: toCreate.map((c) => c.bucketId) });
+  await prisma.budgetAllocation.createMany({
+    data: buckets.map((b) => ({ userId, bucketId: b.id, amount: Number(b.topUpAmount) })),
+  });
+  return NextResponse.json({ fed: buckets.map((b) => b.id) });
 }

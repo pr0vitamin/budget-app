@@ -190,6 +190,9 @@ allocating (the Transactions page flags the unallocated ones, and the nav badges
    with the amount defaulted to its `topUpAmount` (editable) → on confirm, sparkle animation, pool
    decreases. (Tapping the cat *itself* opens its **details** — balance, activity, edit — not a feed.)
 3. **Feed All**: one button feeds every cat its `topUpAmount` → cascading sparkles across the cats.
+   **All-or-nothing** — disabled (with a "Need \$X to feed all cats" hint) unless the pool covers
+   every cat's full top-up; it never partially feeds. The server enforces this too (the batch
+   endpoint feeds all or returns `{ fed: [] }`).
 4. **Completion**: confetti when Available-to-Budget reaches \$0.
 5. Feeding is blocked from making Available-to-Budget negative.
 

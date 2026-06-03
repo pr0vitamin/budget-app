@@ -47,17 +47,16 @@ export default function HomePage() {
     setTimeout(() => setSparkles(new Set()), 900);
   };
 
+  // Feed All is all-or-nothing: only enabled when the pool covers every cat's top-up.
+  const feedAllCats = (data?.groups ?? []).flatMap((g) => g.buckets).filter((b) => b.topUpAmount > 0);
+  const feedAllTotal = feedAllCats.reduce((s, b) => s + b.topUpAmount, 0);
+  const canFeedAll = feedAllCats.length > 0 && feedAllTotal <= (data?.availableToBudget ?? 0) + 0.001;
+
   const onFeedAll = () => {
-    if (!data) return;
-    let avail = data.availableToBudget;
-    const fed: string[] = [];
-    for (const g of data.groups)
-      for (const b of g.buckets)
-        if (b.topUpAmount > 0 && b.topUpAmount <= avail + 0.001) { fed.push(b.id); avail -= b.topUpAmount; }
-    if (fed.length === 0) return;
-    sparkle(fed);
+    if (!data || !canFeedAll) return;
+    sparkle(feedAllCats.map((b) => b.id));
     feedAll.mutate();
-    if (avail <= 0.001) setConfetti(true);
+    if (data.availableToBudget - feedAllTotal <= 0.001) setConfetti(true);
   };
 
   const onCustomFeed = (bucketId: string, amount: number) => {
@@ -101,12 +100,20 @@ export default function HomePage() {
           </div>
           <p className="text-3xl font-bold">${(data?.availableToBudget ?? 0).toFixed(2)}</p>
           {!manageMode && (
-            <button
-              onClick={onFeedAll}
-              className="mt-3 w-full rounded-xl bg-white/20 py-2 font-medium backdrop-blur active:scale-95 transition-transform"
-            >
-              🐱 Feed All
-            </button>
+            <div className="mt-3">
+              <button
+                onClick={onFeedAll}
+                disabled={!canFeedAll}
+                className="w-full rounded-xl bg-white/20 py-2 font-medium backdrop-blur active:scale-95 transition-transform disabled:opacity-40 disabled:active:scale-100"
+              >
+                🐱 Feed All
+              </button>
+              {feedAllCats.length > 0 && !canFeedAll && (
+                <p className="mt-1 text-center text-xs text-white/80">
+                  Need ${feedAllTotal.toFixed(2)} to feed all cats
+                </p>
+              )}
+            </div>
           )}
         </div>
 
