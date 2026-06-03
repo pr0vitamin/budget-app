@@ -105,7 +105,7 @@ export default function HomePage() {
           </div>
         )}
         {/* Header: Available to Budget card */}
-        <div className="mb-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 p-5 text-white">
+        <div className="mb-4 rounded-2xl bg-indigo-500 p-5 text-white">
           <div className="flex items-center justify-between mb-1">
             <p className="text-sm opacity-90">Available to Budget</p>
             <button

@@ -81,7 +81,7 @@ export default function TransactionsPage() {
           </div>
         )}
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold">Transactions</h1>
+          <h1 className="text-xl font-bold text-gray-900">Transactions</h1>
           <button
             onClick={() => setAddOpen(true)}
             className="text-sm text-indigo-600 font-medium px-3 py-1.5 rounded-xl bg-indigo-50 active:scale-95 transition-transform"
