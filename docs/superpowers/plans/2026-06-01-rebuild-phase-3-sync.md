@@ -596,7 +596,7 @@ git commit -m "feat: sync engine — dedup, classify, rules-on-ingest, pending l
 
 **Files:** Modify `src/lib/api.ts`, `src/lib/query/hooks.ts`; recover `src/hooks/usePullToRefresh.ts`; modify `src/app/page.tsx` and `src/app/transactions/page.tsx`
 
-- [ ] **Step 1: API + accounts hook**
+- [x] **Step 1: API + accounts hook**
 
 Add to `src/lib/api.ts` (inside the `api` object) and the `Account` type:
 ```typescript
@@ -618,7 +618,7 @@ Add to `src/lib/query/hooks.ts`:
 export const useAccounts = () => useQuery({ queryKey: ['accounts'], queryFn: api.accounts });
 ```
 
-- [ ] **Step 2: Recover pull-to-refresh**
+- [x] **Step 2: Recover pull-to-refresh**
 
 ```bash
 mkdir -p src/hooks
@@ -626,7 +626,7 @@ git show 1db8878:src/hooks/usePullToRefresh.ts > src/hooks/usePullToRefresh.ts
 ```
 Read it; remove any deleted-module imports. It should expose a hook taking an async `onRefresh` callback. If its API differs, adapt the call sites in Step 3 to match.
 
-- [ ] **Step 3: Wire sync into the Cats and Transactions pages**
+- [x] **Step 3: Wire sync into the Cats and Transactions pages**
 
 In both `src/app/page.tsx` and `src/app/transactions/page.tsx`, add a sync handler and pull-to-refresh:
 ```typescript
@@ -647,7 +647,7 @@ usePullToRefresh(onRefresh);
 ```
 (The Transactions page already has `qc`; reuse it. Match `usePullToRefresh`'s actual signature.)
 
-- [ ] **Step 4: Typecheck & commit**
+- [x] **Step 4: Typecheck & commit**
 
 Run: `npm run typecheck` (PASS).
 ```bash
