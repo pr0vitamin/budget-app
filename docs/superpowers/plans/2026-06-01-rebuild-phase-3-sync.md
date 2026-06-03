@@ -684,7 +684,13 @@ git commit -m "feat: accounts UI + sync controls in settings"
 
 ---
 
-## Task 7: E2E smoke tests (local, via auth bypass)
+## Task 7: E2E smoke tests (local, via auth bypass) — DEFERRED
+
+> **Status: deferred** (user decision). Correctness-critical logic is covered by 47 unit tests and
+> the app is verified manually in-browser, so browser-based E2E is low-value/high-cost for now. The
+> four stale old-UI specs (`navigation`, `inbox`, `buckets`, `settings`) were removed so the suite
+> isn't left broken. When picking E2E up later: the harness (`playwright.config.ts` webServer +
+> `e2e/global-setup.ts`) still assumes Supabase auth and must be switched to `AUTH_DEV_BYPASS=true`.
 
 **Files:** Modify `playwright.config.ts`; create `e2e/budget-flows.spec.ts`; review `e2e/global-setup.ts`
 
@@ -753,7 +759,7 @@ git commit -m "test: e2e core budget flows via auth bypass"
 
 ## Task 8: Phase 3 verification
 
-- [ ] **Step 1: Full gate**
+- [x] **Step 1: Full gate** — PASS: typecheck clean, lint clean, 47/47 unit tests green.
 
 Run: `npm run typecheck && npm run lint && npm run test:run`
 Expected: typecheck PASS, lint clean, all unit tests green (Phase 1–2 + the 9 reconcile tests).
