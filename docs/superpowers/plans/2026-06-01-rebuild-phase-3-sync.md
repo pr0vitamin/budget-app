@@ -68,7 +68,7 @@ git commit -m "feat: recover akahu client"
 
 This is the heart of the data-loss fix. Pure functions, fully tested.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/lib/domain/reconcile.test.ts`:
 ```typescript
@@ -146,11 +146,11 @@ describe('reconcileAllocations', () => {
 });
 ```
 
-- [ ] **Step 2: Run it — expect failure (module missing).**
+- [x] **Step 2: Run it — expect failure (module missing).**
 
 Run: `npx vitest run src/lib/domain/reconcile.test.ts` → FAIL.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/lib/domain/reconcile.ts`:
 ```typescript
@@ -225,11 +225,11 @@ export function reconcileAllocations(input: {
 }
 ```
 
-- [ ] **Step 4: Run it — expect pass (9 tests).**
+- [x] **Step 4: Run it — expect pass (9 tests).**
 
 Run: `npx vitest run src/lib/domain/reconcile.test.ts` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/domain/reconcile.ts src/lib/domain/reconcile.test.ts
