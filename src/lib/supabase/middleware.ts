@@ -1,7 +1,15 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { isAuthBypassEnabled } from '@/lib/dev-auth';
 
 export async function updateSession(request: NextRequest) {
+    // Local-dev only (see dev-auth.ts) — never active in production. Skips all
+    // Supabase auth and lets every request through so the app runs with no
+    // Supabase project configured.
+    if (isAuthBypassEnabled()) {
+        return NextResponse.next({ request });
+    }
+
     let supabaseResponse = NextResponse.next({
         request,
     });

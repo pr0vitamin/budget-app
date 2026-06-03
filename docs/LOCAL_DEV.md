@@ -3,6 +3,22 @@
 The rebuilt app uses **Supabase only for auth**; all data lives in your **local Postgres**
 (`cat_budget`). You don't need to deploy anything to run it locally.
 
+## Quickest path: local-dev auth bypass (no Supabase at all)
+
+`.env` ships with `AUTH_DEV_BYPASS=true`. With it on, the app skips Supabase entirely and treats
+every request as a fixed local user (`dev@localhost`). Just:
+
+```bash
+brew services start postgresql@16   # if not already running
+npm run dev                         # http://localhost:3000 — straight into the app, no login
+```
+
+The bypass is **hard-disabled in production** (it also requires `NODE_ENV !== production`), so it
+can never ship live. To exercise the real Supabase login flow instead, set `AUTH_DEV_BYPASS` to
+anything but `true` (or remove it) and follow the Supabase setup below.
+
+---
+
 ## Prerequisites (already set up on this machine)
 
 - Postgres 16 via Homebrew, running as a service. If it isn't running:

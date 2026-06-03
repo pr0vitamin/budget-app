@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { isAuthBypassEnabled } from '@/lib/dev-auth';
 
 export async function sendOtpCode(formData: FormData) {
     const email = formData.get('email') as string;
@@ -52,8 +53,11 @@ export async function verifyOtpCode(email: string, token: string) {
 }
 
 export async function signOut() {
-    const supabase = await createClient();
-    await supabase.auth.signOut();
+    // In local-dev bypass there is no Supabase session to end.
+    if (!isAuthBypassEnabled()) {
+        const supabase = await createClient();
+        await supabase.auth.signOut();
+    }
     redirect('/login');
 }
 
