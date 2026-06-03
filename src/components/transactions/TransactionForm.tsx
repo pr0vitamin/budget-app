@@ -33,6 +33,7 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
             });
             qc.invalidateQueries({ queryKey: qk.overview });
             qc.invalidateQueries({ queryKey: qk.inbox });
+            qc.invalidateQueries({ queryKey: qk.transactions('all') });
             onClose();
         } catch (err) {
             console.error('Failed to create transaction:', err);

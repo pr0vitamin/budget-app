@@ -6,5 +6,7 @@ import { qk } from './keys';
 export const useOverview = () => useQuery({ queryKey: qk.overview, queryFn: api.overview });
 export const useInbox = () =>
   useQuery({ queryKey: qk.inbox, queryFn: () => api.transactions('?kind=expense&unallocated=true') });
+export const useTransactions = () =>
+  useQuery({ queryKey: qk.transactions('all'), queryFn: () => api.transactions('') });
 export const useSettings = () => useQuery({ queryKey: qk.settings, queryFn: api.settings });
 export const useRules = () => useQuery({ queryKey: qk.rules, queryFn: api.rules });

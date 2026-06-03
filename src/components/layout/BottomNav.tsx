@@ -31,8 +31,8 @@ export function BottomNav() {
             ),
         },
         {
-            href: '/inbox',
-            label: 'Inbox',
+            href: '/transactions',
+            label: 'Transactions',
             icon: (active: boolean) => (
                 <svg
                     className={`w-6 h-6 ${active ? 'text-indigo-600' : 'text-gray-400'}`}
