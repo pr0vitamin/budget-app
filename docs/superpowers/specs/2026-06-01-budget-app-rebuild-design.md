@@ -186,9 +186,11 @@ allocating (the Transactions page flags the unallocated ones, and the nav badges
 ### Cash stuffing (tap-based — no drag)
 
 1. Income lands → Available-to-Budget pool grows.
-2. **Feed one bucket**: tap a bucket (or its feed control) → adds its `topUpAmount` (or a custom
-   amount entered in a small modal) → sparkle animation, pool decreases.
-3. **Feed All**: one button feeds every bucket its `topUpAmount` → cascading sparkles across buckets.
+2. **Feed one cat**: tap the cat's **feed control** (a "＋ \$topUp" pill) → adds its `topUpAmount`
+   → sparkle animation, pool decreases. (Tapping the cat *itself* opens its **details** — balance,
+   activity, edit — not a feed; feeding is the deliberate pill tap. A custom amount is available via
+   the "＋ Custom" modal in the header.)
+3. **Feed All**: one button feeds every cat its `topUpAmount` → cascading sparkles across the cats.
 4. **Completion**: confetti when Available-to-Budget reaches \$0.
 5. Feeding is blocked from making Available-to-Budget negative.
 
@@ -227,8 +229,10 @@ remainder). Example: a \$12.90 supermarket transaction split across Pet and Groc
 
 ### Cat & Clowder management (Cats page, Manage mode)
 
-The Cats page has a **Manage** toggle. Its default mode is feeding (tap a cat to feed it). Switching
-to Manage mode reveals: create a Clowder, add Cats to a Clowder, edit/delete a Cat, and **reorder**
+The Cats page has a **Manage** toggle. In its default (feed) mode, each cat shows a feed pill
+("＋ \$topUp") and tapping the cat opens its **details** (balance, activity feed via
+`GET /api/buckets/:id`, and an edit affordance). Switching to Manage mode reveals: create a Clowder,
+add Cats to a Clowder, edit/delete a Cat, and **reorder**
 cats and clowders via tap move-up/down controls (no drag) — persisting `sortOrder` through the
 reorder endpoints. Keeping management behind a toggle preserves the primary tap-to-feed gesture.
 
@@ -263,7 +267,7 @@ resource so the client can reconcile its cache.
 
 | Area         | Endpoints                                                                                 |
 | ------------ | ----------------------------------------------------------------------------------------- |
-| Buckets      | `GET/POST /buckets`, `PATCH/DELETE /buckets/:id`, `POST /buckets/reorder`                  |
+| Buckets      | `POST /buckets`, `GET/PATCH/DELETE /buckets/:id` (GET = activity feed), `POST /buckets/reorder` |
 | Groups       | `GET/POST /bucket-groups`, `PATCH/DELETE /bucket-groups/:id`, `POST /bucket-groups/reorder`|
 | Transactions | `GET/POST /transactions`, `PATCH/DELETE /transactions/:id` (incl. reclassify `kind`)       |
 | Inbox        | `GET /inbox/count`                                                                         |

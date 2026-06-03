@@ -15,7 +15,7 @@ import { CatPiggyBank } from '@/components/buckets/CatPiggyBank';
 type Modal =
   | { kind: 'newBucket'; groupId: string }
   | { kind: 'editBucket'; bucketId: string; groupId: string }
-  | { kind: 'bucketDetail'; bucketId: string; bucketName: string; bucketColor: string }
+  | { kind: 'bucketDetail'; bucketId: string; bucketName: string; bucketColor: string; bucketBalance: number }
   | { kind: 'reorder' }
   | { kind: 'newGroup' };
 
@@ -180,6 +180,7 @@ export default function HomePage() {
                                 bucketId: bucket.id,
                                 bucketName: bucket.name,
                                 bucketColor: bucket.color,
+                                bucketBalance: bucket.balance,
                               })
                             }
                             className="w-full flex items-center gap-2 text-left py-1.5 px-2 rounded-xl hover:bg-gray-50 transition-colors"
@@ -209,19 +210,41 @@ export default function HomePage() {
               <section key={group.id}>
                 <h2 className="text-sm font-semibold text-gray-500 mb-2 px-1">{group.name}</h2>
                 <div className="grid grid-cols-3 gap-3">
-                  {group.buckets.map((b) => (
-                    <CatPiggyBank
-                      key={b.id}
-                      name={b.name}
-                      balance={b.balance}
-                      target={b.targetAmount ?? undefined}
-                      topUpAmount={b.topUpAmount}
-                      color={b.color}
-                      isOverspent={b.balance < 0}
-                      showSparkle={sparkles.has(b.id)}
-                      onClick={() => onFeed(b.id)}
-                    />
-                  ))}
+                  {group.buckets.map((b) => {
+                    const canFeed =
+                      b.topUpAmount > 0 && b.topUpAmount <= (data?.availableToBudget ?? 0) + 0.001;
+                    return (
+                      <div key={b.id} className="flex flex-col items-center gap-1">
+                        <CatPiggyBank
+                          name={b.name}
+                          balance={b.balance}
+                          target={b.targetAmount ?? undefined}
+                          topUpAmount={b.topUpAmount}
+                          color={b.color}
+                          isOverspent={b.balance < 0}
+                          showSparkle={sparkles.has(b.id)}
+                          onClick={() =>
+                            setModal({
+                              kind: 'bucketDetail',
+                              bucketId: b.id,
+                              bucketName: b.name,
+                              bucketColor: b.color,
+                              bucketBalance: b.balance,
+                            })
+                          }
+                        />
+                        {b.topUpAmount > 0 && (
+                          <button
+                            onClick={() => onFeed(b.id)}
+                            disabled={!canFeed}
+                            className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 disabled:opacity-40 active:scale-95 transition-transform"
+                          >
+                            ＋ ${b.topUpAmount.toFixed(0)}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             ))}
@@ -332,6 +355,7 @@ export default function HomePage() {
           bucketId={modal.bucketId}
           bucketName={modal.bucketName}
           bucketColor={modal.bucketColor}
+          balance={modal.bucketBalance}
           isOpen
           onClose={() => setModal(null)}
           onEditBucket={() => {

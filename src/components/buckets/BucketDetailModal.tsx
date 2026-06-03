@@ -27,6 +27,7 @@ interface BucketDetailModalProps {
     bucketId: string;
     bucketName: string;
     bucketColor: string;
+    balance?: number;
     isOpen: boolean;
     onClose: () => void;
     onEditBucket: () => void;
@@ -36,6 +37,7 @@ export function BucketDetailModal({
     bucketId,
     bucketName,
     bucketColor,
+    balance,
     isOpen,
     onClose,
     onEditBucket,
@@ -195,7 +197,14 @@ export function BucketDetailModal({
                                 style={{ backgroundColor: bucketColor }}
                             >
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-900">{bucketName}</h2>
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">{bucketName}</h2>
+                                {balance !== undefined && (
+                                    <p className={`text-lg font-semibold ${balance < 0 ? 'text-red-500' : 'text-gray-700'}`}>
+                                        ${balance.toFixed(2)}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                         <button
                             onClick={onClose}
