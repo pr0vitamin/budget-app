@@ -10,6 +10,7 @@ import { useTransactions, useOverview } from '@/lib/query/hooks';
 import { useAllocate } from '@/lib/query/mutations';
 import { api, type Transaction } from '@/lib/api';
 import { qk } from '@/lib/query/keys';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 export default function TransactionsPage() {
   const qc = useQueryClient();
@@ -18,6 +19,15 @@ export default function TransactionsPage() {
   const allocate = useAllocate();
   const [active, setActive] = useState<Transaction | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+
+  const onRefresh = async () => {
+    try { await api.sync(); } catch { /* surfaced via banner elsewhere */ }
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: qk.overview }),
+      qc.invalidateQueries({ queryKey: qk.transactions('all') }),
+    ]);
+  };
+  const { isRefreshing, pullDistance, handlers } = usePullToRefresh({ onRefresh });
 
   const buckets = (overview?.groups ?? []).flatMap((g) =>
     g.buckets.map((b) => ({ id: b.id, name: b.name, color: b.color, groupName: g.name, balance: b.balance }))
@@ -61,7 +71,15 @@ export default function TransactionsPage() {
 
   return (
     <AppShell>
-      <div className="p-4">
+      <div className="p-4" {...handlers}>
+        {isRefreshing && (
+          <div className="flex justify-center py-2 text-indigo-500 text-sm">Refreshing...</div>
+        )}
+        {pullDistance > 0 && !isRefreshing && (
+          <div className="flex justify-center py-1 text-gray-400 text-xs" style={{ height: pullDistance }}>
+            Pull to refresh
+          </div>
+        )}
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold">Transactions</h1>
           <button

@@ -28,6 +28,12 @@ export interface Transaction {
 export interface Settings { id: string; userId: string; initialSyncDays: number; theme: string; }
 export interface Rule { id: string; merchantPattern: string; bucketId: string; bucket: { id: string; name: string; color: string }; }
 
+export interface Account {
+  id: string; name: string; institution: string; accountType: string;
+  accountNumber: string | null; balanceCurrent: number | string | null; balanceAvailable: number | string | null;
+  currency: string; status: string; connectionLogo: string | null; lastSyncAt: string | null; connectionError: string | null;
+}
+
 export const api = {
   overview: () => http<Overview>('/api/overview'),
   transactions: (q = '') => http<Transaction[]>(`/api/transactions${q}`),
@@ -61,4 +67,10 @@ export const api = {
 
   updateSettings: (data: Partial<Pick<Settings, 'initialSyncDays' | 'theme'>>) =>
     http<Settings>('/api/settings', { method: 'PATCH', body: JSON.stringify(data) }),
+
+  accounts: () => http<Account[]>('/api/accounts'),
+  connectAccounts: () => http<{ count: number }>('/api/accounts', { method: 'POST' }),
+  removeAccount: (id: string) => http(`/api/accounts/${id}`, { method: 'DELETE' }),
+  refreshAccount: (id: string) => http(`/api/accounts/${id}/refresh`, { method: 'POST' }),
+  sync: (full = false) => http<{ created: number; updated: number; confirmed: number; flaggedReview: number }>('/api/transactions/sync', { method: 'POST', body: JSON.stringify({ full }) }),
 };

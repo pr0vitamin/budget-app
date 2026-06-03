@@ -10,3 +10,4 @@ export const useTransactions = () =>
   useQuery({ queryKey: qk.transactions('all'), queryFn: () => api.transactions('') });
 export const useSettings = () => useQuery({ queryKey: qk.settings, queryFn: api.settings });
 export const useRules = () => useQuery({ queryKey: qk.rules, queryFn: api.rules });
+export const useAccounts = () => useQuery({ queryKey: ['accounts'], queryFn: api.accounts });

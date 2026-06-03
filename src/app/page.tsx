@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout';
 import { BucketForm } from '@/components/buckets/BucketForm';
 import { BucketDetailModal } from '@/components/buckets/BucketDetailModal';
@@ -10,6 +11,8 @@ import { Skeleton } from '@/components/ui';
 import { useOverview } from '@/lib/query/hooks';
 import { useFeedBucket, useFeedAll, useOverviewMutation } from '@/lib/query/mutations';
 import { api } from '@/lib/api';
+import { qk } from '@/lib/query/keys';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { CatPiggyBank } from '@/components/buckets/CatPiggyBank';
 
 type Modal =
@@ -20,9 +23,19 @@ type Modal =
   | { kind: 'newGroup' };
 
 export default function HomePage() {
+  const qc = useQueryClient();
   const { data, isLoading } = useOverview();
   const feed = useFeedBucket();
   const feedAll = useFeedAll();
+
+  const onRefresh = async () => {
+    try { await api.sync(); } catch { /* surfaced via banner elsewhere */ }
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: qk.overview }),
+      qc.invalidateQueries({ queryKey: qk.transactions('all') }),
+    ]);
+  };
+  const { isRefreshing, pullDistance, handlers } = usePullToRefresh({ onRefresh });
   const [sparkles, setSparkles] = useState<Set<string>>(new Set());
   const [confetti, setConfetti] = useState(false);
   const [feedBucketId, setFeedBucketId] = useState<string | null>(null);
@@ -82,7 +95,15 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      <div className="p-4">
+      <div className="p-4" {...handlers}>
+        {isRefreshing && (
+          <div className="flex justify-center py-2 text-indigo-500 text-sm">Refreshing...</div>
+        )}
+        {pullDistance > 0 && !isRefreshing && (
+          <div className="flex justify-center py-1 text-gray-400 text-xs" style={{ height: pullDistance }}>
+            Pull to refresh
+          </div>
+        )}
         {/* Header: Available to Budget card */}
         <div className="mb-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 p-5 text-white">
           <div className="flex items-center justify-between mb-1">
