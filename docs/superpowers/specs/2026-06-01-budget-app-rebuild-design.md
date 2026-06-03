@@ -38,6 +38,12 @@ A delightful, mobile-first, single-user budgeting PWA built on envelope budgetin
 - **Tap, don't drag.** All interactions are tap-based and mobile-native.
 - **Lean.** Only ship features that are actually used. No inert scaffolding.
 
+### UI vocabulary: Clowders & Cats
+
+User-facing language is themed: a **Clowder** is a group of cats (model `BucketGroup`), and a **Cat**
+is a single envelope (model `Bucket`). Only labels/copy use these terms — the data model, API
+routes, and types keep `BucketGroup` / `Bucket`.
+
 ### Target user
 
 Single user (personal use), New Zealand, multiple bank accounts, paid fortnightly. Not multi-tenant
@@ -47,13 +53,14 @@ in spirit, though auth still scopes all data per user.
 
 ### Kept
 
-- Buckets organised into groups (cat piggy banks).
-- Cash stuffing — tap-to-feed a bucket, "Feed All", sparkle + confetti celebrations.
-- Inbox: allocating expense transactions to buckets, including splits across buckets.
-- Auto-categorization rules (merchant → bucket).
+- Cats (buckets) organised into Clowders (groups), shown as cat piggy banks on the **Cats page**.
+- Cash stuffing — tap-to-feed a cat, "Feed All", sparkle + confetti celebrations.
+- Cat/Clowder create, edit, and reorder — on the Cats page behind a **Manage** toggle.
+- **Transactions page**: lists all transactions; tap to allocate / re-allocate to cats (incl. splits);
+  manual transaction entry lives here too.
+- Auto-categorization rules (merchant → cat).
 - Akahu bank sync via pull-to-refresh (personal-app token auth).
-- Manual transaction entry.
-- Settings.
+- Settings (initial sync days, theme, sign-out).
 - PWA install + offline support.
 - 8-digit OTP authentication (Supabase Auth).
 
@@ -171,9 +178,10 @@ _Removed entirely_: `ScheduledTransaction`.
 ### Classification
 
 On sync, `kind` is auto-set from the Akahu transaction type and sign (`DEBIT` → `expense`, `CREDIT`
-→ `income`, `TRANSFER` → `transfer`). The user can reclassify any transaction in the inbox
-(`isReclassified` records the override). Only `expense` transactions appear in the inbox awaiting
-allocation; `income` flows to the Available-to-Budget pool; `transfer` is hidden from budgeting.
+→ `income`, `TRANSFER` → `transfer`). The user can reclassify any transaction on the Transactions
+page (`isReclassified` records the override). `expense` transactions are the ones that need
+allocating (the Transactions page flags the unallocated ones, and the nav badges their count);
+`income` flows to the Available-to-Budget pool; `transfer` is hidden from budgeting.
 
 ### Cash stuffing (tap-based — no drag)
 
@@ -193,10 +201,12 @@ the cache on success, or rolls the balance back with an error toast on failure. 
 `router.refresh()` is ever on the animation path.** "Feed All" animates every cat in one pass from
 the optimistic state, rather than waiting on the batch request.
 
-### Allocation (inbox)
+### Allocation (Transactions page)
 
-Tap an expense → pick a bucket, or split across several buckets (the allocation modal enforces that
-the split sums to the transaction amount). Optionally "Always allocate \<merchant\> to \<bucket\>"
+The Transactions page lists **all** transactions (allocated, unallocated, pending, income) with their
+status; tapping one opens the allocation modal to allocate or re-allocate. Manual transaction entry
+also lives on this page. Tap an expense → pick a cat, or split across several cats (the modal enforces
+that the split sums to the transaction amount). Optionally "Always allocate \<merchant\> to \<cat\>"
 creates a CategorizationRule; future matching expense transactions auto-allocate on sync.
 
 **Rules apply to pending transactions too.** Categorization runs the moment an expense is ingested —
@@ -215,10 +225,12 @@ split. With two or more buckets still unentered, no auto-fill happens (there is 
 remainder). Example: a \$12.90 supermarket transaction split across Pet and Groceries — entering
 \$4.50 for Pet auto-assigns \$8.40 to Groceries.
 
-### Reordering (tap-based — no drag)
+### Cat & Clowder management (Cats page, Manage mode)
 
-Group and bucket order is edited via move up/down controls (or a dedicated reorder mode), persisting
-a new `sortOrder` via the reorder endpoints.
+The Cats page has a **Manage** toggle. Its default mode is feeding (tap a cat to feed it). Switching
+to Manage mode reveals: create a Clowder, add Cats to a Clowder, edit/delete a Cat, and **reorder**
+cats and clowders via tap move-up/down controls (no drag) — persisting `sortOrder` through the
+reorder endpoints. Keeping management behind a toggle preserves the primary tap-to-feed gesture.
 
 ### Overspending
 
@@ -291,7 +303,7 @@ delete-and-recreate-by-key approach destroyed allocations on nearly every sync. 
   - **Single allocation**: update the allocation amount to the confirmed total, preserving the
     bucket choice.
   - **Split (multiple allocations)**: **never delete.** Keep the existing splits; if they no longer
-    sum to the new amount, set `needsReview` and surface the transaction in the inbox so the user
+    sum to the new amount, set `needsReview` and surface the transaction on the Transactions page so the user
     adjusts it — the auto-remainder feature (§5) makes that a one-tap fix.
 - **Disappearing pending.** If Akahu stops reporting a pending transaction: remove the local row
   only if it has **no allocations** (a transient pre-auth that vanished). If it has allocations,
@@ -321,7 +333,7 @@ Testing: Vitest (unit/integration) + Playwright (E2E). Hosting: Vercel + Supabas
 - **Integration** (Vitest): each API route — auth required, CRUD, error/edge cases (e.g. deleting an
   account preserves its transactions; reconnection updates instead of duplicating).
 - **E2E** (Playwright, mobile viewport): cash-stuffing flow (tap-feed → sparkle → confetti at \$0),
-  inbox allocation incl. split, manual entry, pull-to-refresh sync, offline mutation queue + flush.
+  Transactions-page allocation incl. split, manual entry, pull-to-refresh sync, offline mutation queue + flush.
 
 ## 12. Security & privacy
 
@@ -352,3 +364,7 @@ budgeting, receipt scanning, budget templates. None of these exist today; they r
 4. **Rebuild approach** — greenfield, port good code (cat components, Akahu client, animations), fresh DB.
 5. **Drag** — removed entirely; cash stuffing and reordering are tap-based.
 6. **Akahu** — kept, but hardened (stable identity, robust dedup, no destructive deletes, full refresh).
+7. **UI revision (from live testing, post-Phase-2)** — themed vocabulary **Clowder** (group) / **Cat**
+   (bucket), labels only; Cat/Clowder create + edit + reorder moved onto the **Cats page** behind a
+   Manage toggle; the old Inbox became the **Transactions page** (all transactions, allocate inline,
+   manual entry here); Settings trimmed accordingly.
