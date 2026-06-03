@@ -366,7 +366,7 @@ git commit -m "feat: accounts API with stable identity and non-destructive delet
 
 The orchestrator. It is not unit-tested (DB-bound); its decisions come from the Task-2 pure functions, which are.
 
-- [ ] **Step 1: Sync engine**
+- [x] **Step 1: Sync engine**
 
 `src/lib/sync/engine.ts`:
 ```typescript
@@ -556,7 +556,7 @@ async function autoCategorizePending(txnId: string, merchant: string, amount: nu
 }
 ```
 
-- [ ] **Step 2: Sync endpoint**
+- [x] **Step 2: Sync endpoint**
 
 `src/app/api/transactions/sync/route.ts`:
 ```typescript
@@ -582,7 +582,7 @@ export async function POST(request: Request) {
 }
 ```
 
-- [ ] **Step 3: Typecheck & commit**
+- [x] **Step 3: Typecheck & commit**
 
 Run: `npm run typecheck` (PASS).
 ```bash
