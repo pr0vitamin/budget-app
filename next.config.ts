@@ -1,43 +1,9 @@
 import type { NextConfig } from 'next';
 
-const nextConfig: NextConfig = {
-  // Allow webpack plugins from next-pwa while using Turbopack
-  turbopack: {},
-};
+// PWA is manifest-only (installable + offline reads via TanStack Query/IndexedDB).
+// next-pwa was removed: it's a webpack plugin and never ran under Next 16's
+// Turbopack build, so it emitted no service worker. A Turbopack-compatible SW
+// (e.g. @serwist/next) can be added later for offline app-shell precaching.
+const nextConfig: NextConfig = {};
 
-// Only use next-pwa in production to avoid Turbopack conflicts
-const withPWA = process.env.NODE_ENV === 'production'
-  ? // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require('next-pwa')({
-    dest: 'public',
-    register: true,
-    skipWaiting: true,
-    runtimeCaching: [
-      {
-        urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-        handler: 'NetworkFirst',
-        options: {
-          cacheName: 'supabase-api',
-          expiration: {
-            maxEntries: 50,
-            maxAgeSeconds: 60 * 60 * 24, // 24 hours
-          },
-        },
-      },
-      {
-        urlPattern: /\/api\/.*/i,
-        handler: 'NetworkFirst',
-        options: {
-          cacheName: 'api-cache',
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 60 * 60, // 1 hour
-          },
-          networkTimeoutSeconds: 10,
-        },
-      },
-    ],
-  })
-  : (config: NextConfig) => config;
-
-export default withPWA(nextConfig);
+export default nextConfig;

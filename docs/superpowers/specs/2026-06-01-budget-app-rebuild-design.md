@@ -320,16 +320,21 @@ delete-and-recreate-by-key approach destroyed allocations on nearly every sync. 
 
 ## 9. PWA & offline
 
-- Installable, app-shell cached by the service worker, icons + manifest retained.
-- IndexedDB (via the TanStack Query persister) holds the last-known buckets, transactions, settings,
-  and the offline mutation queue.
-- Offline: reads serve from cache; mutations queue and flush automatically when back online.
+- **Installable (manifest-only)** — manifest + icons retained, installs to the home screen over
+  HTTPS. There is currently **no service worker**: `next-pwa` is a webpack plugin and never ran under
+  Next 16's Turbopack build, so it was removed. A Turbopack-compatible SW (e.g. `@serwist/next`) for
+  offline app-shell precaching is deferred future work.
+- IndexedDB (via the TanStack Query persister) holds the last-known buckets, transactions, and
+  settings.
+- Offline: **reads** serve instantly from the IndexedDB cache once the app is loaded. An offline
+  **write** queue (and background-sync flush) is future work — today mutations require connectivity.
 
 ## 10. Tech stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Prisma 7 + Postgres (Supabase) ·
-Supabase Auth (OTP) · Akahu (NZ open banking) · Motion (animations) · idb · **TanStack Query (new)**
-· next-pwa. **Removed**: `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`.
+Supabase Auth (OTP) · Akahu (NZ open banking) · Motion (animations) · idb · **TanStack Query (new)**.
+Manifest-only PWA (no SW yet). **Removed**: `@dnd-kit/*`, and `next-pwa` (incompatible with the
+Turbopack build).
 Testing: Vitest (unit/integration) + Playwright (E2E). Hosting: Vercel + Supabase free tier.
 
 ## 11. Testing strategy
