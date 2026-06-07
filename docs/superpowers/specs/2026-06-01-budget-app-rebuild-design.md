@@ -60,9 +60,10 @@ in spirit, though auth still scopes all data per user.
   manual transaction entry lives here too.
 - Auto-categorization rules (merchant → cat).
 - Akahu bank sync via pull-to-refresh (personal-app token auth).
-- Settings (sign-out + bank accounts only). No theme/dark mode (unbuilt — removed; app is
-  light-only). The first-connect history window is a one-time prompt on the Connect-bank flow, not a
-  stored setting.
+- Settings: sign-out, bank accounts (connect/remove), and a **categorization-rules** list
+  (view/delete; rules are created via the allocation modal). No theme/dark mode (unbuilt — removed;
+  app is light-only). The first-connect history window is a prompt on the Connect-bank flow (a
+  permanent floor, see §8), not a stored UI setting.
 - PWA install + offline support.
 - 8-digit OTP authentication (Supabase Auth).
 
