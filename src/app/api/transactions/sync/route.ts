@@ -1,19 +1,44 @@
 import { NextResponse } from 'next/server';
 import { getAuthedUserId } from '@/lib/auth';
 import { syncUser } from '@/lib/sync/engine';
+import { refreshAccountAndWait } from '@/lib/akahu';
+import { prisma } from '@/lib/db';
 
-// POST /api/transactions/sync  body: { full?: boolean }
-// full = wider window to self-heal historical gaps.
-export async function POST(request: Request) {
+export const maxDuration = 60;
+
+// POST /api/transactions/sync
+// Server-enforced 1-hour cooldown. Refreshes all Akahu accounts then imports.
+export async function POST() {
   const userId = await getAuthedUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  let full = false;
-  try { full = (await request.json())?.full === true; } catch { /* no body */ }
+  const accounts = await prisma.account.findMany({ where: { userId }, select: { id: true, akahuId: true, lastSyncAt: true } });
+
+  if (accounts.length === 0) {
+    return NextResponse.json({ created: 0, updated: 0, confirmed: 0, flaggedReview: 0, nextSyncAt: null });
+  }
+
+  // Cooldown check (server-enforced): use the most recent lastSyncAt across all accounts
+  const lastSyncTimes = accounts.map((a) => a.lastSyncAt?.getTime() ?? 0).filter((t) => t > 0);
+  const lastSync = lastSyncTimes.length > 0 ? Math.max(...lastSyncTimes) : null;
+
+  if (lastSync && Date.now() - lastSync < 60 * 60 * 1000) {
+    const nextSyncAt = new Date(lastSync + 60 * 60 * 1000).toISOString();
+    return NextResponse.json({ cooldown: true, nextSyncAt });
+  }
 
   try {
-    const result = await syncUser(userId, { windowDays: full ? 365 : 14 });
-    return NextResponse.json(result);
+    // Refresh all accounts at Akahu in parallel, tolerating individual failures
+    await Promise.allSettled(accounts.map((a) => refreshAccountAndWait(a.akahuId, 20000)));
+
+    // Import transactions
+    const result = await syncUser(userId, { windowDays: 30 });
+
+    // Stamp cooldown only on success
+    await prisma.account.updateMany({ where: { userId }, data: { lastSyncAt: new Date() } });
+
+    const nextSyncAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    return NextResponse.json({ ...result, nextSyncAt });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Sync failed' }, { status: 502 });
   }

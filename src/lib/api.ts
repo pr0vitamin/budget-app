@@ -17,7 +17,7 @@ export interface OverviewBucket {
   targetAmount: number | null; topUpAmount: number; balance: number;
 }
 export interface OverviewGroup { id: string; name: string; isCollapsed: boolean; buckets: OverviewBucket[]; }
-export interface Overview { groups: OverviewGroup[]; availableToBudget: number; inboxCount: number; }
+export interface Overview { groups: OverviewGroup[]; availableToBudget: number; inboxCount: number; lastSyncAt: string | null; }
 
 export interface TxnAllocation { bucket: { id: string; name: string; color: string }; amount: number; }
 export interface Transaction {
@@ -71,6 +71,5 @@ export const api = {
   accounts: () => http<Account[]>('/api/accounts'),
   connectAccounts: () => http<{ count: number }>('/api/accounts', { method: 'POST' }),
   removeAccount: (id: string) => http(`/api/accounts/${id}`, { method: 'DELETE' }),
-  refreshAccount: (id: string) => http(`/api/accounts/${id}/refresh`, { method: 'POST' }),
-  sync: (full = false) => http<{ created: number; updated: number; confirmed: number; flaggedReview: number }>('/api/transactions/sync', { method: 'POST', body: JSON.stringify({ full }) }),
+  sync: () => http<{ created: number; updated: number; confirmed: number; flaggedReview: number; cooldown?: boolean; nextSyncAt: string | null }>('/api/transactions/sync', { method: 'POST' }),
 };

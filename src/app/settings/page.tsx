@@ -16,29 +16,9 @@ export default function SettingsPage() {
   const [syncDays, setSyncDays] = useState<number | null>(null);
   const [theme, setTheme] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<{ created: number; updated: number; confirmed: number; flaggedReview: number } | null>(null);
-
   const currentSyncDays = syncDays ?? settings?.initialSyncDays ?? 30;
   const currentTheme = theme ?? settings?.theme ?? 'system';
   const isDirty = syncDays !== null || theme !== null;
-
-  const handleSync = async (full: boolean) => {
-    setIsSyncing(true);
-    setSyncResult(null);
-    try {
-      const result = await api.sync(full);
-      setSyncResult(result);
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: qk.overview }),
-        qc.invalidateQueries({ queryKey: qk.transactions('all') }),
-      ]);
-    } catch (err) {
-      console.error('Sync failed:', err);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
@@ -141,35 +121,6 @@ export default function SettingsPage() {
                 Bank accounts
               </h2>
               <AccountsList />
-            </div>
-
-            {/* Sync controls */}
-            <div className="bg-white rounded-2xl shadow-sm p-4 mb-4">
-              <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
-                Sync
-              </h2>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handleSync(false)}
-                  disabled={isSyncing}
-                  className="flex-1 py-2 px-4 bg-indigo-500 text-white text-sm font-medium rounded-xl hover:bg-indigo-600 transition-colors disabled:opacity-50"
-                >
-                  {isSyncing ? 'Syncing...' : 'Sync now'}
-                </button>
-                <button
-                  onClick={() => handleSync(true)}
-                  disabled={isSyncing}
-                  className="flex-1 py-2 px-4 bg-purple-500 text-white text-sm font-medium rounded-xl hover:bg-purple-600 transition-colors disabled:opacity-50"
-                >
-                  {isSyncing ? 'Syncing...' : 'Full refresh'}
-                </button>
-              </div>
-              {syncResult && (
-                <p className="mt-3 text-sm text-gray-600">
-                  Sync complete: {syncResult.created} created, {syncResult.confirmed} confirmed
-                  {syncResult.flaggedReview > 0 && `, ${syncResult.flaggedReview} flagged for review`}
-                </p>
-              )}
             </div>
           </>
         )}

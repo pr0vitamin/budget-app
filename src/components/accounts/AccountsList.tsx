@@ -10,7 +10,6 @@ export function AccountsList() {
     const qc = useQueryClient();
     const { data: accounts, isLoading } = useAccounts();
     const [deletingId, setDeletingId] = useState<string | null>(null);
-    const [refreshingId, setRefreshingId] = useState<string | null>(null);
     const [connecting, setConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -30,19 +29,6 @@ export function AccountsList() {
             setError(e instanceof Error ? e.message : 'Failed to connect accounts');
         } finally {
             setConnecting(false);
-        }
-    };
-
-    const handleRefresh = async (accountId: string) => {
-        setRefreshingId(accountId);
-        setError(null);
-        try {
-            await api.refreshAccount(accountId);
-            await invalidate();
-        } catch (e) {
-            setError(e instanceof Error ? e.message : 'Failed to refresh account');
-        } finally {
-            setRefreshingId(null);
         }
     };
 
@@ -77,19 +63,6 @@ export function AccountsList() {
         return date.toLocaleDateString('en-NZ');
     };
 
-    // Check if account is rate limited (1 hour cooldown)
-    const COOLDOWN_MS = 60 * 60 * 1000;
-    const getRateLimitInfo = (lastSyncAt: string | null) => {
-        if (!lastSyncAt) return { isLimited: false, remainingMins: 0 };
-        const lastSync = new Date(lastSyncAt).getTime();
-        const now = Date.now();
-        const elapsed = now - lastSync;
-        const remaining = COOLDOWN_MS - elapsed;
-
-        if (remaining <= 0) return { isLimited: false, remainingMins: 0 };
-        return { isLimited: true, remainingMins: Math.ceil(remaining / 60000) };
-    };
-
     if (isLoading) {
         return <div className="py-6 text-center text-sm text-gray-400">Loading accounts...</div>;
     }
@@ -122,7 +95,6 @@ export function AccountsList() {
                 </div>
             ) : (
                 accounts.map((account) => {
-                    const rateLimit = getRateLimitInfo(account.lastSyncAt);
                     const balance = account.balanceCurrent != null ? Number(account.balanceCurrent) : null;
 
                     return (
@@ -160,28 +132,11 @@ export function AccountsList() {
                                 )}
                                 <p className="text-xs text-gray-400">
                                     {formatLastSync(account.lastSyncAt)}
-                                    {rateLimit.isLimited && (
-                                        <span className="text-amber-600 ml-2">
-                                            ⏱️ {rateLimit.remainingMins}m until next sync
-                                        </span>
-                                    )}
                                     {account.connectionError && (
                                         <span className="text-red-500 ml-2">⚠️ {account.connectionError}</span>
                                     )}
                                 </p>
                             </div>
-
-                            {/* Refresh button */}
-                            <button
-                                onClick={() => handleRefresh(account.id)}
-                                disabled={refreshingId === account.id || rateLimit.isLimited}
-                                className="p-2 rounded-lg text-indigo-500 hover:bg-indigo-50 transition-colors disabled:opacity-40"
-                                title="Refresh account"
-                            >
-                                <svg className={`w-4 h-4 ${refreshingId === account.id ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            </button>
 
                             {/* Delete button */}
                             <button

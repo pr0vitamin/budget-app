@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout';
 import { Skeleton } from '@/components/ui';
@@ -20,7 +20,14 @@ export default function TransactionsPage() {
   const [active, setActive] = useState<Transaction | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
+  const lastSyncAt = overview?.lastSyncAt ?? null;
+  const cooldownMsLeft = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity
+    return lastSyncAt ? Math.max(0, new Date(lastSyncAt).getTime() + 3600_000 - Date.now()) : 0;
+  }, [lastSyncAt]);
+
   const onRefresh = async () => {
+    if (cooldownMsLeft > 0) return;
     try { await api.sync(); } catch { /* surfaced via banner elsewhere */ }
     await Promise.all([
       qc.invalidateQueries({ queryKey: qk.overview }),
@@ -77,7 +84,7 @@ export default function TransactionsPage() {
         )}
         {pullDistance > 0 && !isRefreshing && (
           <div className="flex justify-center py-1 text-gray-400 text-xs" style={{ height: pullDistance }}>
-            Pull to refresh
+            {cooldownMsLeft > 0 ? `Next sync in ${Math.ceil(cooldownMsLeft / 60000)}m` : 'Pull to refresh'}
           </div>
         )}
         <div className="flex items-center justify-between mb-4">

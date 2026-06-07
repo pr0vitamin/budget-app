@@ -17,12 +17,13 @@ export async function GET() {
 
   const bucketIds = groups.flatMap((g) => g.buckets.map((b) => b.id));
 
-  const [spendAgg, feedAgg, income, feedsTotal, inboxCount] = await Promise.all([
+  const [spendAgg, feedAgg, income, feedsTotal, inboxCount, accountsSync] = await Promise.all([
     prisma.allocation.groupBy({ by: ['bucketId'], where: { bucketId: { in: bucketIds } }, _sum: { amount: true } }),
     prisma.budgetAllocation.groupBy({ by: ['bucketId'], where: { bucketId: { in: bucketIds } }, _sum: { amount: true } }),
     prisma.transaction.aggregate({ where: { userId, kind: 'income' }, _sum: { amount: true } }),
     prisma.budgetAllocation.aggregate({ where: { userId }, _sum: { amount: true } }),
     prisma.transaction.count({ where: { userId, kind: 'expense', allocations: { none: {} } } }),
+    prisma.account.findMany({ where: { userId }, select: { lastSyncAt: true } }),
   ]);
 
   const spendMap = new Map(spendAgg.map((a) => [a.bucketId, Number(a._sum.amount ?? 0)]));
@@ -48,5 +49,8 @@ export async function GET() {
     feedsTotal: Number(feedsTotal._sum.amount ?? 0),
   });
 
-  return NextResponse.json({ groups: groupsOut, availableToBudget, inboxCount });
+  const syncTimes = accountsSync.map((a) => a.lastSyncAt?.getTime() ?? 0).filter((t) => t > 0);
+  const lastSyncAt = syncTimes.length > 0 ? new Date(Math.max(...syncTimes)).toISOString() : null;
+
+  return NextResponse.json({ groups: groupsOut, availableToBudget, inboxCount, lastSyncAt });
 }
