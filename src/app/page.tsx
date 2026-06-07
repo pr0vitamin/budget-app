@@ -13,6 +13,7 @@ import { useFeedBucket, useFeedAll, useOverviewMutation } from '@/lib/query/muta
 import { api } from '@/lib/api';
 import { qk } from '@/lib/query/keys';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { showToast } from '@/lib/toast';
 import { CatPiggyBank } from '@/components/buckets/CatPiggyBank';
 
 type Modal =
@@ -36,7 +37,20 @@ export default function HomePage() {
 
   const onRefresh = async () => {
     if (cooldownMsLeft > 0) return;
-    try { await api.sync(); } catch { /* surfaced via banner elsewhere */ }
+    try {
+      const r = await api.sync();
+      if (!r.cooldown) {
+        const n = (r.created ?? 0) + (r.updated ?? 0) + (r.confirmed ?? 0);
+        showToast(
+          n > 0
+            ? `Synced — ${n} update${n === 1 ? '' : 's'}${r.flaggedReview ? `, ${r.flaggedReview} to review` : ''}`
+            : 'Up to date',
+          'success'
+        );
+      }
+    } catch {
+      showToast('Sync failed — pull down to try again', 'error');
+    }
     await Promise.all([
       qc.invalidateQueries({ queryKey: qk.overview }),
       qc.invalidateQueries({ queryKey: qk.transactions('all') }),
