@@ -9,9 +9,15 @@ export const maxDuration = 60;
 
 // POST /api/transactions/sync
 // Server-enforced 1-hour cooldown. Refreshes all Akahu accounts then imports.
-export async function POST() {
+export async function POST(request: Request) {
   const userId = await getAuthedUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let windowDays = 30;
+  try {
+    const b = await request.json();
+    if (b?.windowDays) windowDays = Math.min(Math.max(1, Number(b.windowDays)), 365);
+  } catch {}
 
   const accounts = await prisma.account.findMany({ where: { userId }, select: { id: true, akahuId: true, lastSyncAt: true } });
 
@@ -40,7 +46,7 @@ export async function POST() {
     }
 
     // Import transactions
-    const result = await syncUser(userId, { windowDays: 30 });
+    const result = await syncUser(userId, { windowDays });
 
     // Stamp cooldown only on success
     await prisma.account.updateMany({ where: { userId }, data: { lastSyncAt: new Date() } });

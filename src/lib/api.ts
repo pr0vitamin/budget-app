@@ -25,7 +25,6 @@ export interface Transaction {
   date: string; kind: 'income' | 'expense' | 'transfer'; status: 'pending' | 'confirmed';
   source: 'akahu' | 'manual'; needsReview: boolean; allocations: TxnAllocation[];
 }
-export interface Settings { id: string; userId: string; initialSyncDays: number; theme: string; }
 export interface Rule { id: string; merchantPattern: string; bucketId: string; bucket: { id: string; name: string; color: string }; }
 
 export interface Account {
@@ -37,7 +36,6 @@ export interface Account {
 export const api = {
   overview: () => http<Overview>('/api/overview'),
   transactions: (q = '') => http<Transaction[]>(`/api/transactions${q}`),
-  settings: () => http<Settings>('/api/settings'),
   rules: () => http<Rule[]>('/api/rules'),
 
   feed: (bucketId: string, amount: number) =>
@@ -65,11 +63,8 @@ export const api = {
     http('/api/rules', { method: 'POST', body: JSON.stringify({ merchantPattern, bucketId }) }),
   deleteRule: (id: string) => http(`/api/rules/${id}`, { method: 'DELETE' }),
 
-  updateSettings: (data: Partial<Pick<Settings, 'initialSyncDays' | 'theme'>>) =>
-    http<Settings>('/api/settings', { method: 'PATCH', body: JSON.stringify(data) }),
-
   accounts: () => http<Account[]>('/api/accounts'),
   connectAccounts: () => http<{ count: number }>('/api/accounts', { method: 'POST' }),
   removeAccount: (id: string) => http(`/api/accounts/${id}`, { method: 'DELETE' }),
-  sync: () => http<{ created: number; updated: number; confirmed: number; flaggedReview: number; cooldown?: boolean; nextSyncAt: string | null }>('/api/transactions/sync', { method: 'POST' }),
+  sync: (windowDays?: number) => http<{ created: number; updated: number; confirmed: number; flaggedReview: number; cooldown?: boolean; nextSyncAt: string | null }>('/api/transactions/sync', { method: 'POST', body: windowDays ? JSON.stringify({ windowDays }) : undefined }),
 };

@@ -5,28 +5,51 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAccounts } from '@/lib/query/hooks';
 import { api } from '@/lib/api';
 import { qk } from '@/lib/query/keys';
+import { showToast } from '@/lib/toast';
 
 export function AccountsList() {
     const qc = useQueryClient();
     const { data: accounts, isLoading } = useAccounts();
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [connecting, setConnecting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [showDaysModal, setShowDaysModal] = useState(false);
+    const [days, setDays] = useState(30);
 
     const invalidate = () =>
         Promise.all([
             qc.invalidateQueries({ queryKey: ['accounts'] }),
             qc.invalidateQueries({ queryKey: qk.overview }),
+            qc.invalidateQueries({ queryKey: qk.transactions('all') }),
         ]);
 
     const handleConnect = async () => {
+        const isFirstConnect = !accounts || accounts.length === 0;
+        if (isFirstConnect) {
+            setShowDaysModal(true);
+        } else {
+            setConnecting(true);
+            try {
+                await api.connectAccounts();
+                await qc.invalidateQueries({ queryKey: ['accounts'] });
+                showToast('Accounts refreshed', 'success');
+            } catch {
+                showToast('Connect failed — try again', 'error');
+            } finally {
+                setConnecting(false);
+            }
+        }
+    };
+
+    const handleImport = async () => {
+        setShowDaysModal(false);
         setConnecting(true);
-        setError(null);
         try {
             await api.connectAccounts();
+            const r = await api.sync(days);
             await invalidate();
-        } catch (e) {
-            setError(e instanceof Error ? e.message : 'Failed to connect accounts');
+            showToast(`Bank connected — imported ${r.created ?? 0} transactions`, 'success');
+        } catch {
+            showToast('Connect failed — try again', 'error');
         } finally {
             setConnecting(false);
         }
@@ -38,13 +61,12 @@ export function AccountsList() {
         }
 
         setDeletingId(accountId);
-        setError(null);
 
         try {
             await api.removeAccount(accountId);
-            await invalidate();
+            await qc.invalidateQueries({ queryKey: ['accounts'] });
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Failed to remove account');
+            showToast(e instanceof Error ? e.message : 'Failed to remove account', 'error');
         } finally {
             setDeletingId(null);
         }
@@ -75,14 +97,8 @@ export function AccountsList() {
                 disabled={connecting}
                 className="w-full py-2 px-4 bg-indigo-500 text-white text-sm font-medium rounded-xl hover:bg-indigo-600 transition-colors disabled:opacity-50"
             >
-                {connecting ? 'Connecting...' : 'Connect / sync accounts'}
+                {connecting ? 'Connecting...' : 'Connect bank'}
             </button>
-
-            {error && (
-                <div className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm">
-                    {error}
-                </div>
-            )}
 
             {(!accounts || accounts.length === 0) ? (
                 <div className="text-center py-6">
@@ -159,6 +175,41 @@ export function AccountsList() {
                         </div>
                     );
                 })
+            )}
+
+            {/* First-connect days modal */}
+            {showDaysModal && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm animate-slide-up">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">Import history</h3>
+                        <p className="text-sm text-gray-500 mb-4">How many days of history would you like to import?</p>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Days of history
+                        </label>
+                        <input
+                            type="number"
+                            min={1}
+                            max={365}
+                            value={days}
+                            onChange={(e) => setDays(Math.min(365, Math.max(1, parseInt(e.target.value) || 1)))}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
+                        />
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowDaysModal(false)}
+                                className="flex-1 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleImport}
+                                className="flex-1 py-3 bg-indigo-500 text-white font-medium rounded-xl hover:bg-indigo-600 transition-colors"
+                            >
+                                Import
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
