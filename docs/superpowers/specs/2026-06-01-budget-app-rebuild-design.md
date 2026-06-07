@@ -60,7 +60,9 @@ in spirit, though auth still scopes all data per user.
   manual transaction entry lives here too.
 - Auto-categorization rules (merchant → cat).
 - Akahu bank sync via pull-to-refresh (personal-app token auth).
-- Settings (initial sync days, theme, sign-out).
+- Settings (sign-out + bank accounts only). No theme/dark mode (unbuilt — removed; app is
+  light-only). The first-connect history window is a one-time prompt on the Connect-bank flow, not a
+  stored setting.
 - PWA install + offline support.
 - 8-digit OTP authentication (Supabase Auth).
 
@@ -117,9 +119,10 @@ from budgeting entirely.
 
 **User** — `id`, `email`, `createdAt`, `lastActiveAt`. Owns everything below.
 
-**UserSettings** — `id`, `userId` (unique), `initialSyncDays` (default 30, how far back the first
-Akahu sync reaches), display/theme prefs. _Removed_: all budget-cycle fields. _Note_: Akahu tokens
-live in environment variables for this personal app, not in the DB.
+**UserSettings** — `id`, `userId` (unique). The `initialSyncDays` and `theme` columns remain in the
+schema but are **unused** (theme/dark mode was removed; the first-connect history window is a
+one-time prompt passed to the sync endpoint as `windowDays`, not persisted). _Removed_: all
+budget-cycle fields. _Note_: Akahu tokens live in environment variables, not the DB.
 
 **Account** — a connected bank account.
 `id`, `userId`, `akahuId`, `accountNumber` (the stable formatted account number, e.g.
