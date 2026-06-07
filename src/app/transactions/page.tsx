@@ -46,6 +46,7 @@ export default function TransactionsPage() {
     await Promise.all([
       qc.invalidateQueries({ queryKey: qk.overview }),
       qc.invalidateQueries({ queryKey: qk.transactions('all') }),
+      qc.invalidateQueries({ queryKey: ['accounts'] }),
     ]);
   };
   const { isRefreshing, pullDistance, handlers } = usePullToRefresh({ onRefresh });

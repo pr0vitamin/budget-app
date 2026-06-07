@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthedUserId } from '@/lib/auth';
 import { syncUser } from '@/lib/sync/engine';
+import { syncAccountsFromAkahu } from '@/lib/sync/accounts';
 import { refreshAccountAndWait } from '@/lib/akahu';
 import { prisma } from '@/lib/db';
 
@@ -30,6 +31,13 @@ export async function POST() {
   try {
     // Refresh all accounts at Akahu in parallel, tolerating individual failures
     await Promise.allSettled(accounts.map((a) => refreshAccountAndWait(a.akahuId, 20000)));
+
+    // Refresh stored account balances from Akahu (best-effort — never fail the sync over this)
+    try {
+      await syncAccountsFromAkahu(userId);
+    } catch (e) {
+      console.error('Account balance refresh failed during sync:', e);
+    }
 
     // Import transactions
     const result = await syncUser(userId, { windowDays: 30 });
