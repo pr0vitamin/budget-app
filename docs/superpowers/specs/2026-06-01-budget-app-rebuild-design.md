@@ -120,8 +120,8 @@ from budgeting entirely.
 **User** — `id`, `email`, `createdAt`, `lastActiveAt`. Owns everything below.
 
 **UserSettings** — `id`, `userId` (unique). The `initialSyncDays` and `theme` columns remain in the
-schema but are **unused** (theme/dark mode was removed; the first-connect history window is a
-one-time prompt passed to the sync endpoint as `windowDays`, not persisted). _Removed_: all
+schema but `initialSyncDays` is **repurposed** as the first-connect history floor (theme/dark mode
+was removed; see §8 — set once on first connect, used as a permanent cutoff). _Removed_: all
 budget-cycle fields. _Note_: Akahu tokens live in environment variables, not the DB.
 
 **Account** — a connected bank account.
@@ -294,9 +294,15 @@ _Removed_: all `/scheduled*` endpoints.
   the ledger.
 - **Pull-to-refresh is the single sync action.** A pull (on the Cats or Transactions page) calls one
   endpoint that: (1) triggers an Akahu **refresh** for all accounts in parallel (bounded wait,
-  `maxDuration=60`), (2) runs the **bank sync** (30-day window: dedup + classify + rules + pending
-  reconcile), (3) stamps `lastSyncAt`. There is no separate "full refresh" or per-account refresh
-  button, and no Settings sync buttons — they were removed.
+  `maxDuration=60`), (2) runs the **bank sync** (dedup + classify + rules + pending reconcile),
+  (3) stamps `lastSyncAt`. There is no separate "full refresh" or per-account refresh button, and no
+  Settings sync buttons — they were removed.
+- **First-connect window is a permanent floor.** At first connect the user picks how many days of
+  history to import; that value is stored (reusing `UserSettings.initialSyncDays`) as a hard cutoff
+  = `account.createdAt − initialSyncDays`. The engine derives each account's fetch window from it: an
+  account's **first** sync fetches the full window back to the cutoff; **routine** syncs stay within
+  ~30 days but are floored at the cutoff and **never import anything older** — so a small initial
+  window keeps the transaction set permanently small (not re-expanded to 30 days by later syncs).
 - **1-hour cooldown, server-enforced.** The sync endpoint refuses (returns `{ cooldown, nextSyncAt }`,
   no Akahu call) if the last successful sync was under 60 min ago — respecting Akahu rate limits.
   Cooldown starts **on success only** (a failed sync doesn't lock you out). The client reads
