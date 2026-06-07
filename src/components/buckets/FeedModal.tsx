@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { OverviewBucket, OverviewGroup } from '@/lib/api';
 
 interface FeedModalProps {
@@ -21,8 +21,12 @@ export function FeedModal({
   availableToBudget,
   initialBucketId,
 }: FeedModalProps) {
-  const allBuckets: (OverviewBucket & { groupName: string })[] = groups.flatMap((g) =>
-    g.buckets.map((b) => ({ ...b, groupName: g.name }))
+  // Memoized so its identity is stable across renders — otherwise the
+  // amount-defaulting effect below would re-run on every keystroke and clobber
+  // the user's custom amount.
+  const allBuckets: (OverviewBucket & { groupName: string })[] = useMemo(
+    () => groups.flatMap((g) => g.buckets.map((b) => ({ ...b, groupName: g.name }))),
+    [groups]
   );
 
   const [selectedBucketId, setSelectedBucketId] = useState(initialBucketId ?? allBuckets[0]?.id ?? '');
@@ -32,15 +36,13 @@ export function FeedModal({
 
   const selectedBucket = allBuckets.find((b) => b.id === selectedBucketId);
 
-  // Pre-fill amount with bucket's topUpAmount when selection changes
+  // Pre-fill the amount with the cat's topUp ONLY when the selected cat changes
+  // (not on every render) — so a typed custom amount is preserved.
   useEffect(() => {
-    if (selectedBucket && selectedBucket.topUpAmount > 0) {
-      setAmount(selectedBucket.topUpAmount.toFixed(2));
-    } else {
-      setAmount('');
-    }
+    const b = allBuckets.find((x) => x.id === selectedBucketId);
+    setAmount(b && b.topUpAmount > 0 ? b.topUpAmount.toFixed(2) : '');
     setError(null);
-  }, [selectedBucketId, selectedBucket]);
+  }, [selectedBucketId, allBuckets]);
 
   // Sync bucket selection when initialBucketId changes (e.g. modal re-opened)
   useEffect(() => {
