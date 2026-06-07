@@ -276,7 +276,7 @@ resource so the client can reconcile its cache.
 | Allocations  | `POST /transactions/:id/allocate`, `DELETE /transactions/:id/allocations/:bucketId`        |
 | Budget       | `GET /budget/available`, `POST /budget/allocations`, `POST /budget/allocations/batch` (Feed All), `DELETE /budget/allocations/:id` |
 | Accounts     | `GET /accounts`, `POST /accounts` (sync from Akahu), `DELETE /accounts/:id`, `POST /accounts/:id/refresh` |
-| Sync         | `POST /transactions/sync` (pull-to-refresh; dedup + auto-categorize)                       |
+| Sync         | `POST /transactions/sync` (pull-to-refresh: Akahu refresh-all → import; 1h server-side cooldown) |
 | Rules        | `GET/POST /rules`, `DELETE /rules/:id`                                                     |
 | Settings     | `GET/PATCH /settings`                                                                      |
 
@@ -289,9 +289,18 @@ _Removed_: all `/scheduled*` endpoints.
   than duplicates, and reissued transaction IDs no longer create duplicates or orphans.
 - **No destructive deletes**: removing an account unlinks transactions (`SetNull`); they remain in
   the ledger.
-- **Full refresh** action: fetches a wide window and reconciles by dedup key, so historical gaps
-  self-heal instead of being permanently lost to the narrow incremental window.
-- Sync failures surface a non-blocking warning banner; the app keeps working from cache.
+- **Pull-to-refresh is the single sync action.** A pull (on the Cats or Transactions page) calls one
+  endpoint that: (1) triggers an Akahu **refresh** for all accounts in parallel (bounded wait,
+  `maxDuration=60`), (2) runs the **bank sync** (30-day window: dedup + classify + rules + pending
+  reconcile), (3) stamps `lastSyncAt`. There is no separate "full refresh" or per-account refresh
+  button, and no Settings sync buttons — they were removed.
+- **1-hour cooldown, server-enforced.** The sync endpoint refuses (returns `{ cooldown, nextSyncAt }`,
+  no Akahu call) if the last successful sync was under 60 min ago — respecting Akahu rate limits.
+  Cooldown starts **on success only** (a failed sync doesn't lock you out). The client reads
+  `lastSyncAt` (exposed on `/api/overview`); during cooldown a pull shows "Next sync in Xm" and does
+  nothing.
+- Sync runs are best-effort per account (`Promise.allSettled`); a single account's Akahu failure
+  doesn't abort the rest, and the app keeps working from cache.
 
 ### Pending transaction lifecycle (allocations must survive)
 
