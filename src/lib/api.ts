@@ -66,5 +66,5 @@ export const api = {
   accounts: () => http<Account[]>('/api/accounts'),
   connectAccounts: () => http<{ count: number }>('/api/accounts', { method: 'POST' }),
   removeAccount: (id: string) => http(`/api/accounts/${id}`, { method: 'DELETE' }),
-  sync: (windowDays?: number) => http<{ created: number; updated: number; confirmed: number; flaggedReview: number; cooldown?: boolean; nextSyncAt: string | null }>('/api/transactions/sync', { method: 'POST', body: windowDays ? JSON.stringify({ windowDays }) : undefined }),
+  sync: (initialDays?: number) => http<{ created: number; updated: number; confirmed: number; flaggedReview: number; cooldown?: boolean; nextSyncAt: string | null }>('/api/transactions/sync', { method: 'POST', body: initialDays ? JSON.stringify({ initialDays }) : undefined }),
 };

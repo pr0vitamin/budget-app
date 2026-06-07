@@ -13,10 +13,12 @@ export async function POST(request: Request) {
   const userId = await getAuthedUserId();
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  let windowDays = 30;
+  // Optional first-connect history window (days). Stored as the PERMANENT floor
+  // (UserSettings.initialSyncDays); the engine never imports older than it.
+  let initialDays: number | null = null;
   try {
     const b = await request.json();
-    if (b?.windowDays) windowDays = Math.min(Math.max(1, Number(b.windowDays)), 365);
+    if (b?.initialDays) initialDays = Math.min(Math.max(1, Number(b.initialDays)), 365);
   } catch {}
 
   const accounts = await prisma.account.findMany({ where: { userId }, select: { id: true, akahuId: true, lastSyncAt: true } });
@@ -34,6 +36,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ cooldown: true, nextSyncAt });
   }
 
+  // Persist the first-connect window as the permanent floor before importing.
+  if (initialDays !== null) {
+    await prisma.userSettings.upsert({
+      where: { userId },
+      update: { initialSyncDays: initialDays },
+      create: { userId, initialSyncDays: initialDays },
+    });
+  }
+
   try {
     // Refresh all accounts at Akahu in parallel, tolerating individual failures
     await Promise.allSettled(accounts.map((a) => refreshAccountAndWait(a.akahuId, 20000)));
@@ -45,8 +56,8 @@ export async function POST(request: Request) {
       console.error('Account balance refresh failed during sync:', e);
     }
 
-    // Import transactions
-    const result = await syncUser(userId, { windowDays });
+    // Import transactions (the engine derives each account's window from the floor)
+    const result = await syncUser(userId);
 
     // Stamp cooldown only on success
     await prisma.account.updateMany({ where: { userId }, data: { lastSyncAt: new Date() } });

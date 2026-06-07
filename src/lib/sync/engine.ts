@@ -18,17 +18,33 @@ async function autoCategorize(txnId: string, merchant: string, amount: number, r
   await prisma.allocation.create({ data: { transactionId: txnId, bucketId: rule.bucketId, amount } });
 }
 
-export async function syncUser(
-  userId: string,
-  opts: { windowDays?: number } = {}
-): Promise<SyncResult> {
-  const windowDays = opts.windowDays ?? 30;
-  const since = new Date();
-  since.setDate(since.getDate() - windowDays);
-
+export async function syncUser(userId: string): Promise<SyncResult> {
   const accounts = await prisma.account.findMany({ where: { userId } });
   if (accounts.length === 0) return { created: 0, updated: 0, confirmed: 0, flaggedReview: 0 };
   const akahuToLocal = new Map(accounts.map((a) => [a.akahuId, a.id]));
+
+  // The user's first-connect window is a PERMANENT FLOOR: never import any
+  // transaction older than (account.createdAt − initialSyncDays). On an account's
+  // first sync we fetch that full window; routine syncs stay within ~30 days but
+  // are floored at the cutoff so they can never reach past it.
+  const settings = await prisma.userSettings.findUnique({ where: { userId } });
+  const cutoffDays = settings?.initialSyncDays ?? 30;
+  const routineSince = new Date();
+  routineSince.setDate(routineSince.getDate() - 30);
+  const cutoffOf = (createdAt: Date): Date => {
+    const c = new Date(createdAt);
+    c.setDate(c.getDate() - cutoffDays);
+    return c;
+  };
+  const sinceOf = (a: { createdAt: Date; lastSyncAt: Date | null }): Date => {
+    const cutoff = cutoffOf(a.createdAt);
+    if (!a.lastSyncAt) return cutoff; // first sync: fetch the full initial window
+    return cutoff > routineSince ? cutoff : routineSince; // routine: floored at cutoff
+  };
+  const oldestSince = accounts.reduce<Date>(
+    (min, a) => (sinceOf(a) < min ? sinceOf(a) : min),
+    new Date()
+  );
 
   const rules = (await prisma.categorizationRule.findMany({ where: { userId } })).map((r) => ({
     id: r.id, merchantPattern: r.merchantPattern, bucketId: r.bucketId,
@@ -36,7 +52,7 @@ export async function syncUser(
 
   // Candidate existing rows for matching: this user's pending rows + recent rows.
   const existingRows = await prisma.transaction.findMany({
-    where: { userId, OR: [{ status: 'pending' }, { date: { gte: since } }] },
+    where: { userId, OR: [{ status: 'pending' }, { date: { gte: oldestSince } }] },
     include: { allocations: { select: { amount: true } } },
   });
   const existing: (ExistingTxn & { accountId: string | null })[] = existingRows.map((t) => ({
@@ -54,6 +70,8 @@ export async function syncUser(
   const result: SyncResult = { created: 0, updated: 0, confirmed: 0, flaggedReview: 0 };
 
   for (const account of accounts) {
+    const since = sinceOf(account);
+    const cutoff = cutoffOf(account.createdAt);
     let akahuTxns: AkahuTransaction[] = [];
     try {
       akahuTxns = await getTransactions(account.akahuId, since.toISOString().split('T')[0]);
@@ -70,6 +88,8 @@ export async function syncUser(
         amount: at.amount,
         description: at.description,
       };
+      // Hard floor: never import anything older than the first-connect cutoff.
+      if (incoming.date < cutoff) continue;
       const action = decideSyncAction(incoming, existing);
       const kind = classifyKind({ type: at.type, amount: at.amount });
       const merchant = merchantOf(at);
