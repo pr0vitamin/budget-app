@@ -405,7 +405,7 @@ export function AllocationModal({
                                     <select
                                         value={alloc.bucketId}
                                         onChange={(e) => handleSplitBucketChange(index, e.target.value)}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     >
                                         <option value="">Select cat...</option>
                                         {buckets.map((b) => (
@@ -414,10 +414,11 @@ export function AllocationModal({
                                             </option>
                                         ))}
                                     </select>
-                                    <div className="relative w-24">
+                                    <div className="relative w-28 shrink-0">
                                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                                         <input
                                             type="number"
+                                            inputMode="decimal"
                                             value={displayAmount}
                                             onChange={(e) => handleSplitAmountChange(index, e.target.value)}
                                             placeholder={isAutoRow ? 'auto' : '0.00'}
