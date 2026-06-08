@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout';
 import { Skeleton } from '@/components/ui';
@@ -11,6 +11,7 @@ import { useAllocate } from '@/lib/query/mutations';
 import { api, type Transaction } from '@/lib/api';
 import { qk } from '@/lib/query/keys';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useSyncCooldown } from '@/hooks/useSyncCooldown';
 import { showToast } from '@/lib/toast';
 
 export default function TransactionsPage() {
@@ -21,11 +22,7 @@ export default function TransactionsPage() {
   const [active, setActive] = useState<Transaction | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
-  const lastSyncAt = overview?.lastSyncAt ?? null;
-  const cooldownMsLeft = useMemo(() => {
-    // eslint-disable-next-line react-hooks/purity
-    return lastSyncAt ? Math.max(0, new Date(lastSyncAt).getTime() + 3600_000 - Date.now()) : 0;
-  }, [lastSyncAt]);
+  const cooldownMsLeft = useSyncCooldown(overview?.lastSyncAt ?? null);
 
   const onRefresh = async () => {
     if (cooldownMsLeft > 0) return;
