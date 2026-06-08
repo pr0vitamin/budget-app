@@ -53,4 +53,26 @@ describe('transactionsMatch', () => {
       transactionsMatch(base, { ...base, date: new Date('2026-05-10') })
     ).toBe(false);
   });
+
+  it('does NOT match unrelated transactions that only share generic words', () => {
+    // Different merchants, within 5 days and 30% amount, sharing only generic
+    // banking tokens (EFTPOS, PURCHASE). These must NOT be treated as the same
+    // transaction — this is the bug that cross-wired allocations on sync.
+    expect(
+      transactionsMatch(
+        { date: new Date('2026-05-03'), amount: -20, description: 'EFTPOS PURCHASE BP CONNECT' },
+        { date: new Date('2026-05-01'), amount: -18, description: 'EFTPOS PURCHASE CAFE XYZ' }
+      )
+    ).toBe(false);
+  });
+
+  it('still matches a raw pending description against its enriched confirmed merchant', () => {
+    // The enriched merchant is a substring of the raw pending description.
+    expect(
+      transactionsMatch(
+        { date: new Date('2026-05-01'), amount: -42.5, description: 'POS W/D COUNTDOWN PONSONBY 1234' },
+        { date: new Date('2026-05-01'), amount: -42.5, description: 'Countdown Ponsonby' }
+      )
+    ).toBe(true);
+  });
 });

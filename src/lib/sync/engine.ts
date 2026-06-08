@@ -130,6 +130,12 @@ export async function syncUser(userId: string): Promise<SyncResult> {
         if (target.allocations.length === 0) await autoCategorize(target.id, merchant, at.amount, rules);
         if (recon.type === 'flagReview') result.flaggedReview++;
         if (action.type === 'confirm') result.confirmed++; else result.updated++;
+
+        // Consume the matched candidate so no later incoming transaction in this
+        // sync can be matched onto the same row (prevents data being funnelled
+        // into one row when several incoming look similar).
+        const consumeIdx = existing.findIndex((e) => e.id === action.id);
+        if (consumeIdx >= 0) existing.splice(consumeIdx, 1);
       }
     }
   }

@@ -19,14 +19,25 @@ export function fallbackDedupKey(tx: {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+function normalizeDesc(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Strict description similarity: the two descriptions are identical, OR one
+ * contains the other (e.g. an enriched merchant name "Countdown Ponsonby" sits
+ * inside a raw pending description "POS W/D COUNTDOWN PONSONBY 1234"). We do NOT
+ * match on merely sharing a word — generic banking tokens (EFTPOS, PURCHASE, POS)
+ * are shared by unrelated transactions, which previously cross-wired allocations
+ * when a new transaction was wrongly confirmed onto an old pending row.
+ */
 function descriptionsSimilar(a: string, b: string): boolean {
-  const x = a.toLowerCase();
-  const y = b.toLowerCase();
-  if (x.includes(y) || y.includes(x)) return true;
-  const words = (s: string) => new Set(s.split(/\s+/).filter((w) => w.length >= 3));
-  const wa = words(x);
-  for (const w of words(y)) if (wa.has(w)) return true;
-  return false;
+  const x = normalizeDesc(a);
+  const y = normalizeDesc(b);
+  if (!x || !y) return false;
+  if (x === y) return true;
+  const [short, long] = x.length <= y.length ? [x, y] : [y, x];
+  return short.length >= 5 && long.includes(short);
 }
 
 export interface MatchCandidate {

@@ -48,6 +48,20 @@ describe('decideSyncAction', () => {
       decideSyncAction({ externalId: 'a1', hash: null, date: new Date('2026-05-01'), amount: -10, description: 'Countdown' }, existing)
     ).toEqual({ type: 'confirm', id: 'p2' });
   });
+
+  it('does NOT confirm an unrelated new transaction onto a pending row', () => {
+    // New transaction shares only generic words with an existing pending row.
+    // It must be created, not confirmed onto (and stealing) the pending's allocation.
+    const existing = [
+      base({ id: 'p1', status: 'pending', amount: -18, description: 'EFTPOS PURCHASE CAFE XYZ' }),
+    ];
+    expect(
+      decideSyncAction(
+        { externalId: 'new1', hash: 'hN', date: new Date('2026-05-03'), amount: -20, description: 'EFTPOS PURCHASE BP CONNECT' },
+        existing
+      )
+    ).toEqual({ type: 'create' });
+  });
 });
 
 describe('reconcileAllocations', () => {
