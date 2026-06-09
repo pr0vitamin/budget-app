@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { getTransactions, getPendingTransactions, type AkahuTransaction } from '@/lib/akahu';
-import { decideSyncAction, reconcileAllocations, type ExistingTxn } from '@/lib/domain/reconcile';
+import { decideSyncAction, matchPendingRow, reconcileAllocations, type ExistingTxn } from '@/lib/domain/reconcile';
 import { classifyKind } from '@/lib/domain/classify';
 import { findMatchingRule, type Rule } from '@/lib/domain/rules';
 
@@ -165,24 +165,30 @@ async function syncPending(
   });
 
   const seen = new Set<string>();
+  const candidates = localPending.map((lp) => ({
+    id: lp.id,
+    accountId: lp.accountId,
+    date: new Date(lp.date),
+    amount: Number(lp.amount),
+    description: lp.description,
+  }));
   for (const p of mine) {
     const accountId = akahuToLocal.get(p._account)!;
-    const incoming = { externalId: null, hash: null, date: new Date(p.date), amount: p.amount, description: p.description };
+    const incoming = { accountId, date: new Date(p.date), amount: p.amount, description: p.description };
+    const merchant = p.description.replace(/\s+/g, ' ').trim().slice(0, 100);
     // Match an existing local pending row to update IN PLACE (never delete+recreate).
-    const match = localPending.find(
-      (lp) => !seen.has(lp.id) && lp.accountId === accountId &&
-        Math.abs(Number(lp.amount) - p.amount) <= Math.max(Math.abs(p.amount) * 0.3, 0.05) &&
-        Math.abs(new Date(lp.date).getTime() - new Date(p.date).getTime()) <= 5 * 86400000
-    );
-    if (match) {
-      seen.add(match.id);
+    // Requires same account, an exact amount (a still-pending txn hasn't settled,
+    // so its amount is stable) and a similar description — a loose 30% amount-only
+    // match previously merged unrelated transactions onto the wrong row.
+    const matchId = matchPendingRow(incoming, candidates, seen);
+    if (matchId) {
+      seen.add(matchId);
       await prisma.transaction.update({
-        where: { id: match.id },
-        data: { amount: p.amount, description: p.description, date: incoming.date },
+        where: { id: matchId },
+        data: { amount: p.amount, merchant, description: p.description, date: incoming.date },
       });
     } else {
       const kind = classifyKind({ type: p.type, amount: p.amount });
-      const merchant = p.description.replace(/\s+/g, ' ').trim().slice(0, 100);
       const created = await prisma.transaction.create({
         data: { userId, accountId, source: 'akahu', kind, amount: p.amount, merchant, description: p.description, date: incoming.date, status: 'pending' },
       });
