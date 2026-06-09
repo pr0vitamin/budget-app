@@ -33,6 +33,16 @@ describe('decideSyncAction', () => {
     ).toEqual({ type: 'update', id: 'e1' });
   });
 
+  it('matches by externalId regardless of how old the existing row is (identity beats date)', () => {
+    // The candidate set must surface an externalId-bearing row even when its date
+    // is far outside the recent window — otherwise we try to re-insert a unique
+    // externalId and abort the sync. This locks that identity match is date-free.
+    const existing = [base({ id: 'e1', externalId: 'a1', status: 'confirmed', date: new Date('2020-01-01') })];
+    expect(
+      decideSyncAction({ externalId: 'a1', hash: null, date: new Date('2026-05-01'), amount: -10, description: 'Countdown' }, existing)
+    ).toEqual({ type: 'update', id: 'e1' });
+  });
+
   it('absorbs an Akahu-reissued id by matching the stable hash', () => {
     const existing = [base({ id: 'e1', externalId: 'OLD', hash: 'h1', status: 'confirmed' })];
     expect(

@@ -50,9 +50,44 @@ export async function syncUser(userId: string): Promise<SyncResult> {
     id: r.id, merchantPattern: r.merchantPattern, bucketId: r.bucketId,
   }));
 
-  // Candidate existing rows for matching: this user's pending rows + recent rows.
+  // First pass: fetch each account's Akahu transactions up front. We need the
+  // incoming externalIds/hashes BEFORE building the candidate set so we can
+  // include any existing row that shares one. externalId/hash are globally-unique
+  // identities and must be matched even when the local row's date sits outside
+  // the recent-date window — otherwise an edited/corrupted date hides the row and
+  // we try to re-insert its externalId, a duplicate-key error that aborts the
+  // entire sync.
+  const fetched: { account: (typeof accounts)[number]; cutoff: Date; txns: AkahuTransaction[] }[] = [];
+  const incomingIds: string[] = [];
+  const incomingHashes: string[] = [];
+  for (const account of accounts) {
+    const since = sinceOf(account);
+    const cutoff = cutoffOf(account.createdAt);
+    try {
+      const txns = await getTransactions(account.akahuId, since.toISOString().split('T')[0]);
+      fetched.push({ account, cutoff, txns });
+      for (const at of txns) {
+        incomingIds.push(at._id);
+        if (at.hash) incomingHashes.push(at.hash);
+      }
+    } catch (e) {
+      console.error(`Sync failed for account ${account.id}:`, e);
+      // graceful: keep other accounts working
+    }
+  }
+
+  // Candidate existing rows for matching: this user's pending rows, recent rows,
+  // and any row sharing an incoming externalId/hash (identity match, any date).
   const existingRows = await prisma.transaction.findMany({
-    where: { userId, OR: [{ status: 'pending' }, { date: { gte: oldestSince } }] },
+    where: {
+      userId,
+      OR: [
+        { status: 'pending' },
+        { date: { gte: oldestSince } },
+        { externalId: { in: incomingIds } },
+        { hash: { in: incomingHashes } },
+      ],
+    },
     include: { allocations: { select: { amount: true } } },
   });
   const existing: (ExistingTxn & { accountId: string | null })[] = existingRows.map((t) => ({
@@ -69,18 +104,8 @@ export async function syncUser(userId: string): Promise<SyncResult> {
 
   const result: SyncResult = { created: 0, updated: 0, confirmed: 0, flaggedReview: 0 };
 
-  for (const account of accounts) {
-    const since = sinceOf(account);
-    const cutoff = cutoffOf(account.createdAt);
-    let akahuTxns: AkahuTransaction[] = [];
-    try {
-      akahuTxns = await getTransactions(account.akahuId, since.toISOString().split('T')[0]);
-    } catch (e) {
-      console.error(`Sync failed for account ${account.id}:`, e);
-      continue; // graceful: keep other accounts working
-    }
-
-    for (const at of akahuTxns) {
+  for (const { account, cutoff, txns } of fetched) {
+    for (const at of txns) {
       const incoming = {
         externalId: at._id,
         hash: at.hash ?? null,
