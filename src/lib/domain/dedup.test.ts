@@ -32,12 +32,22 @@ describe('transactionsMatch', () => {
     expect(transactionsMatch(base, { ...base })).toBe(true);
   });
 
-  it('matches when a pending amount settles within tolerance', () => {
-    // pending $1.00 pre-auth settles to $1.05, same day/desc
+  it('does NOT match when the amount differs at all (no pre-auth tolerance)', () => {
+    // Same day/desc but $1.00 vs $1.05 — an amount difference always means a
+    // different transaction; only an exact amount (within float noise) matches.
     expect(
       transactionsMatch(
         { date: new Date('2026-05-01'), amount: -1, description: 'Cafe Hold' },
         { date: new Date('2026-05-01'), amount: -1.05, description: 'Cafe Hold' }
+      )
+    ).toBe(false);
+  });
+
+  it('matches an exact amount despite float representation noise', () => {
+    expect(
+      transactionsMatch(
+        { date: new Date('2026-05-01'), amount: -0.1 - 0.2, description: 'Cafe' },
+        { date: new Date('2026-05-01'), amount: -0.3, description: 'Cafe' }
       )
     ).toBe(true);
   });

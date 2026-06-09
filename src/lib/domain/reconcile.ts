@@ -44,6 +44,35 @@ export function decideSyncAction(incoming: IncomingTxn, existing: ExistingTxn[])
   return { type: 'create' };
 }
 
+export interface PendingCandidate {
+  id: string;
+  accountId: string | null;
+  date: Date;
+  amount: number;
+  description: string | null;
+}
+
+/**
+ * Match an incoming Akahu pending transaction to one of our local pending rows
+ * so we can update it IN PLACE across syncs (Akahu pendings have no stable id).
+ *
+ * `transactionsMatch` requires the same amount and a similar description; here
+ * we add the same-account and consume-once guards (each local row may be
+ * claimed by only one incoming pending per sync). Without these a new
+ * transaction whose amount merely fell near an old pending row (e.g. $16.99 vs
+ * $12 under the old 30% band) was merged onto it, stealing name and allocation.
+ */
+export function matchPendingRow(
+  incoming: { accountId: string; date: Date; amount: number; description: string | null },
+  candidates: PendingCandidate[],
+  consumed: Set<string>
+): string | null {
+  const match = candidates.find(
+    (c) => !consumed.has(c.id) && c.accountId === incoming.accountId && transactionsMatch(incoming, c)
+  );
+  return match ? match.id : null;
+}
+
 export type AllocationReconcile =
   | { type: 'none' }
   | { type: 'updateSingle'; amount: number }

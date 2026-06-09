@@ -19,6 +19,14 @@ export function fallbackDedupKey(tx: {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * "Same amount": currency is two decimal places, so half a cent absorbs float
+ * representation noise without admitting any real delta. We deliberately do NOT
+ * allow a wider band — a transaction's amount does not change between sightings
+ * (no pre-auth settling here), so any real difference means a different txn.
+ */
+const AMOUNT_EPSILON = 0.005;
+
 function normalizeDesc(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -49,14 +57,17 @@ export interface MatchCandidate {
 /**
  * Decide whether two transactions are the same real-world transaction.
  * Used to reconcile pending → confirmed and to absorb Akahu-reissued ids:
- * within 5 days, amount within 30% (handles pre-auth settling), similar description.
+ * within 5 days, the same amount, and a similar description.
+ *
+ * The amount must match exactly (within float noise). We do not allow a band:
+ * an amount difference always means a different transaction here, and a loose
+ * band previously merged unrelated transactions onto the wrong row.
  */
 export function transactionsMatch(a: MatchCandidate, b: MatchCandidate): boolean {
   const daysApart = Math.abs(a.date.getTime() - b.date.getTime()) / DAY_MS;
   if (daysApart > 5) return false;
 
-  const tolerance = Math.max(Math.abs(a.amount) * 0.3, 0.05);
-  if (Math.abs(a.amount - b.amount) > tolerance) return false;
+  if (Math.abs(a.amount - b.amount) > AMOUNT_EPSILON) return false;
 
   return descriptionsSimilar(a.description ?? '', b.description ?? '');
 }
