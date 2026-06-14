@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   decideSyncAction,
+  decideDisappearedPending,
   matchPendingRow,
   reconcileAllocations,
+  STALE_PENDING_DAYS,
   type ExistingTxn,
   type PendingCandidate,
 } from './reconcile';
@@ -153,6 +155,29 @@ describe('matchPendingRow', () => {
         new Set()
       )
     ).toBeNull();
+  });
+});
+
+describe('decideDisappearedPending', () => {
+  it('deletes an allocation-free disappeared pending regardless of age', () => {
+    expect(decideDisappearedPending({ hasAllocations: false, ageDays: 0 })).toBe('delete');
+    expect(decideDisappearedPending({ hasAllocations: false, ageDays: 99 })).toBe('delete');
+  });
+
+  it('keeps a recently-disappeared allocated pending (likely a transient feed gap)', () => {
+    expect(decideDisappearedPending({ hasAllocations: true, ageDays: 1 })).toBe('keep');
+    expect(decideDisappearedPending({ hasAllocations: true, ageDays: STALE_PENDING_DAYS - 0.5 })).toBe('keep');
+  });
+
+  it('promotes an allocated pending that has been gone past the stale threshold', () => {
+    // The user's stuck rows: allocated, ~8 days pending, no confirmed counterpart.
+    expect(decideDisappearedPending({ hasAllocations: true, ageDays: 8 })).toBe('promote');
+    expect(decideDisappearedPending({ hasAllocations: true, ageDays: STALE_PENDING_DAYS })).toBe('promote');
+  });
+
+  it('respects a custom stale threshold', () => {
+    expect(decideDisappearedPending({ hasAllocations: true, ageDays: 3, stalePendingDays: 7 })).toBe('keep');
+    expect(decideDisappearedPending({ hasAllocations: true, ageDays: 7, stalePendingDays: 7 })).toBe('promote');
   });
 });
 

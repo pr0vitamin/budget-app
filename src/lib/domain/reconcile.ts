@@ -73,6 +73,35 @@ export function matchPendingRow(
   return match ? match.id : null;
 }
 
+/** A pending row this many days old is treated as settled-or-reversed, not transient. */
+export const STALE_PENDING_DAYS = 5;
+
+export type DisappearedPendingAction = 'delete' | 'keep' | 'promote';
+
+/**
+ * Decide what to do with a local pending row that Akahu's pending feed no longer
+ * reports AND that did not match an incoming pending this sync. The main sync
+ * loop already confirms any pending that has a settled counterpart in the
+ * transaction feed, so a row reaching here has no confirmed record at all.
+ *
+ * - delete:  no allocations — nothing of the user's to preserve, drop it.
+ * - keep:    allocated but only recently gone — likely a transient one-sync feed
+ *            gap; leave it pending and untouched (do NOT re-flag every sync).
+ * - promote: allocated and gone past the stale threshold — it has almost
+ *            certainly settled with no confirmed record (or been reversed).
+ *            Move it to confirmed so it leaves the pending set and the flag loop,
+ *            and flag it once for the user to verify it really happened.
+ */
+export function decideDisappearedPending(input: {
+  hasAllocations: boolean;
+  ageDays: number;
+  stalePendingDays?: number;
+}): DisappearedPendingAction {
+  if (!input.hasAllocations) return 'delete';
+  const threshold = input.stalePendingDays ?? STALE_PENDING_DAYS;
+  return input.ageDays >= threshold ? 'promote' : 'keep';
+}
+
 export type AllocationReconcile =
   | { type: 'none' }
   | { type: 'updateSingle'; amount: number }
