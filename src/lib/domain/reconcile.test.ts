@@ -2,10 +2,12 @@ import { describe, it, expect } from 'vitest';
 import {
   decideSyncAction,
   decideDisappearedPending,
+  confirmedFieldsDiffer,
   firstConnectCutoff,
   matchPendingRow,
   reconcileAllocations,
   STALE_PENDING_DAYS,
+  type ConfirmedFields,
   type ExistingTxn,
   type PendingCandidate,
 } from './reconcile';
@@ -199,6 +201,39 @@ describe('decideDisappearedPending', () => {
   it('respects a custom stale threshold', () => {
     expect(decideDisappearedPending({ hasAllocations: true, ageDays: 3, stalePendingDays: 7 })).toBe('keep');
     expect(decideDisappearedPending({ hasAllocations: true, ageDays: 7, stalePendingDays: 7 })).toBe('promote');
+  });
+});
+
+describe('confirmedFieldsDiffer', () => {
+  const fields = (over: Partial<ConfirmedFields> = {}): ConfirmedFields => ({
+    externalId: 'trans_1',
+    hash: 'h1',
+    amount: -26.5,
+    merchant: 'Grey Roasting Co',
+    description: 'Grey Roasting Co Card number: 4835 **** **** 0599',
+    category: 'Specialty food stores',
+    balanceAfter: 1559.35,
+    ...over,
+  });
+
+  it('is false when an identical transaction is re-synced (no spurious update)', () => {
+    expect(confirmedFieldsDiffer(fields(), fields())).toBe(false);
+  });
+
+  it('treats equal null balances as unchanged', () => {
+    expect(confirmedFieldsDiffer(fields({ balanceAfter: null }), fields({ balanceAfter: null }))).toBe(false);
+  });
+
+  it('detects a changed amount', () => {
+    expect(confirmedFieldsDiffer(fields(), fields({ amount: -27 }))).toBe(true);
+  });
+
+  it('detects an absorbed (reissued) externalId', () => {
+    expect(confirmedFieldsDiffer(fields(), fields({ externalId: 'trans_2' }))).toBe(true);
+  });
+
+  it('detects a category appearing where there was none', () => {
+    expect(confirmedFieldsDiffer(fields({ category: null }), fields({ category: 'Food' }))).toBe(true);
   });
 });
 
