@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { getTransactions, getPendingTransactions, type AkahuTransaction } from '@/lib/akahu';
-import { decideSyncAction, matchPendingRow, reconcileAllocations, type ExistingTxn } from '@/lib/domain/reconcile';
+import { decideSyncAction, decideDisappearedPending, matchPendingRow, reconcileAllocations, type ExistingTxn } from '@/lib/domain/reconcile';
 import { classifyKind } from '@/lib/domain/classify';
 import { findMatchingRule, type Rule } from '@/lib/domain/rules';
 
@@ -222,15 +222,26 @@ async function syncPending(
     }
   }
 
-  // Disappeared pending (no longer reported, not matched): drop only if allocation-free.
+  // Disappeared pending (no longer reported, not matched): drop, leave, or
+  // promote-and-flag depending on allocations and how long it's been pending.
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const now = Date.now();
   for (const lp of localPending) {
     if (seen.has(lp.id)) continue;
-    if (lp.allocations.length === 0) {
+    const ageDays = (now - new Date(lp.date).getTime()) / DAY_MS;
+    const action = decideDisappearedPending({ hasAllocations: lp.allocations.length > 0, ageDays });
+    if (action === 'delete') {
       await prisma.transaction.delete({ where: { id: lp.id } });
-    } else {
-      await prisma.transaction.update({ where: { id: lp.id }, data: { needsReview: true } });
+    } else if (action === 'promote') {
+      // Settled-or-reversed with no confirmed record: confirm it (so it leaves
+      // the pending set and stops being re-flagged) and flag once to verify.
+      await prisma.transaction.update({
+        where: { id: lp.id },
+        data: { status: 'confirmed', needsReview: true },
+      });
       result.flaggedReview++;
     }
+    // action === 'keep' → recently gone, likely transient: leave it untouched.
   }
 }
 
