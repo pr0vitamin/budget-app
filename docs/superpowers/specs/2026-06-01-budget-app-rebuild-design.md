@@ -5,7 +5,7 @@ job") model and the cat-piggy-bank cash-stuffing soul of the app, fixes the data
 that lost historical income, removes accumulated dead scaffolding, and adds a local-first cache
 layer so pages load instantly._
 
-_Date: 2026-06-01 · Supersedes the original `spec.md` (which had drifted from the built code)._
+_Date: 2026-06-01 · This is the sole product spec. It replaced the original root `spec.md` and `project-plan.md` (which had drifted from the built code and were removed)._
 
 ---
 
