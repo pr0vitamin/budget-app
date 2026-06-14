@@ -118,6 +118,36 @@ export function decideDisappearedPending(input: {
   return input.ageDays >= threshold ? 'promote' : 'keep';
 }
 
+/** The Akahu-sourced fields the update path writes onto a confirmed row. */
+export interface ConfirmedFields {
+  externalId: string | null;
+  hash: string | null;
+  amount: number;
+  merchant: string | null;
+  description: string | null;
+  category: string | null;
+  balanceAfter: number | null;
+}
+
+/**
+ * True if an incoming Akahu transaction would actually change a stored row.
+ * Re-syncing the same transaction re-reports identical fields, so without this
+ * check every existing transaction in the fetch window counts as an "update"
+ * every sync (and is needlessly rewritten) — which is why the sync toast showed
+ * ~20 updates with nothing new.
+ */
+export function confirmedFieldsDiffer(stored: ConfirmedFields, incoming: ConfirmedFields): boolean {
+  return (
+    stored.externalId !== incoming.externalId ||
+    stored.hash !== incoming.hash ||
+    stored.amount !== incoming.amount ||
+    stored.merchant !== incoming.merchant ||
+    stored.description !== incoming.description ||
+    stored.category !== incoming.category ||
+    stored.balanceAfter !== incoming.balanceAfter
+  );
+}
+
 export type AllocationReconcile =
   | { type: 'none' }
   | { type: 'updateSingle'; amount: number }

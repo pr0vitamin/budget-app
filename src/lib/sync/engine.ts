@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { getTransactions, getPendingTransactions, type AkahuTransaction } from '@/lib/akahu';
-import { decideSyncAction, decideDisappearedPending, firstConnectCutoff, matchPendingRow, reconcileAllocations, type ExistingTxn } from '@/lib/domain/reconcile';
+import { decideSyncAction, decideDisappearedPending, confirmedFieldsDiffer, firstConnectCutoff, matchPendingRow, reconcileAllocations, type ExistingTxn } from '@/lib/domain/reconcile';
 import { classifyKind } from '@/lib/domain/classify';
 import { findMatchingRule, type Rule } from '@/lib/domain/rules';
 
@@ -132,25 +132,46 @@ export async function syncUser(userId: string): Promise<SyncResult> {
         const target = existingRows.find((e) => e.id === action.id)!;
         const allocSum = target.allocations.reduce((s, a) => s + Number(a.amount), 0);
         const recon = reconcileAllocations({ allocationCount: target.allocations.length, allocationSum: allocSum, newAmount: at.amount });
+        const isConfirm = action.type === 'confirm';
+
+        // A confirm always changes status. An update (already-confirmed row,
+        // re-seen) only matters if the Akahu fields actually changed or an
+        // allocation needs touching — otherwise re-syncing the same transaction
+        // would rewrite it and count it as an "update" on every sync.
+        const fieldsDiffer = confirmedFieldsDiffer(
+          {
+            externalId: target.externalId, hash: target.hash, amount: Number(target.amount),
+            merchant: target.merchant, description: target.description, category: target.category,
+            balanceAfter: target.balanceAfter === null ? null : Number(target.balanceAfter),
+          },
+          {
+            externalId: at._id, hash: at.hash ?? null, amount: at.amount, merchant,
+            description: at.description, category: at.category?.name ?? null, balanceAfter: at.balance ?? null,
+          }
+        );
+        const mustWrite = isConfirm || fieldsDiffer || recon.type !== 'none';
 
         if (recon.type === 'updateSingle') {
           await prisma.allocation.updateMany({ where: { transactionId: target.id }, data: { amount: recon.amount } });
         }
-        await prisma.transaction.update({
-          where: { id: target.id },
-          data: {
-            externalId: at._id, hash: at.hash ?? null, amount: at.amount, merchant,
-            description: at.description, category: at.category?.name ?? null,
-            balanceAfter: at.balance ?? null, status: 'confirmed',
-            needsReview: recon.type === 'flagReview' ? true : undefined,
-            // keep user's kind override
-            kind: undefined,
-          },
-        });
+        if (mustWrite) {
+          await prisma.transaction.update({
+            where: { id: target.id },
+            data: {
+              externalId: at._id, hash: at.hash ?? null, amount: at.amount, merchant,
+              description: at.description, category: at.category?.name ?? null,
+              balanceAfter: at.balance ?? null, status: 'confirmed',
+              needsReview: recon.type === 'flagReview' ? true : undefined,
+              // keep user's kind override
+              kind: undefined,
+            },
+          });
+        }
         // newly-confirmed expense with no allocation → try rules
         if (target.allocations.length === 0) await autoCategorize(target.id, merchant, at.amount, rules);
         if (recon.type === 'flagReview') result.flaggedReview++;
-        if (action.type === 'confirm') result.confirmed++; else result.updated++;
+        if (isConfirm) result.confirmed++;
+        else if (mustWrite) result.updated++;
 
         // Consume the matched candidate so no later incoming transaction in this
         // sync can be matched onto the same row (prevents data being funnelled
