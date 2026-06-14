@@ -110,7 +110,7 @@ in spirit, though auth still scopes all data per user.
 | Account deletion     | **cascade-deletes** its transactions  | only unlinks them (`SetNull`) — history always survives                 |
 | Income               | implicit ("amount > 0")               | explicit **`kind`** field on every transaction                         |
 | Account identity     | volatile Akahu `_id`                  | stable bank **account number**, falling back to `akahuId`              |
-| Transaction dedup    | `externalId` only                     | `externalId` **OR** Akahu `hash` **OR** (account + date + amount + desc) |
+| Transaction dedup    | `externalId` only                     | `externalId` **OR** Akahu `hash` **OR** (same account + exact amount + similar description, ≤5 days) |
 
 The `kind` field also fixes a latent bug: a transfer between the user's own accounts (a positive
 credit) used to count as budgetable income and inflate "Available to Budget." `transfer` is excluded
@@ -147,9 +147,9 @@ _Removed_: `type`, `rollover`, `rolloverTargetId`.
 (unique, Akahu txn id), `hash?` (Akahu dedup hash), `kind` (`income` | `expense` | `transfer`),
 `amount` (Decimal, signed: negative = outflow, positive = inflow), `merchant?`, `description?`,
 `date`, `category?` (Akahu-provided), `balanceAfter?`, `status` (`pending` | `confirmed`),
-`isReclassified` (user overrode the auto `kind`), `needsReview` (an amount change or dropped-pending
-left this transaction's allocations possibly out of date — surfaced to the user, never auto-wiped),
-timestamps.
+`isReclassified` (user overrode the auto `kind`), `needsReview` (an amount change left a split out of
+date, or a stale allocated pending was promoted to confirmed with no bank record — surfaced to the
+user to verify, never auto-wiped; see §8), timestamps.
 Indexes on `userId`, `date`, `status`, `accountId`.
 
 **Allocation** — an expense (or refund) assigned to a bucket. Supports splits.
@@ -300,10 +300,14 @@ _Removed_: all `/scheduled*` endpoints.
   Settings sync buttons — they were removed.
 - **First-connect window is a permanent floor.** At first connect the user picks how many days of
   history to import; that value is stored (reusing `UserSettings.initialSyncDays`) as a hard cutoff
-  = `account.createdAt − initialSyncDays`. The engine derives each account's fetch window from it: an
-  account's **first** sync fetches the full window back to the cutoff; **routine** syncs stay within
-  ~30 days but are floored at the cutoff and **never import anything older** — so a small initial
-  window keeps the transaction set permanently small (not re-expanded to 30 days by later syncs).
+  = the **start of the day (00:00 UTC)** `initialSyncDays` before `account.createdAt`. Flooring to the
+  start of the day is deliberate: keeping the connect *time-of-day* made the cutoff a mid-day instant
+  and silently dropped transactions from the **morning of the boundary day** (which the unfloored
+  pending feed still created rows for, leaving them un-confirmable and stuck `pending`). The engine
+  derives each account's fetch window from the cutoff: an account's **first** sync fetches the full
+  window back to the cutoff; **routine** syncs stay within ~30 days but are floored at the cutoff and
+  **never import anything older** — so a small initial window keeps the transaction set permanently
+  small (not re-expanded to 30 days by later syncs).
 - **1-hour cooldown, server-enforced.** The sync endpoint refuses (returns `{ cooldown, nextSyncAt }`,
   no Akahu call) if the last successful sync was under 60 min ago — respecting Akahu rate limits.
   Cooldown starts **on success only** (a failed sync doesn't lock you out). The client reads
@@ -311,18 +315,35 @@ _Removed_: all `/scheduled*` endpoints.
   nothing.
 - Sync runs are best-effort per account (`Promise.allSettled`); a single account's Akahu failure
   doesn't abort the rest, and the app keeps working from cache.
+- **Result counts reflect real changes.** The endpoint returns `{ created, confirmed, updated,
+  flaggedReview }`. `updated` counts only already-confirmed rows whose Akahu fields **actually
+  changed** — re-syncing an unchanged transaction is neither rewritten nor counted — so a no-change
+  sync reports "Up to date" instead of re-counting every transaction in the fetch window.
 
 ### Pending transaction lifecycle (allocations must survive)
 
 Pending transactions are allocatable and shown but clearly marked. Akahu pending transactions have
-**no stable ID** and mutate as they settle (amount, description, and date all change), so the old
-delete-and-recreate-by-key approach destroyed allocations on nearly every sync. The rebuilt rules:
+**no stable ID** and their description and date can shift as they settle, so the old
+delete-and-recreate-by-key approach destroyed allocations on nearly every sync. (Amount is treated as
+stable — a changed amount is taken to be a different transaction, per the exact-amount rule below.)
+The rebuilt rules:
 
 - **Reconcile in place, never delete-and-recreate.** Each real-world transaction maps to one stable
-  local row that allocations hang off. On sync, a pending Akahu transaction is matched to its
-  existing row via the §4 dedup machinery (Akahu `hash` if present, else account + approximate date
-  + amount-within-tolerance + description similarity) and **updated in place** — even if amount or
-  description has changed. The row id, and therefore its allocations, are preserved.
+  local row that allocations hang off. On sync, an Akahu transaction is matched **by identity first**
+  — `externalId`, else Akahu `hash` — and these identity matches are checked against **all** of the
+  user's rows regardless of date. (A globally-unique id must never be re-inserted just because the
+  stored row's date sits outside the recent window — doing so threw a duplicate-key error that aborted
+  the entire sync.) Failing identity, a pending row is matched by **same account + exact amount +
+  similar description, within 5 days** and **updated in place**; the row id, and therefore its
+  allocations, are preserved.
+- **Matching uses an exact amount, not a tolerance band.** A real transaction's amount does not change
+  between sightings on this account (no pre-auth settling in practice), so amounts must match to the
+  cent; the description guard requires the two strings to be identical or one to contain the other —
+  **not** merely share generic tokens like "EFTPOS". (An earlier 30%-amount / loose-description match
+  merged unrelated transactions, e.g. a $16.99 charge onto a $12 pending, stealing its name and
+  allocation.) A consequence: if a settled transaction's amount differs from its pending sighting it
+  will **not** match — it is recorded as a new confirmed transaction, and the stale pending is handled
+  by the disappearing-pending rule below.
 - **Pending → confirmed preserves allocations.** When the confirmed version arrives it reconciles
   onto the same row (flip `status` to `confirmed`, set `externalId`/`hash`), keeping allocations:
   - **Single allocation**: update the allocation amount to the confirmed total, preserving the
@@ -330,10 +351,17 @@ delete-and-recreate-by-key approach destroyed allocations on nearly every sync. 
   - **Split (multiple allocations)**: **never delete.** Keep the existing splits; if they no longer
     sum to the new amount, set `needsReview` and surface the transaction on the Transactions page so the user
     adjusts it — the auto-remainder feature (§5) makes that a one-tap fix.
-- **Disappearing pending.** If Akahu stops reporting a pending transaction: remove the local row
-  only if it has **no allocations** (a transient pre-auth that vanished). If it has allocations,
-  keep it and set `needsReview` rather than destroying the user's intent — pending holds often
-  reappear as a confirmed transaction with a different key.
+- **Disappearing pending.** If Akahu stops reporting a pending transaction and no confirmed
+  counterpart matched it this sync (the confirm path runs first, so a row reaching here has no bank
+  record):
+  - **No allocations** → remove the local row (a transient pre-auth that vanished).
+  - **Allocated, gone < 5 days** → leave it untouched. A one-sync gap in the pending feed is likely
+    transient; do **not** re-flag it.
+  - **Allocated, gone ≥ 5 days** (`STALE_PENDING_DAYS`) → it has almost certainly settled without a
+    confirmed record (or been reversed), so **promote it to `confirmed` and set `needsReview` once**.
+    Promoting moves it out of the pending set so it is never re-evaluated — fixing an earlier loop in
+    which such a row stayed `pending` and was re-flagged on every sync, so the flag could never be
+    cleared. The one-time flag asks the user to verify the charge really happened (vs was refunded).
 - **Net effect:** allocating a pending transaction is safe; nothing the user assigns is ever silently
   unallocated by a sync. The only outcome of an Akahu-side change is, at worst, a `needsReview` flag.
 
