@@ -1,5 +1,21 @@
 import { transactionsMatch } from './dedup';
 
+/**
+ * The first-connect floor: the oldest moment we ever import for an account.
+ * `cutoffDays` whole days before the connect date, floored to the START of that
+ * day in UTC. Flooring to 00:00 matters: `createdAt − cutoffDays` keeps the
+ * connect time-of-day, which would drop any transaction from the morning of the
+ * boundary day (e.g. connect 06-08 11:45 → cutoff 06-06 11:45 silently excluded
+ * a real 06-06 01:35 transaction, leaving its pending row stuck forever). The
+ * window is whole calendar days, so the boundary day must be included entirely.
+ */
+export function firstConnectCutoff(createdAt: Date, cutoffDays: number): Date {
+  const c = new Date(createdAt);
+  c.setUTCDate(c.getUTCDate() - cutoffDays);
+  c.setUTCHours(0, 0, 0, 0);
+  return c;
+}
+
 export interface ExistingTxn {
   id: string;
   externalId: string | null;

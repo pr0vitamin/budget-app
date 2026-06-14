@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { getTransactions, getPendingTransactions, type AkahuTransaction } from '@/lib/akahu';
-import { decideSyncAction, decideDisappearedPending, matchPendingRow, reconcileAllocations, type ExistingTxn } from '@/lib/domain/reconcile';
+import { decideSyncAction, decideDisappearedPending, firstConnectCutoff, matchPendingRow, reconcileAllocations, type ExistingTxn } from '@/lib/domain/reconcile';
 import { classifyKind } from '@/lib/domain/classify';
 import { findMatchingRule, type Rule } from '@/lib/domain/rules';
 
@@ -31,11 +31,7 @@ export async function syncUser(userId: string): Promise<SyncResult> {
   const cutoffDays = settings?.initialSyncDays ?? 30;
   const routineSince = new Date();
   routineSince.setDate(routineSince.getDate() - 30);
-  const cutoffOf = (createdAt: Date): Date => {
-    const c = new Date(createdAt);
-    c.setDate(c.getDate() - cutoffDays);
-    return c;
-  };
+  const cutoffOf = (createdAt: Date): Date => firstConnectCutoff(createdAt, cutoffDays);
   const sinceOf = (a: { createdAt: Date; lastSyncAt: Date | null }): Date => {
     const cutoff = cutoffOf(a.createdAt);
     if (!a.lastSyncAt) return cutoff; // first sync: fetch the full initial window
