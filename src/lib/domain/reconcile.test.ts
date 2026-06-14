@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   decideSyncAction,
   decideDisappearedPending,
+  firstConnectCutoff,
   matchPendingRow,
   reconcileAllocations,
   STALE_PENDING_DAYS,
@@ -155,6 +156,26 @@ describe('matchPendingRow', () => {
         new Set()
       )
     ).toBeNull();
+  });
+});
+
+describe('firstConnectCutoff', () => {
+  it('floors to the start of the boundary day in UTC, ignoring the connect time-of-day', () => {
+    // Real incident: connected 2026-06-08 11:45:53Z with a 2-day window.
+    const cutoff = firstConnectCutoff(new Date('2026-06-08T11:45:53.767Z'), 2);
+    expect(cutoff.toISOString()).toBe('2026-06-06T00:00:00.000Z');
+  });
+
+  it('includes a transaction from the morning of the boundary day (the stuck-pending bug)', () => {
+    // Grey Roasting at 06-06 01:35Z was dropped when the cutoff kept the connect
+    // time (06-06 11:45Z). Against a day-floored cutoff it must NOT be excluded.
+    const cutoff = firstConnectCutoff(new Date('2026-06-08T11:45:53.767Z'), 2);
+    expect(new Date('2026-06-06T01:35:36.000Z') < cutoff).toBe(false);
+  });
+
+  it('still excludes anything before the boundary day', () => {
+    const cutoff = firstConnectCutoff(new Date('2026-06-08T11:45:53.767Z'), 2);
+    expect(new Date('2026-06-05T23:59:59.000Z') < cutoff).toBe(true);
   });
 });
 
